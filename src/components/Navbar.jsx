@@ -79,7 +79,8 @@ export function Navbar({ user, monitors = [], avaliadores = [] }) {
               flexDirection: 'column',
               overflow: 'hidden'
             }}>
-              {userRole !== 'avaliador' && userRole !== 'monitor' && (
+              {/* Portal de Eventos: Visível para Participante, Organizador e Monitor */}
+              {(userRole === 'participante' || userRole === 'organizador' || userRole === 'monitor') && (
                 <Link to="/" onClick={() => setIsMenuOpen(false)} className={`nav-link-dropdown ${location.pathname === '/' ? 'active-dropdown' : ''}`} style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none', color: 'var(--text-primary)', borderBottom: '1px solid var(--border-color)' }}>
                   <CalendarDays size={18} /> Portal de Eventos
                 </Link>
@@ -87,25 +88,30 @@ export function Navbar({ user, monitors = [], avaliadores = [] }) {
               
               {user ? (
                 <>
-                  {userRole !== 'avaliador' && userRole !== 'monitor' && (
-                    <>
-                      <Link to="/painel-usuario" onClick={() => setIsMenuOpen(false)} className={`nav-link-dropdown ${location.pathname === '/painel-usuario' ? 'active-dropdown' : ''}`} style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none', color: 'var(--text-primary)', borderBottom: '1px solid var(--border-color)' }}>
-                        <FileText size={18} /> Meus Trabalhos
-                      </Link>
-                      <Link to="/perfil" onClick={() => setIsMenuOpen(false)} className={`nav-link-dropdown ${location.pathname === '/perfil' ? 'active-dropdown' : ''}`} style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none', color: 'var(--text-primary)', borderBottom: '1px solid var(--border-color)' }}>
-                        <UserCircle size={18} /> Meu Perfil
-                      </Link>
-                    </>
+                  {/* Meu Perfil: Visível para Participante, Organizador e Monitor */}
+                  {(userRole === 'participante' || userRole === 'organizador' || userRole === 'monitor') && (
+                    <Link to="/perfil" onClick={() => setIsMenuOpen(false)} className={`nav-link-dropdown ${location.pathname === '/perfil' ? 'active-dropdown' : ''}`} style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none', color: 'var(--text-primary)', borderBottom: '1px solid var(--border-color)' }}>
+                      <UserCircle size={18} /> Meu Perfil
+                    </Link>
                   )}
 
+                  {/* Meus Trabalhos: Visível APENAS para Monitor e Organizador (conforme áudio) */}
+                  {(userRole === 'monitor' || userRole === 'organizador') && (
+                    <Link to="/painel-usuario" onClick={() => setIsMenuOpen(false)} className={`nav-link-dropdown ${location.pathname === '/painel-usuario' ? 'active-dropdown' : ''}`} style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none', color: 'var(--text-primary)', borderBottom: '1px solid var(--border-color)' }}>
+                      <FileText size={18} /> Meus Trabalhos
+                    </Link>
+                  )}
+
+                  {/* Minhas Atividades (Painel do Monitor): Visível APENAS para Monitor */}
                   {isMonitor && userRole === 'monitor' && (
                     <div style={{ padding: '1rem', backgroundColor: '#eef2ff', borderBottom: '1px solid var(--border-color)' }}>
                       <Link to="/painel-monitor" onClick={() => setIsMenuOpen(false)} className="btn btn-primary" style={{ textDecoration: 'none', width: '100%', display: 'flex', justifyContent: 'center' }}>
-                        Painel do Monitor
+                        Minhas Atividades
                       </Link>
                     </div>
                   )}
 
+                  {/* Painel do Avaliador: Visível APENAS para Avaliador */}
                   {isAvaliador && userRole === 'avaliador' && (
                     <div style={{ padding: '1rem', backgroundColor: '#f0fdf4', borderBottom: '1px solid var(--border-color)' }}>
                       <Link to="/painel-avaliador" onClick={() => setIsMenuOpen(false)} className="btn btn-primary" style={{ textDecoration: 'none', width: '100%', display: 'flex', justifyContent: 'center', backgroundColor: '#16a34a', border: 'none' }}>
@@ -114,7 +120,8 @@ export function Navbar({ user, monitors = [], avaliadores = [] }) {
                     </div>
                   )}
 
-                  {userRole !== 'avaliador' && userRole !== 'monitor' && (
+                  {/* Área do Organizador: Visível APENAS para Organizador */}
+                  {userRole === 'organizador' && (
                     <div style={{ padding: '1rem', backgroundColor: '#f8fafc', borderBottom: '1px solid var(--border-color)' }}>
                       <Link to="/organizador" onClick={() => setIsMenuOpen(false)} className="btn btn-primary" style={{ textDecoration: 'none', width: '100%', display: 'flex', justifyContent: 'center', backgroundColor: '#475569', border: 'none' }}>
                         <LayoutDashboard size={18} />

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogIn, Users, MonitorPlay, GraduationCap } from 'lucide-react';
+import { LogIn, Users, MonitorPlay, GraduationCap, LayoutDashboard } from 'lucide-react';
 import { auth, googleProvider } from '../firebase';
 import { signInWithPopup } from 'firebase/auth';
 
@@ -68,7 +68,7 @@ export function Login({ setUser, monitors, avaliadores }) {
           
           <div style={{ padding: '1.5rem', border: '1px solid var(--border-color)', borderRadius: '8px', backgroundColor: '#f8fafc' }}>
             <h3 style={{ marginBottom: '1rem', fontSize: '1.1rem', color: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-              <Users size={20} /> Participante / Organizador
+              <Users size={20} /> Participante
             </h3>
             <button 
               onClick={() => handleGoogleLogin('participante')} 
@@ -76,7 +76,21 @@ export function Login({ setUser, monitors, avaliadores }) {
               className="btn btn-outline" 
               style={{ width: '100%', padding: '0.75rem', fontSize: '1rem', display: 'flex', justifyContent: 'center', gap: '1rem', backgroundColor: 'white' }}
             >
-              {isLoading ? 'Conectando...' : <><LogIn size={18} /> Entrar com Google</>}
+              {isLoading ? 'Conectando...' : <><LogIn size={18} /> Entrar como Participante</>}
+            </button>
+          </div>
+
+          <div style={{ padding: '1.5rem', border: '1px solid #e2e8f0', borderRadius: '8px', backgroundColor: '#f1f5f9' }}>
+            <h3 style={{ marginBottom: '1rem', fontSize: '1.1rem', color: '#334155', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+              <LayoutDashboard size={20} /> Organizador
+            </h3>
+            <button 
+              onClick={() => handleGoogleLogin('organizador')} 
+              disabled={isLoading}
+              className="btn btn-primary" 
+              style={{ width: '100%', padding: '0.75rem', fontSize: '1rem', display: 'flex', justifyContent: 'center', gap: '1rem', backgroundColor: '#475569', border: 'none' }}
+            >
+              {isLoading ? 'Conectando...' : <><LogIn size={18} /> Entrar como Organizador</>}
             </button>
           </div>
 
