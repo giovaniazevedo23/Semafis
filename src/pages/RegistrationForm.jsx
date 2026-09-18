@@ -4,7 +4,7 @@ import { User, CreditCard, FileUp, ArrowLeft, CheckCircle } from 'lucide-react';
 import { initMercadoPago, Payment } from '@mercadopago/sdk-react';
 
 // Inicializa com a chave pública fornecida pelo usuário
-initMercadoPago('APP_USR-3991bf48-57bf-43b3-b17d-89afeaf263ad');
+initMercadoPago('APP_USR-b36f802e-840f-45c2-b81f-6249a435a48f');
 
 export function RegistrationForm({ events, user, userProfile, onSubmitWork }) {
   const { id } = useParams();

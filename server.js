@@ -13,7 +13,8 @@ app.use(express.json());
 
 // Inicializa a SDK com o Access Token enviado pelo usuário
 const client = new MercadoPagoConfig({ 
-  accessToken: 'APP_USR-8650725683690446-091811-b03d7fd4b8f7d55684ed38ad4a89e4fe-3687145010' 
+  accessToken: 'APP_USR-7430180943099085-091811-2f4dc121b34762ea415943f3f1df04db-1745666103', 
+  options: { timeout: 5000 } 
 });
 const payment = new Payment(client);
 
