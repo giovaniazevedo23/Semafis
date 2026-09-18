@@ -418,14 +418,15 @@ export function RegistrationForm({ events, user, userProfile, onSubmitWork }) {
 
             </div>
 
-            {/* Código de Barras (Visual) */}
-            <div style={{ marginTop: '1rem', opacity: 0.8 }}>
-              {/* Uma simulação boba de código de barras feita com divs */}
-              <div style={{ display: 'flex', height: '40px', gap: '2px', alignItems: 'flex-end' }}>
-                {Array.from({length: 45}).map((_, i) => (
-                  <div key={i} style={{ width: Math.random() > 0.5 ? '4px' : '2px', backgroundColor: 'black', height: Math.random() > 0.2 ? '100%' : '80%' }}></div>
-                ))}
-              </div>
+            {/* QR Code de Validação */}
+            <div style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', borderTop: '1px dashed #cbd5e1', paddingTop: '2rem' }}>
+              <span style={{ color: '#64748b', fontSize: '0.875rem', marginBottom: '1rem', fontWeight: 'bold' }}>QR CODE DE AUTENTICAÇÃO</span>
+              <img 
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`SEMAFIS CREDENCIAL\nNome: ${formData.nomeSocial || formData.nome}\nCPF: ${formData.cpf}\nCategoria: ${formData.modalidade === 'com_submissao' ? 'Apresentador' : 'Estudante - Presencial'}\nAtividades: ${formData.atividadesExtras.length > 0 ? formData.atividadesExtras.join(', ') : 'Nenhuma'}`)}`} 
+                alt="QR Code de Validação" 
+                style={{ borderRadius: '8px', border: '4px solid white', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
+              />
+              <span style={{ color: '#94a3b8', fontSize: '0.75rem', marginTop: '0.5rem' }}>Apresente este código na entrada do evento</span>
             </div>
 
           </div>
