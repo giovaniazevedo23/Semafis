@@ -11,6 +11,7 @@ export function Navbar({ user, monitors = [], avaliadores = [] }) {
   
   const isMonitor = monitors.some(m => m.email === user?.email);
   const isAvaliador = avaliadores.some(a => a.email === user?.email);
+  const userRole = sessionStorage.getItem('userRole') || 'participante';
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -24,6 +25,7 @@ export function Navbar({ user, monitors = [], avaliadores = [] }) {
 
   const handleLogout = async () => {
     try {
+      sessionStorage.removeItem('userRole');
       await signOut(auth);
       window.location.href = '/login';
     } catch (error) {
@@ -77,19 +79,51 @@ export function Navbar({ user, monitors = [], avaliadores = [] }) {
               flexDirection: 'column',
               overflow: 'hidden'
             }}>
-              <Link to="/" onClick={() => setIsMenuOpen(false)} className={`nav-link-dropdown ${location.pathname === '/' ? 'active-dropdown' : ''}`} style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none', color: 'var(--text-primary)', borderBottom: '1px solid var(--border-color)' }}>
-                <CalendarDays size={18} /> Portal de Eventos
-              </Link>
+              {userRole !== 'avaliador' && userRole !== 'monitor' && (
+                <Link to="/" onClick={() => setIsMenuOpen(false)} className={`nav-link-dropdown ${location.pathname === '/' ? 'active-dropdown' : ''}`} style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none', color: 'var(--text-primary)', borderBottom: '1px solid var(--border-color)' }}>
+                  <CalendarDays size={18} /> Portal de Eventos
+                </Link>
+              )}
               
               {user ? (
                 <>
-                  <Link to="/painel-usuario" onClick={() => setIsMenuOpen(false)} className={`nav-link-dropdown ${location.pathname === '/painel-usuario' ? 'active-dropdown' : ''}`} style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none', color: 'var(--text-primary)', borderBottom: '1px solid var(--border-color)' }}>
-                    <FileText size={18} /> Meus Trabalhos
-                  </Link>
-                  <Link to="/perfil" onClick={() => setIsMenuOpen(false)} className={`nav-link-dropdown ${location.pathname === '/perfil' ? 'active-dropdown' : ''}`} style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none', color: 'var(--text-primary)', borderBottom: '1px solid var(--border-color)' }}>
-                    <UserCircle size={18} /> Meu Perfil
-                  </Link>
-                  <button onClick={handleLogout} className="nav-link-dropdown" style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none', color: '#ef4444', backgroundColor: 'transparent', border: 'none', borderBottom: '1px solid var(--border-color)', cursor: 'pointer', textAlign: 'left', width: '100%', fontSize: '1rem' }}>
+                  {userRole !== 'avaliador' && userRole !== 'monitor' && (
+                    <>
+                      <Link to="/painel-usuario" onClick={() => setIsMenuOpen(false)} className={`nav-link-dropdown ${location.pathname === '/painel-usuario' ? 'active-dropdown' : ''}`} style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none', color: 'var(--text-primary)', borderBottom: '1px solid var(--border-color)' }}>
+                        <FileText size={18} /> Meus Trabalhos
+                      </Link>
+                      <Link to="/perfil" onClick={() => setIsMenuOpen(false)} className={`nav-link-dropdown ${location.pathname === '/perfil' ? 'active-dropdown' : ''}`} style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none', color: 'var(--text-primary)', borderBottom: '1px solid var(--border-color)' }}>
+                        <UserCircle size={18} /> Meu Perfil
+                      </Link>
+                    </>
+                  )}
+
+                  {isMonitor && userRole === 'monitor' && (
+                    <div style={{ padding: '1rem', backgroundColor: '#eef2ff', borderBottom: '1px solid var(--border-color)' }}>
+                      <Link to="/painel-monitor" onClick={() => setIsMenuOpen(false)} className="btn btn-primary" style={{ textDecoration: 'none', width: '100%', display: 'flex', justifyContent: 'center' }}>
+                        Painel do Monitor
+                      </Link>
+                    </div>
+                  )}
+
+                  {isAvaliador && userRole === 'avaliador' && (
+                    <div style={{ padding: '1rem', backgroundColor: '#f0fdf4', borderBottom: '1px solid var(--border-color)' }}>
+                      <Link to="/painel-avaliador" onClick={() => setIsMenuOpen(false)} className="btn btn-primary" style={{ textDecoration: 'none', width: '100%', display: 'flex', justifyContent: 'center', backgroundColor: '#16a34a', border: 'none' }}>
+                        Painel do Avaliador
+                      </Link>
+                    </div>
+                  )}
+
+                  {userRole !== 'avaliador' && userRole !== 'monitor' && (
+                    <div style={{ padding: '1rem', backgroundColor: '#f8fafc', borderBottom: '1px solid var(--border-color)' }}>
+                      <Link to="/organizador" onClick={() => setIsMenuOpen(false)} className="btn btn-primary" style={{ textDecoration: 'none', width: '100%', display: 'flex', justifyContent: 'center', backgroundColor: '#475569', border: 'none' }}>
+                        <LayoutDashboard size={18} />
+                        Área do Organizador
+                      </Link>
+                    </div>
+                  )}
+
+                  <button onClick={handleLogout} className="nav-link-dropdown" style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none', color: '#ef4444', backgroundColor: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%', fontSize: '1rem' }}>
                     <LogOut size={18} /> Sair da Conta
                   </button>
                 </>
@@ -98,29 +132,6 @@ export function Navbar({ user, monitors = [], avaliadores = [] }) {
                   <UserCircle size={18} /> Fazer Login
                 </Link>
               )}
-
-              {isMonitor && (
-                <div style={{ padding: '1rem', backgroundColor: '#eef2ff', borderTop: '1px solid var(--border-color)' }}>
-                  <Link to="/painel-monitor" onClick={() => setIsMenuOpen(false)} className="btn btn-primary" style={{ textDecoration: 'none', width: '100%', display: 'flex', justifyContent: 'center' }}>
-                    Painel do Monitor
-                  </Link>
-                </div>
-              )}
-
-              {isAvaliador && (
-                <div style={{ padding: '1rem', backgroundColor: '#f0fdf4', borderTop: '1px solid var(--border-color)' }}>
-                  <Link to="/painel-avaliador" onClick={() => setIsMenuOpen(false)} className="btn btn-primary" style={{ textDecoration: 'none', width: '100%', display: 'flex', justifyContent: 'center', backgroundColor: '#16a34a', border: 'none' }}>
-                    Painel do Avaliador
-                  </Link>
-                </div>
-              )}
-
-              <div style={{ padding: '1rem', backgroundColor: '#f8fafc', borderTop: '1px solid var(--border-color)' }}>
-                <Link to="/organizador" onClick={() => setIsMenuOpen(false)} className="btn btn-primary" style={{ textDecoration: 'none', width: '100%', display: 'flex', justifyContent: 'center', backgroundColor: '#475569', border: 'none' }}>
-                  <LayoutDashboard size={18} />
-                  Área do Organizador
-                </Link>
-              </div>
 
             </div>
           )}

@@ -33,13 +33,31 @@ const DUMMY_EVENTS = [
 import { MonitorDashboard } from './pages/MonitorDashboard';
 import { EvaluatorDashboard } from './pages/EvaluatorDashboard';
 
+const getInitialState = (key, defaultValue) => {
+  const saved = localStorage.getItem(key);
+  if (saved !== null) {
+    try {
+      return JSON.parse(saved);
+    } catch (e) {
+      console.error("Erro ao ler localStorage para", key);
+    }
+  }
+  return defaultValue;
+};
+
 function App() {
-  const [events, setEvents] = useState(DUMMY_EVENTS);
-  const [submissions, setSubmissions] = useState([]);
-  const [monitors, setMonitors] = useState([]);
-  const [avaliadores, setAvaliadores] = useState([]);
+  const [events, setEvents] = useState(() => getInitialState('events', DUMMY_EVENTS));
+  const [submissions, setSubmissions] = useState(() => getInitialState('submissions', []));
+  const [monitors, setMonitors] = useState(() => getInitialState('monitors', []));
+  const [avaliadores, setAvaliadores] = useState(() => getInitialState('avaliadores', []));
   const [user, setUser] = useState(null);
-  const [userProfile, setUserProfile] = useState(null); // Estado do perfil do usuário
+  const [userProfile, setUserProfile] = useState(() => getInitialState('userProfile', null));
+
+  useEffect(() => { localStorage.setItem('events', JSON.stringify(events)); }, [events]);
+  useEffect(() => { localStorage.setItem('submissions', JSON.stringify(submissions)); }, [submissions]);
+  useEffect(() => { localStorage.setItem('monitors', JSON.stringify(monitors)); }, [monitors]);
+  useEffect(() => { localStorage.setItem('avaliadores', JSON.stringify(avaliadores)); }, [avaliadores]);
+  useEffect(() => { if (userProfile) localStorage.setItem('userProfile', JSON.stringify(userProfile)); }, [userProfile]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -83,7 +101,7 @@ function App() {
         <main className="main-content">
           <Routes>
             <Route path="/" element={<ClientPortal events={events} />} />
-            <Route path="/login" element={<Login setUser={setUser} />} />
+            <Route path="/login" element={<Login setUser={setUser} monitors={monitors} avaliadores={avaliadores} />} />
             <Route path="/perfil" element={<UserProfile user={user} userProfile={userProfile} setUserProfile={setUserProfile} />} />
             <Route path="/evento/:id" element={<EventDetails events={events} />} />
             <Route path="/evento/:id/inscricao" element={<RegistrationForm events={events} user={user} userProfile={userProfile} onSubmitWork={handleSubmitWork} monitors={monitors} />} />
