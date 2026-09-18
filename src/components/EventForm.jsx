@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Calendar, MapPin, Type, Image as ImageIcon, FileText, DollarSign, Clock, PlusCircle, Trash2 } from 'lucide-react';
+import { Calendar, MapPin, Type, Image as ImageIcon, FileText, DollarSign, Clock, PlusCircle, Trash2, CalendarClock } from 'lucide-react';
 
 export function EventForm({ onSubmit }) {
   const [formData, setFormData] = useState({
@@ -9,10 +9,12 @@ export function EventForm({ onSubmit }) {
     description: '',
     priceWithSubmission: '',
     priceWithoutSubmission: '',
+    dataInicioInscricao: '',
+    dataFimInscricao: '',
     schedule: '',
     imageUrl: '',
     logoUrl: '',
-    activities: [] // { name, minister, time, room }
+    activities: [] // { type, name, minister, startTime, endTime, room }
   });
   
   const [imagePreview, setImagePreview] = useState(null);
@@ -40,7 +42,7 @@ export function EventForm({ onSubmit }) {
   const addActivity = () => {
     setFormData(prev => ({
       ...prev,
-      activities: [...prev.activities, { name: '', minister: '', time: '', room: '' }]
+      activities: [...prev.activities, { type: 'Palestra', name: '', minister: '', startTime: '', endTime: '', room: '' }]
     }));
   };
 
@@ -58,9 +60,10 @@ export function EventForm({ onSubmit }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     onSubmit({ ...formData, id: Date.now().toString() });
-    setFormData({ title: '', date: '', location: '', description: '', priceWithSubmission: '', priceWithoutSubmission: '', schedule: '', imageUrl: '', logoUrl: '', activities: [] });
+    setFormData({ title: '', date: '', location: '', description: '', priceWithSubmission: '', priceWithoutSubmission: '', dataInicioInscricao: '', dataFimInscricao: '', schedule: '', imageUrl: '', logoUrl: '', activities: [] });
     setImagePreview(null);
     setLogoPreview(null);
+    alert('Evento criado com sucesso!');
   };
 
   return (
@@ -79,7 +82,7 @@ export function EventForm({ onSubmit }) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="form-group">
           <label className="form-label">
-            <div className="flex items-center gap-2 mb-2"><Calendar size={16} /> Data Principal</div>
+            <div className="flex items-center gap-2 mb-2"><Calendar size={16} /> Data Principal (Início do Evento)</div>
           </label>
           <input type="date" name="date" value={formData.date} onChange={handleChange} className="form-input" required />
         </div>
@@ -89,6 +92,22 @@ export function EventForm({ onSubmit }) {
             <div className="flex items-center gap-2 mb-2"><MapPin size={16} /> Local Principal</div>
           </label>
           <input type="text" name="location" value={formData.location} onChange={handleChange} className="form-input" placeholder="Ex: Universidade Federal" required />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4" style={{ backgroundColor: '#fdf4ff', padding: '1rem', borderRadius: '8px', border: '1px solid #f5d0fe', marginBottom: '1.5rem' }}>
+        <div className="form-group" style={{ marginBottom: 0 }}>
+          <label className="form-label">
+            <div className="flex items-center gap-2 mb-2" style={{ color: '#86198f' }}><CalendarClock size={16} /> Início das Inscrições</div>
+          </label>
+          <input type="date" name="dataInicioInscricao" value={formData.dataInicioInscricao} onChange={handleChange} className="form-input" required />
+        </div>
+
+        <div className="form-group" style={{ marginBottom: 0 }}>
+          <label className="form-label">
+            <div className="flex items-center gap-2 mb-2" style={{ color: '#86198f' }}><CalendarClock size={16} /> Término das Inscrições</div>
+          </label>
+          <input type="date" name="dataFimInscricao" value={formData.dataFimInscricao} onChange={handleChange} className="form-input" required />
         </div>
       </div>
 
@@ -145,7 +164,7 @@ export function EventForm({ onSubmit }) {
       <div className="form-group" style={{ padding: '1.5rem', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
         <div className="flex items-center justify-between mb-4">
           <label className="form-label" style={{ margin: 0 }}>
-            Minicursos, Oficinas e Palestras Extras
+            Atividades Extras (Minicursos, Oficinas, Palestras)
           </label>
           <button type="button" onClick={addActivity} className="btn btn-primary" style={{ padding: '0.5rem', fontSize: '0.875rem' }}>
             <PlusCircle size={16} /> Adicionar Atividade
@@ -157,14 +176,46 @@ export function EventForm({ onSubmit }) {
         )}
 
         {formData.activities.map((act, index) => (
-          <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4" style={{ padding: '1rem', backgroundColor: 'white', borderRadius: '4px', border: '1px solid var(--border-color)', position: 'relative' }}>
+          <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4" style={{ padding: '1.5rem', backgroundColor: 'white', borderRadius: '8px', border: '1px solid #cbd5e1', position: 'relative' }}>
             <button type="button" onClick={() => removeActivity(index)} style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}>
               <Trash2 size={16} />
             </button>
-            <input type="text" placeholder="Nome da Atividade" value={act.name} onChange={(e) => updateActivity(index, 'name', e.target.value)} className="form-input" />
-            <input type="text" placeholder="Ministrante" value={act.minister} onChange={(e) => updateActivity(index, 'minister', e.target.value)} className="form-input" />
-            <input type="text" placeholder="Horário (Ex: 14:00 - 16:00)" value={act.time} onChange={(e) => updateActivity(index, 'time', e.target.value)} className="form-input" />
-            <input type="text" placeholder="Sala / Local" value={act.room} onChange={(e) => updateActivity(index, 'room', e.target.value)} className="form-input" />
+            
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--text-secondary)' }}>Tipo de Atividade</label>
+              <select value={act.type || 'Palestra'} onChange={(e) => updateActivity(index, 'type', e.target.value)} className="form-input">
+                <option value="Palestra">Palestra</option>
+                <option value="Minicurso">Minicurso</option>
+                <option value="Oficina">Oficina</option>
+                <option value="Mesa Redonda">Mesa Redonda</option>
+              </select>
+            </div>
+
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--text-secondary)' }}>Título</label>
+              <input type="text" placeholder="Ex: Introdução ao React" value={act.name} onChange={(e) => updateActivity(index, 'name', e.target.value)} className="form-input" />
+            </div>
+
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--text-secondary)' }}>Ministrante</label>
+              <input type="text" placeholder="Nome do Professor/Especialista" value={act.minister} onChange={(e) => updateActivity(index, 'minister', e.target.value)} className="form-input" />
+            </div>
+
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--text-secondary)' }}>Local / Sala</label>
+              <input type="text" placeholder="Ex: Laboratório 1" value={act.room} onChange={(e) => updateActivity(index, 'room', e.target.value)} className="form-input" />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2" style={{ gridColumn: '1 / -1' }}>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--text-secondary)' }}>Horário Inicial</label>
+                <input type="time" value={act.startTime || ''} onChange={(e) => updateActivity(index, 'startTime', e.target.value)} className="form-input" />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--text-secondary)' }}>Horário Final</label>
+                <input type="time" value={act.endTime || ''} onChange={(e) => updateActivity(index, 'endTime', e.target.value)} className="form-input" />
+              </div>
+            </div>
           </div>
         ))}
       </div>

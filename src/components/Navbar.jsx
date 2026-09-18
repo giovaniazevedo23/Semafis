@@ -95,10 +95,10 @@ export function Navbar({ user, monitors = [], avaliadores = [] }) {
                     </Link>
                   )}
 
-                  {/* Meus Trabalhos: Visível APENAS para Monitor e Organizador (conforme áudio) */}
-                  {(userRole === 'monitor' || userRole === 'organizador') && (
+                  {/* Área do Participante: Visível para Participante, Monitor e Organizador */}
+                  {(userRole === 'participante' || userRole === 'monitor' || userRole === 'organizador') && (
                     <Link to="/painel-usuario" onClick={() => setIsMenuOpen(false)} className={`nav-link-dropdown ${location.pathname === '/painel-usuario' ? 'active-dropdown' : ''}`} style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none', color: 'var(--text-primary)', borderBottom: '1px solid var(--border-color)' }}>
-                      <FileText size={18} /> Meus Trabalhos
+                      <FileText size={18} /> Área do Participante
                     </Link>
                   )}
 

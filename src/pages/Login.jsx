@@ -60,13 +60,13 @@ export function Login({ setUser, monitors, avaliadores }) {
 
   return (
     <div className="container flex items-center justify-center" style={{ minHeight: 'calc(100vh - 80px)' }}>
-      <div className="card text-center" style={{ padding: '3rem', maxWidth: '500px', width: '100%' }}>
-        <h1 style={{ fontSize: '2rem', marginBottom: '1rem', color: 'var(--accent-primary)' }}>Acesso ao Sistema</h1>
-        <p style={{ color: 'var(--text-secondary)', marginBottom: '3rem' }}>Selecione o seu perfil de acesso. Todos os logins são feitos de forma segura via Google.</p>
+      <div className="card text-center" style={{ padding: '3rem', maxWidth: '800px', width: '100%' }}>
+        <h1 style={{ fontSize: '2.5rem', marginBottom: '1rem', color: 'var(--accent-primary)' }}>Acesso ao Sistema</h1>
+        <p style={{ color: 'var(--text-secondary)', marginBottom: '3rem', fontSize: '1.1rem' }}>Selecione o seu perfil de acesso. Todos os logins são feitos de forma segura via Google.</p>
         
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
           
-          <div style={{ padding: '1.5rem', border: '1px solid var(--border-color)', borderRadius: '8px', backgroundColor: '#f8fafc' }}>
+          <div style={{ padding: '1.5rem', border: '1px solid var(--border-color)', borderRadius: '8px', backgroundColor: '#f8fafc', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <h3 style={{ marginBottom: '1rem', fontSize: '1.1rem', color: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
               <Users size={20} /> Participante
             </h3>
@@ -80,7 +80,7 @@ export function Login({ setUser, monitors, avaliadores }) {
             </button>
           </div>
 
-          <div style={{ padding: '1.5rem', border: '1px solid #e2e8f0', borderRadius: '8px', backgroundColor: '#f1f5f9' }}>
+          <div style={{ padding: '1.5rem', border: '1px solid #e2e8f0', borderRadius: '8px', backgroundColor: '#f1f5f9', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <h3 style={{ marginBottom: '1rem', fontSize: '1.1rem', color: '#334155', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
               <LayoutDashboard size={20} /> Organizador
             </h3>
@@ -94,7 +94,7 @@ export function Login({ setUser, monitors, avaliadores }) {
             </button>
           </div>
 
-          <div style={{ padding: '1.5rem', border: '1px solid #bbf7d0', borderRadius: '8px', backgroundColor: '#f0fdf4' }}>
+          <div style={{ padding: '1.5rem', border: '1px solid #bbf7d0', borderRadius: '8px', backgroundColor: '#f0fdf4', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <h3 style={{ marginBottom: '1rem', fontSize: '1.1rem', color: '#166534', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
               <GraduationCap size={20} /> Membro da Comissão (Avaliador)
             </h3>
@@ -108,7 +108,7 @@ export function Login({ setUser, monitors, avaliadores }) {
             </button>
           </div>
 
-          <div style={{ padding: '1.5rem', border: '1px solid #c7d2fe', borderRadius: '8px', backgroundColor: '#eef2ff' }}>
+          <div style={{ padding: '1.5rem', border: '1px solid #c7d2fe', borderRadius: '8px', backgroundColor: '#eef2ff', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <h3 style={{ marginBottom: '1rem', fontSize: '1.1rem', color: '#3730a3', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
               <MonitorPlay size={20} /> Monitor do Evento
             </h3>

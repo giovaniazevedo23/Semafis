@@ -1,19 +1,24 @@
 import { useState } from 'react';
 import { EventForm } from '../components/EventForm';
 import { EventCard } from '../components/EventCard';
-import { FileDown, Users, Check, X } from 'lucide-react';
+import { FileDown, Users, Check, X, ArrowLeft, ClipboardList, GraduationCap, MonitorPlay } from 'lucide-react';
 
 export function OrganizerDashboard({ events, onAddEvent, submissions, onUpdateSubmission, monitors = [], onAddMonitor, avaliadores = [], onAddAvaliador }) {
+  const [selectedEventId, setSelectedEventId] = useState(null);
+  const [isCreatingEvent, setIsCreatingEvent] = useState(false);
+  const [activeTab, setActiveTab] = useState('submissoes'); // 'submissoes', 'equipe', 'credenciamento'
+  
   const [approvingSubId, setApprovingSubId] = useState(null);
-  const [approvalData, setApprovalData] = useState({
-    dataApresentacao: '',
-    horaApresentacao: '',
-    localApresentacao: '',
-    numeroPoster: ''
-  });
-
+  const [approvalData, setApprovalData] = useState({ dataApresentacao: '', horaApresentacao: '', localApresentacao: '', numeroPoster: '' });
   const [monitorData, setMonitorData] = useState({ nome: '', email: '', matricula: '', ira: '', telefone: '' });
   const [avaliadorData, setAvaliadorData] = useState({ nome: '', email: '', matricula: '', telefone: '', fotoUrl: '' });
+
+  const selectedEvent = events.find(e => e.id === selectedEventId);
+
+  const handleAddEventWrapper = (data) => {
+    onAddEvent(data);
+    setIsCreatingEvent(false);
+  };
 
   const handleMonitorSubmit = (e) => {
     e.preventDefault();
@@ -29,41 +34,97 @@ export function OrganizerDashboard({ events, onAddEvent, submissions, onUpdateSu
     alert("Avaliador cadastrado com sucesso!");
   };
 
-  const handleApproveClick = (subId) => {
-    setApprovingSubId(subId);
-  };
-
+  const handleApproveClick = (subId) => setApprovingSubId(subId);
   const handleConfirmApproval = () => {
     onUpdateSubmission(approvingSubId, { status: 'aprovado', detalhesApresentacao: approvalData });
     setApprovingSubId(null);
     setApprovalData({ dataApresentacao: '', horaApresentacao: '', localApresentacao: '', numeroPoster: '' });
   };
-
   const handleReject = (subId) => {
-    if (window.confirm("Deseja rejeitar este trabalho?")) {
-      onUpdateSubmission(subId, { status: 'rejeitado' });
-    }
+    if (window.confirm("Deseja rejeitar este trabalho?")) onUpdateSubmission(subId, { status: 'rejeitado' });
   };
 
-  return (
-    <div className="container">
-      <div className="flex justify-between items-center mb-8" style={{ marginTop: '2rem' }}>
-        <div>
-          <h1 style={{ fontSize: '2.25rem', fontWeight: '700' }}>Painel do Organizador</h1>
-          <p>Gerencie seus eventos e avalie as submissões de trabalhos.</p>
+  // Se não tem evento selecionado E não está criando, mostra a lista de eventos
+  if (!selectedEventId && !isCreatingEvent) {
+    return (
+      <div className="container" style={{ marginTop: '2rem' }}>
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 style={{ fontSize: '2.25rem', fontWeight: '700' }}>Painel do Organizador</h1>
+            <p style={{ color: 'var(--text-secondary)' }}>Selecione um evento para gerenciar ou crie um novo.</p>
+          </div>
+          <button onClick={() => setIsCreatingEvent(true)} className="btn btn-primary">
+            + Criar Novo Evento
+          </button>
         </div>
+
+        {events.length === 0 ? (
+          <div className="card text-center" style={{ padding: '4rem 2rem', color: 'var(--text-secondary)' }}>
+            <p>Você ainda não tem nenhum evento. Clique em "Criar Novo Evento" para começar.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {events.map(event => (
+              <div key={event.id} style={{ position: 'relative' }}>
+                <EventCard event={event} />
+                <button 
+                  onClick={() => setSelectedEventId(event.id)}
+                  className="btn btn-primary" 
+                  style={{ width: '100%', marginTop: '0.5rem', borderTopLeftRadius: 0, borderTopRightRadius: 0, backgroundColor: '#0f172a' }}
+                >
+                  Gerenciar Este Evento
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Tela de Criação de Evento
+  if (isCreatingEvent) {
+    return (
+      <div className="container" style={{ marginTop: '2rem' }}>
+        <button onClick={() => setIsCreatingEvent(false)} className="btn btn-outline flex items-center gap-2 mb-4">
+          <ArrowLeft size={16} /> Voltar
+        </button>
+        <EventForm onSubmit={handleAddEventWrapper} />
+      </div>
+    );
+  }
+
+  // Painel de Gerenciamento do Evento Selecionado
+  return (
+    <div className="container" style={{ marginTop: '2rem' }}>
+      <button onClick={() => setSelectedEventId(null)} className="btn btn-outline flex items-center gap-2 mb-4" style={{ padding: '0.5rem 1rem' }}>
+        <ArrowLeft size={16} /> Voltar aos Eventos
+      </button>
+
+      <div className="card mb-8" style={{ padding: '1.5rem', backgroundColor: '#f8fafc', border: '1px solid var(--border-color)' }}>
+        <h1 style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--accent-primary)', marginBottom: '0.5rem' }}>
+          {selectedEvent?.title}
+        </h1>
+        <p style={{ color: 'var(--text-secondary)' }}>Gerencie as submissões, equipe e credenciamento deste evento.</p>
       </div>
 
-      <div className="grid grid-cols-1" style={{ gap: '2rem', gridTemplateColumns: 'minmax(0, 1fr) 400px' }}>
-        <div style={{ order: 2 }}>
-          <div style={{ position: 'sticky', top: '100px' }}>
-            <EventForm onSubmit={onAddEvent} />
-          </div>
-        </div>
-        
-        <div style={{ order: 1 }}>
+      {/* Tabs */}
+      <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', borderBottom: '2px solid var(--border-color)', paddingBottom: '0.5rem' }}>
+        <button onClick={() => setActiveTab('submissoes')} className={`btn ${activeTab === 'submissoes' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none' }}>
+          Submissões
+        </button>
+        <button onClick={() => setActiveTab('equipe')} className={`btn ${activeTab === 'equipe' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none' }}>
+          Equipe (Avaliadores/Monitores)
+        </button>
+        <button onClick={() => setActiveTab('credenciamento')} className={`btn ${activeTab === 'credenciamento' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none' }}>
+          Credenciamento (Presença)
+        </button>
+      </div>
+
+      {/* Aba de Submissões */}
+      {activeTab === 'submissoes' && (
+        <div>
           <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem' }}>Trabalhos Submetidos para Avaliação</h2>
-          
           {submissions.length === 0 ? (
             <div className="card text-center mb-8" style={{ padding: '3rem 2rem', color: 'var(--text-secondary)' }}>
               <Users size={48} style={{ margin: '0 auto', marginBottom: '1rem', opacity: 0.5 }} />
@@ -101,26 +162,12 @@ export function OrganizerDashboard({ events, onAddEvent, submissions, onUpdateSu
                       <td style={{ padding: '1rem 0.75rem' }}>
                         {sub.status === 'em_analise' && (
                           <div className="flex gap-2 mb-2">
-                            <button onClick={() => handleApproveClick(sub.id)} className="btn" style={{ backgroundColor: '#10b981', color: 'white', padding: '0.5rem' }}>
-                              <Check size={16} /> Aprovar
-                            </button>
-                            <button onClick={() => handleReject(sub.id)} className="btn" style={{ backgroundColor: '#ef4444', color: 'white', padding: '0.5rem' }}>
-                              <X size={16} /> Rejeitar
-                            </button>
-                          </div>
-                        )}
-                        {approvingSubId === sub.id && (
-                          <div className="flex gap-2 mb-2">
-                            <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Aguardando preenchimento...</span>
+                            <button onClick={() => handleApproveClick(sub.id)} className="btn" style={{ backgroundColor: '#10b981', color: 'white', padding: '0.5rem' }}>Aprovar</button>
+                            <button onClick={() => handleReject(sub.id)} className="btn" style={{ backgroundColor: '#ef4444', color: 'white', padding: '0.5rem' }}>Rejeitar</button>
                           </div>
                         )}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
-                          <select 
-                            className="form-input" 
-                            style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }} 
-                            value={sub.monitorEmail || ''} 
-                            onChange={(e) => onUpdateSubmission(sub.id, { monitorEmail: e.target.value })}
-                          >
+                          <select className="form-input" style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }} value={sub.monitorEmail || ''} onChange={(e) => onUpdateSubmission(sub.id, { monitorEmail: e.target.value })}>
                             <option value="">Atribuir Monitor...</option>
                             {monitors.map(m => <option key={m.id} value={m.email}>{m.nome}</option>)}
                           </select>
@@ -131,20 +178,10 @@ export function OrganizerDashboard({ events, onAddEvent, submissions, onUpdateSu
                                 const isAssigned = (sub.avaliadoresEmails || []).includes(a.email);
                                 return (
                                   <label key={a.id} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', cursor: 'pointer' }}>
-                                    <input 
-                                      type="checkbox" 
-                                      checked={isAssigned} 
-                                      onChange={() => {
-                                        const current = sub.avaliadoresEmails || [];
-                                        const newEmails = isAssigned ? current.filter(e => e !== a.email) : [...current, a.email];
-                                        onUpdateSubmission(sub.id, { avaliadoresEmails: newEmails });
-                                      }}
-                                    />
-                                    {a.nome}
+                                    <input type="checkbox" checked={isAssigned} onChange={() => onUpdateSubmission(sub.id, { avaliadoresEmails: isAssigned ? (sub.avaliadoresEmails || []).filter(e => e !== a.email) : [...(sub.avaliadoresEmails || []), a.email] })} /> {a.nome}
                                   </label>
                                 );
                               })}
-                              {avaliadores.length === 0 && <span style={{ color: 'var(--text-secondary)' }}>Nenhum cadastrado.</span>}
                             </div>
                           </div>
                         </div>
@@ -155,163 +192,123 @@ export function OrganizerDashboard({ events, onAddEvent, submissions, onUpdateSu
               </table>
             </div>
           )}
+        </div>
+      )}
 
-          <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem' }}>Seus Eventos Publicados</h2>
-          {events.length === 0 ? (
-            <div className="card text-center mb-8" style={{ padding: '4rem 2rem', color: 'var(--text-secondary)' }}>
-              <p>Você ainda não publicou nenhum evento.</p>
-            </div>
-          ) : (
-             <div className="grid grid-cols-1 md:grid-cols-2 mb-8" style={{ gap: '1.5rem' }}>
-              {events.map(event => (
-                <EventCard key={event.id} event={event} />
+      {/* Aba de Equipe */}
+      {activeTab === 'equipe' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><MonitorPlay size={24} /> Monitores</h2>
+            <div className="card" style={{ padding: '1.5rem' }}>
+              <form onSubmit={handleMonitorSubmit} className="mb-6">
+                <input type="text" placeholder="Nome Completo" value={monitorData.nome} onChange={e => setMonitorData({...monitorData, nome: e.target.value})} className="form-input mb-2" required />
+                <input type="email" placeholder="E-mail" value={monitorData.email} onChange={e => setMonitorData({...monitorData, email: e.target.value})} className="form-input mb-2" required />
+                <input type="text" placeholder="Matrícula" value={monitorData.matricula} onChange={e => setMonitorData({...monitorData, matricula: e.target.value})} className="form-input mb-2" required />
+                <input type="text" placeholder="I.R.A" value={monitorData.ira} onChange={e => setMonitorData({...monitorData, ira: e.target.value})} className="form-input mb-2" required />
+                <input type="tel" placeholder="Telefone" value={monitorData.telefone} onChange={e => setMonitorData({...monitorData, telefone: e.target.value})} className="form-input mb-4" required />
+                <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>Cadastrar Monitor</button>
+              </form>
+              <h3 style={{ fontSize: '1rem', marginBottom: '0.5rem' }}>Lista</h3>
+              {monitors.map(m => (
+                <div key={m.id} style={{ padding: '0.5rem', borderBottom: '1px solid #e2e8f0', fontSize: '0.875rem' }}>
+                  <strong>{m.nome}</strong> ({m.email})
+                </div>
               ))}
             </div>
-          )}
-
-          <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', marginTop: '2rem' }}>Cadastro de Monitores</h2>
-          <div className="card mb-8" style={{ padding: '1.5rem', overflowX: 'auto' }}>
-            <form onSubmit={handleMonitorSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8" style={{ paddingBottom: '2rem', borderBottom: '1px dashed var(--border-color)' }}>
-              <div className="form-group">
-                <label className="form-label">Nome Completo</label>
-                <input type="text" value={monitorData.nome} onChange={e => setMonitorData({...monitorData, nome: e.target.value})} className="form-input" required />
-              </div>
-              <div className="form-group">
-                <label className="form-label">E-mail</label>
-                <input type="email" value={monitorData.email} onChange={e => setMonitorData({...monitorData, email: e.target.value})} className="form-input" required />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Matrícula</label>
-                <input type="text" value={monitorData.matricula} onChange={e => setMonitorData({...monitorData, matricula: e.target.value})} className="form-input" required />
-              </div>
-              <div className="form-group">
-                <label className="form-label">I.R.A Acadêmico</label>
-                <input type="text" value={monitorData.ira} onChange={e => setMonitorData({...monitorData, ira: e.target.value})} className="form-input" placeholder="Ex: 8.5" required />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Telefone</label>
-                <input type="tel" value={monitorData.telefone} onChange={e => setMonitorData({...monitorData, telefone: e.target.value})} className="form-input" placeholder="(00) 00000-0000" required />
-              </div>
-              <div className="md:col-span-2">
-                <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>Cadastrar Monitor</button>
-              </div>
-            </form>
-
-            <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Lista de Monitores Cadastrados</h3>
-            {monitors.length === 0 ? (
-              <p style={{ color: 'var(--text-secondary)' }}>Nenhum monitor cadastrado ainda.</p>
-            ) : (
-              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '500px' }}>
-                <thead>
-                  <tr style={{ borderBottom: '2px solid var(--border-color)', textAlign: 'left' }}>
-                    <th style={{ padding: '0.75rem' }}>Nome</th>
-                    <th style={{ padding: '0.75rem' }}>E-mail</th>
-                    <th style={{ padding: '0.75rem' }}>Matrícula</th>
-                    <th style={{ padding: '0.75rem' }}>I.R.A</th>
-                    <th style={{ padding: '0.75rem' }}>Telefone</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {monitors.map(monitor => (
-                    <tr key={monitor.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                      <td style={{ padding: '0.75rem', fontWeight: '500' }}>{monitor.nome}</td>
-                      <td style={{ padding: '0.75rem' }}>{monitor.email}</td>
-                      <td style={{ padding: '0.75rem' }}>{monitor.matricula}</td>
-                      <td style={{ padding: '0.75rem' }}>{monitor.ira}</td>
-                      <td style={{ padding: '0.75rem' }}>{monitor.telefone}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
           </div>
 
-          <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', marginTop: '2rem' }}>Cadastro de Avaliadores</h2>
-          <div className="card mb-8" style={{ padding: '1.5rem', overflowX: 'auto' }}>
-            <form onSubmit={handleAvaliadorSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8" style={{ paddingBottom: '2rem', borderBottom: '1px dashed var(--border-color)' }}>
-              <div className="form-group">
-                <label className="form-label">Nome Completo</label>
-                <input type="text" value={avaliadorData.nome} onChange={e => setAvaliadorData({...avaliadorData, nome: e.target.value})} className="form-input" required />
-              </div>
-              <div className="form-group">
-                <label className="form-label">E-mail Institucional</label>
-                <input type="email" value={avaliadorData.email} onChange={e => setAvaliadorData({...avaliadorData, email: e.target.value})} className="form-input" required />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Matrícula</label>
-                <input type="text" value={avaliadorData.matricula} onChange={e => setAvaliadorData({...avaliadorData, matricula: e.target.value})} className="form-input" required />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Telefone</label>
-                <input type="tel" value={avaliadorData.telefone} onChange={e => setAvaliadorData({...avaliadorData, telefone: e.target.value})} className="form-input" placeholder="(00) 00000-0000" required />
-              </div>
-              <div className="form-group md:col-span-2">
-                <label className="form-label">Link da Foto de Perfil (Ex: LinkedIn, Lattes)</label>
-                <input type="url" value={avaliadorData.fotoUrl} onChange={e => setAvaliadorData({...avaliadorData, fotoUrl: e.target.value})} className="form-input" placeholder="https://..." />
-              </div>
-              <div className="md:col-span-2">
-                <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>Cadastrar Avaliador</button>
-              </div>
-            </form>
-
-            <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Lista de Avaliadores</h3>
-            {avaliadores.length === 0 ? (
-              <p style={{ color: 'var(--text-secondary)' }}>Nenhum avaliador cadastrado ainda.</p>
-            ) : (
-              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '500px' }}>
-                <thead>
-                  <tr style={{ borderBottom: '2px solid var(--border-color)', textAlign: 'left' }}>
-                    <th style={{ padding: '0.75rem' }}>Nome</th>
-                    <th style={{ padding: '0.75rem' }}>E-mail Institucional</th>
-                    <th style={{ padding: '0.75rem' }}>Matrícula</th>
-                    <th style={{ padding: '0.75rem' }}>Telefone</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {avaliadores.map(avaliador => (
-                    <tr key={avaliador.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                      <td style={{ padding: '0.75rem', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        {avaliador.fotoUrl ? <img src={avaliador.fotoUrl} alt={avaliador.nome} style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} /> : <Users size={32} style={{ color: 'var(--text-secondary)', backgroundColor: '#e2e8f0', borderRadius: '50%', padding: '0.25rem' }} />}
-                        {avaliador.nome}
-                      </td>
-                      <td style={{ padding: '0.75rem' }}>{avaliador.email}</td>
-                      <td style={{ padding: '0.75rem' }}>{avaliador.matricula}</td>
-                      <td style={{ padding: '0.75rem' }}>{avaliador.telefone}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+          <div>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><GraduationCap size={24} /> Avaliadores</h2>
+            <div className="card" style={{ padding: '1.5rem' }}>
+              <form onSubmit={handleAvaliadorSubmit} className="mb-6">
+                <input type="text" placeholder="Nome Completo" value={avaliadorData.nome} onChange={e => setAvaliadorData({...avaliadorData, nome: e.target.value})} className="form-input mb-2" required />
+                <input type="email" placeholder="E-mail" value={avaliadorData.email} onChange={e => setAvaliadorData({...avaliadorData, email: e.target.value})} className="form-input mb-2" required />
+                <input type="text" placeholder="Matrícula" value={avaliadorData.matricula} onChange={e => setAvaliadorData({...avaliadorData, matricula: e.target.value})} className="form-input mb-2" required />
+                <input type="tel" placeholder="Telefone" value={avaliadorData.telefone} onChange={e => setAvaliadorData({...avaliadorData, telefone: e.target.value})} className="form-input mb-2" required />
+                <input type="url" placeholder="Link da Foto" value={avaliadorData.fotoUrl} onChange={e => setAvaliadorData({...avaliadorData, fotoUrl: e.target.value})} className="form-input mb-4" />
+                <button type="submit" className="btn btn-primary" style={{ width: '100%', backgroundColor: '#16a34a', border: 'none' }}>Cadastrar Avaliador</button>
+              </form>
+              <h3 style={{ fontSize: '1rem', marginBottom: '0.5rem' }}>Lista</h3>
+              {avaliadores.map(a => (
+                <div key={a.id} style={{ padding: '0.5rem', borderBottom: '1px solid #e2e8f0', fontSize: '0.875rem' }}>
+                  <strong>{a.nome}</strong> ({a.email})
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      )}
+
+      {/* Aba de Credenciamento */}
+      {activeTab === 'credenciamento' && (
+        <div>
+          <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <ClipboardList size={24} /> Credenciamento das Atividades
+          </h2>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>Lista de inscritos no evento. Marque a caixa para confirmar a presença de cada participante nas atividades (necessário para liberar o certificado).</p>
+          
+          {(!selectedEvent?.activities || selectedEvent.activities.length === 0) ? (
+            <div className="card text-center" style={{ padding: '2rem' }}>
+              <p>Nenhuma atividade cadastrada neste evento.</p>
+            </div>
+          ) : (
+            selectedEvent.activities.map((act, idx) => (
+              <div key={idx} className="card mb-6" style={{ padding: '1.5rem', borderLeft: '4px solid var(--accent-primary)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                  <div>
+                    <span style={{ fontSize: '0.75rem', backgroundColor: '#e2e8f0', padding: '0.25rem 0.5rem', borderRadius: '4px', textTransform: 'uppercase', fontWeight: 'bold' }}>{act.type || 'Palestra'}</span>
+                    <h3 style={{ fontSize: '1.25rem', marginTop: '0.5rem' }}>{act.name}</h3>
+                    <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Ministrante: {act.minister} | {act.startTime} - {act.endTime} | Local: {act.room}</p>
+                  </div>
+                </div>
+
+                <div style={{ backgroundColor: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                  <h4 style={{ fontSize: '1rem', marginBottom: '1rem' }}>Inscritos</h4>
+                  {/* Mock: Usaremos os submissores como mock de inscritos por enquanto */}
+                  {submissions.length === 0 ? (
+                    <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Nenhum participante comprou ingresso/se inscreveu ainda.</p>
+                  ) : (
+                    <table style={{ width: '100%', fontSize: '0.875rem' }}>
+                      <tbody>
+                        {submissions.map((sub, i) => (
+                          <tr key={i} style={{ borderBottom: '1px solid #cbd5e1' }}>
+                            <td style={{ padding: '0.75rem' }}>{sub.usuario}</td>
+                            <td style={{ padding: '0.75rem', textAlign: 'right' }}>
+                              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'flex-end', cursor: 'pointer', fontWeight: 'bold', color: '#16a34a' }}>
+                                <input type="checkbox" style={{ width: '1.25rem', height: '1.25rem' }} />
+                                Presente
+                              </label>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      )}
 
       {/* Modal Renderizado Fora da Tabela */}
       {approvingSubId && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
           <div style={{ backgroundColor: 'white', padding: '2.5rem', borderRadius: '12px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', minWidth: '400px', maxWidth: '90%' }}>
-            <h4 style={{ marginBottom: '1.5rem', fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>Dados da Apresentação</h4>
-            
+            <h4 style={{ marginBottom: '1.5rem', fontSize: '1.5rem', fontWeight: 'bold' }}>Dados da Apresentação</h4>
             <div className="form-group mb-4">
               <label className="form-label" style={{ fontWeight: '500', marginBottom: '0.25rem' }}>Data</label>
               <input type="text" placeholder="Ex: 10/10/2026" value={approvalData.dataApresentacao} onChange={(e) => setApprovalData({...approvalData, dataApresentacao: e.target.value})} className="form-input" />
             </div>
-            
             <div className="form-group mb-4">
               <label className="form-label" style={{ fontWeight: '500', marginBottom: '0.25rem' }}>Horário</label>
               <input type="text" placeholder="Ex: 16:00" value={approvalData.horaApresentacao} onChange={(e) => setApprovalData({...approvalData, horaApresentacao: e.target.value})} className="form-input" />
             </div>
-            
             <div className="form-group mb-4">
               <label className="form-label" style={{ fontWeight: '500', marginBottom: '0.25rem' }}>Local / Sessão</label>
               <input type="text" placeholder="Ex: Área de Pôster - Sessão 1" value={approvalData.localApresentacao} onChange={(e) => setApprovalData({...approvalData, localApresentacao: e.target.value})} className="form-input" />
             </div>
-            
-            <div className="form-group mb-6">
-              <label className="form-label" style={{ fontWeight: '500', marginBottom: '0.25rem' }}>Nº do Pôster (Opcional)</label>
-              <input type="text" placeholder="Ex: PO - 0281" value={approvalData.numeroPoster} onChange={(e) => setApprovalData({...approvalData, numeroPoster: e.target.value})} className="form-input" />
-            </div>
-            
             <div className="flex gap-4">
               <button onClick={() => setApprovingSubId(null)} className="btn btn-outline" style={{ flex: 1, padding: '0.75rem' }}>Cancelar</button>
               <button onClick={handleConfirmApproval} className="btn btn-primary" style={{ flex: 1, padding: '0.75rem' }}>Confirmar Aprovação</button>
