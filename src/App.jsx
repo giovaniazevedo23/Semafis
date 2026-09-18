@@ -33,6 +33,7 @@ const DUMMY_EVENTS = [
 function App() {
   const [events, setEvents] = useState(DUMMY_EVENTS);
   const [submissions, setSubmissions] = useState([]);
+  const [monitors, setMonitors] = useState([]);
   const [user, setUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null); // Estado do perfil do usuário
 
@@ -63,6 +64,10 @@ function App() {
     setSubmissions(prev => prev.map(sub => sub.id === subId ? { ...sub, ...updates } : sub));
   };
 
+  const handleAddMonitor = (monitorData) => {
+    setMonitors(prev => [...prev, { id: Date.now().toString(), ...monitorData }]);
+  };
+
   return (
     <Router>
       <div className="page-wrapper">
@@ -74,7 +79,7 @@ function App() {
             <Route path="/perfil" element={<UserProfile user={user} userProfile={userProfile} setUserProfile={setUserProfile} />} />
             <Route path="/evento/:id" element={<EventDetails events={events} />} />
             <Route path="/evento/:id/inscricao" element={<RegistrationForm events={events} user={user} userProfile={userProfile} onSubmitWork={handleSubmitWork} />} />
-            <Route path="/organizador" element={<OrganizerDashboard events={events} onAddEvent={handleAddEvent} submissions={submissions} onUpdateSubmission={handleUpdateSubmission} />} />
+            <Route path="/organizador" element={<OrganizerDashboard events={events} onAddEvent={handleAddEvent} submissions={submissions} onUpdateSubmission={handleUpdateSubmission} monitors={monitors} onAddMonitor={handleAddMonitor} />} />
             <Route path="/painel-usuario" element={<UserDashboard submissions={submissions.filter(s => !user || s.usuario === user.displayName)} events={events} />} />
           </Routes>
         </main>

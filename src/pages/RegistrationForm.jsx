@@ -24,7 +24,7 @@ export function RegistrationForm({ events, user, userProfile, onSubmitWork }) {
     instituicao: userProfile?.instituicao || '',
     instituicaoOutra: userProfile?.instituicaoOutra || '',
     campus: userProfile?.campus || '',
-    modalidade: 'sem_submissao',
+    categorias: ['sem_submissao'],
     tipoApresentacao: 'poster', // poster, oral
     atividadesExtras: []
   });
@@ -55,9 +55,29 @@ export function RegistrationForm({ events, user, userProfile, onSubmitWork }) {
     });
   };
 
-  const precoAtual = formData.modalidade === 'com_submissao' 
-    ? Number(event.priceWithSubmission || 0) 
-    : Number(event.priceWithoutSubmission || 0);
+  const handleCategoriaChange = (catName) => {
+    setFormData(prev => {
+      const selected = prev.categorias.includes(catName)
+        ? prev.categorias.filter(n => n !== catName)
+        : [...prev.categorias, catName];
+      return { ...prev, categorias: selected };
+    });
+  };
+
+  const precoAtual = (() => {
+    let total = 0;
+    if (formData.categorias.includes('com_submissao')) total += Number(event.priceWithSubmission || 0);
+    if (formData.categorias.includes('sem_submissao')) total += Number(event.priceWithoutSubmission || 0);
+    return total;
+  })();
+
+  const getCategoriaDisplay = () => {
+    const cats = [];
+    if (formData.categorias.includes('sem_submissao')) cats.push('Ouvinte');
+    if (formData.categorias.includes('com_submissao')) cats.push('Apresentador');
+    if (formData.categorias.includes('monitor')) cats.push('Monitor');
+    return cats.join(' + ') || 'Nenhuma';
+  };
 
   const handleNext = (e) => {
     e.preventDefault();
@@ -66,7 +86,7 @@ export function RegistrationForm({ events, user, userProfile, onSubmitWork }) {
 
   const handleCheckout = () => {
     setStep(3);
-    if (formData.modalidade === 'com_submissao' && trabalhoFile) {
+    if (formData.categorias.includes('com_submissao') && trabalhoFile) {
       onSubmitWork(event.id, {
         usuario: formData.nome || user.displayName,
         trabalho: trabalhoFile.name,
@@ -155,28 +175,43 @@ export function RegistrationForm({ events, user, userProfile, onSubmitWork }) {
 
               <hr style={{ margin: '2rem 0', borderColor: 'var(--border-color)' }} />
 
-              <h3 style={{ marginBottom: '1rem' }}>Categoria de Inscrição</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div 
-                  className={`card ${formData.modalidade === 'sem_submissao' ? 'active-border' : ''}`} 
-                  style={{ padding: '1.5rem', cursor: 'pointer', border: formData.modalidade === 'sem_submissao' ? '2px solid var(--accent-primary)' : '1px solid var(--border-color)' }}
-                  onClick={() => setFormData(p => ({ ...p, modalidade: 'sem_submissao' }))}
+              <h3 style={{ marginBottom: '1rem' }}>Categoria de Inscrição (Pode marcar mais de uma)</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <label 
+                  className={`card ${formData.categorias.includes('sem_submissao') ? 'active-border' : ''}`} 
+                  style={{ padding: '1.5rem', cursor: 'pointer', border: formData.categorias.includes('sem_submissao') ? '2px solid var(--accent-primary)' : '1px solid var(--border-color)', display: 'block' }}
                 >
-                  <h4>Estudante / Presencial (Ouvinte)</h4>
-                  <p style={{ fontSize: '1.25rem', fontWeight: 'bold', marginTop: '0.5rem', color: 'var(--text-primary)' }}>R$ {Number(event.priceWithoutSubmission || 0).toFixed(2).replace('.', ',')}</p>
-                </div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <input type="checkbox" checked={formData.categorias.includes('sem_submissao')} onChange={() => handleCategoriaChange('sem_submissao')} style={{ width: '18px', height: '18px' }} />
+                    <h4 style={{ margin: 0, fontSize: '1rem' }}>Ouvinte / Presencial</h4>
+                  </div>
+                  <p style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>R$ {Number(event.priceWithoutSubmission || 0).toFixed(2).replace('.', ',')}</p>
+                </label>
 
-                <div 
-                  className={`card ${formData.modalidade === 'com_submissao' ? 'active-border' : ''}`} 
-                  style={{ padding: '1.5rem', cursor: 'pointer', border: formData.modalidade === 'com_submissao' ? '2px solid var(--accent-primary)' : '1px solid var(--border-color)' }}
-                  onClick={() => setFormData(p => ({ ...p, modalidade: 'com_submissao' }))}
+                <label 
+                  className={`card ${formData.categorias.includes('com_submissao') ? 'active-border' : ''}`} 
+                  style={{ padding: '1.5rem', cursor: 'pointer', border: formData.categorias.includes('com_submissao') ? '2px solid var(--accent-primary)' : '1px solid var(--border-color)', display: 'block' }}
                 >
-                  <h4>Comunicação/Apresentador (Com submissão)</h4>
-                  <p style={{ fontSize: '1.25rem', fontWeight: 'bold', marginTop: '0.5rem', color: 'var(--text-primary)' }}>R$ {Number(event.priceWithSubmission || 0).toFixed(2).replace('.', ',')}</p>
-                </div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <input type="checkbox" checked={formData.categorias.includes('com_submissao')} onChange={() => handleCategoriaChange('com_submissao')} style={{ width: '18px', height: '18px' }} />
+                    <h4 style={{ margin: 0, fontSize: '1rem' }}>Apresentador</h4>
+                  </div>
+                  <p style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>R$ {Number(event.priceWithSubmission || 0).toFixed(2).replace('.', ',')}</p>
+                </label>
+
+                <label 
+                  className={`card ${formData.categorias.includes('monitor') ? 'active-border' : ''}`} 
+                  style={{ padding: '1.5rem', cursor: 'pointer', border: formData.categorias.includes('monitor') ? '2px solid var(--accent-primary)' : '1px solid var(--border-color)', display: 'block' }}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <input type="checkbox" checked={formData.categorias.includes('monitor')} onChange={() => handleCategoriaChange('monitor')} style={{ width: '18px', height: '18px' }} />
+                    <h4 style={{ margin: 0, fontSize: '1rem' }}>Monitor</h4>
+                  </div>
+                  <p style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>Gratuito</p>
+                </label>
               </div>
 
-              {formData.modalidade === 'com_submissao' && (
+              {formData.categorias.includes('com_submissao') && (
                 <div className="form-group" style={{ backgroundColor: '#f0f9ff', padding: '1.5rem', borderRadius: '8px', border: '1px dashed var(--accent-primary)', marginBottom: '2rem' }}>
                   
                   <div className="mb-4">
@@ -231,7 +266,7 @@ export function RegistrationForm({ events, user, userProfile, onSubmitWork }) {
                   <strong>R$ {precoAtual.toFixed(2).replace('.', ',')}</strong>
                 </div>
                 <div className="flex justify-between mb-2 text-secondary" style={{ fontSize: '0.875rem' }}>
-                  <span>Categoria: {formData.modalidade === 'com_submissao' ? 'Com submissão de trabalho' : 'Estudante - Presencial'}</span>
+                  <span>Categoria(s): {getCategoriaDisplay()}</span>
                 </div>
                 {formData.atividadesExtras.length > 0 && (
                   <div className="mt-2 text-secondary" style={{ fontSize: '0.875rem' }}>
@@ -417,7 +452,7 @@ export function RegistrationForm({ events, user, userProfile, onSubmitWork }) {
                 <div>
                   <span style={{ color: '#64748b', fontSize: '0.875rem', display: 'block' }}>Categoria de inscrição:</span>
                   <strong style={{ color: '#0f172a' }}>
-                    {formData.modalidade === 'com_submissao' ? `Apresentador - ${formData.tipoApresentacao.toUpperCase()}` : 'Estudante - Presencial'}
+                    {getCategoriaDisplay()}
                   </strong>
                 </div>
                 <div>
@@ -460,7 +495,7 @@ export function RegistrationForm({ events, user, userProfile, onSubmitWork }) {
             <div style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', borderTop: '1px dashed #cbd5e1', paddingTop: '2rem' }}>
               <span style={{ color: '#64748b', fontSize: '0.875rem', marginBottom: '1rem', fontWeight: 'bold' }}>QR CODE DE AUTENTICAÇÃO</span>
               <img 
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`SEMAFIS CREDENCIAL\nNome: ${formData.nomeSocial || formData.nome}\nCPF: ${formData.cpf}\nInstituição: ${formData.instituicao === 'Outra' ? formData.instituicaoOutra : formData.instituicao}\nCampus: ${formData.campus}\nCategoria: ${formData.modalidade === 'com_submissao' ? 'Apresentador' : 'Estudante - Presencial'}\nAtividades: ${formData.atividadesExtras.length > 0 ? formData.atividadesExtras.join(', ') : 'Nenhuma'}`)}`} 
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`SEMAFIS CREDENCIAL\nNome: ${formData.nomeSocial || formData.nome}\nCPF: ${formData.cpf}\nInstituição: ${formData.instituicao === 'Outra' ? formData.instituicaoOutra : formData.instituicao}\nCampus: ${formData.campus}\nCategorias: ${getCategoriaDisplay()}\nAtividades: ${formData.atividadesExtras.length > 0 ? formData.atividadesExtras.join(', ') : 'Nenhuma'}`)}`} 
                 alt="QR Code de Validação" 
                 style={{ borderRadius: '8px', border: '4px solid white', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
               />

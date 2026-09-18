@@ -3,7 +3,7 @@ import { EventForm } from '../components/EventForm';
 import { EventCard } from '../components/EventCard';
 import { FileDown, Users, Check, X } from 'lucide-react';
 
-export function OrganizerDashboard({ events, onAddEvent, submissions, onUpdateSubmission }) {
+export function OrganizerDashboard({ events, onAddEvent, submissions, onUpdateSubmission, monitors = [], onAddMonitor }) {
   const [approvingSubId, setApprovingSubId] = useState(null);
   const [approvalData, setApprovalData] = useState({
     dataApresentacao: '',
@@ -11,6 +11,15 @@ export function OrganizerDashboard({ events, onAddEvent, submissions, onUpdateSu
     localApresentacao: '',
     numeroPoster: ''
   });
+
+  const [monitorData, setMonitorData] = useState({ nome: '', matricula: '', ira: '', telefone: '' });
+
+  const handleMonitorSubmit = (e) => {
+    e.preventDefault();
+    onAddMonitor(monitorData);
+    setMonitorData({ nome: '', matricula: '', ira: '', telefone: '' });
+    alert("Monitor cadastrado com sucesso!");
+  };
 
   const handleApproveClick = (subId) => {
     setApprovingSubId(subId);
@@ -107,16 +116,67 @@ export function OrganizerDashboard({ events, onAddEvent, submissions, onUpdateSu
 
           <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem' }}>Seus Eventos Publicados</h2>
           {events.length === 0 ? (
-            <div className="card text-center" style={{ padding: '4rem 2rem', color: 'var(--text-secondary)' }}>
+            <div className="card text-center mb-8" style={{ padding: '4rem 2rem', color: 'var(--text-secondary)' }}>
               <p>Você ainda não publicou nenhum evento.</p>
             </div>
           ) : (
-             <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: '1.5rem' }}>
+             <div className="grid grid-cols-1 md:grid-cols-2 mb-8" style={{ gap: '1.5rem' }}>
               {events.map(event => (
                 <EventCard key={event.id} event={event} />
               ))}
             </div>
           )}
+
+          <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', marginTop: '2rem' }}>Cadastro de Monitores</h2>
+          <div className="card mb-8" style={{ padding: '1.5rem', overflowX: 'auto' }}>
+            <form onSubmit={handleMonitorSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8" style={{ paddingBottom: '2rem', borderBottom: '1px dashed var(--border-color)' }}>
+              <div className="form-group">
+                <label className="form-label">Nome Completo</label>
+                <input type="text" value={monitorData.nome} onChange={e => setMonitorData({...monitorData, nome: e.target.value})} className="form-input" required />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Matrícula</label>
+                <input type="text" value={monitorData.matricula} onChange={e => setMonitorData({...monitorData, matricula: e.target.value})} className="form-input" required />
+              </div>
+              <div className="form-group">
+                <label className="form-label">I.R.A Acadêmico</label>
+                <input type="text" value={monitorData.ira} onChange={e => setMonitorData({...monitorData, ira: e.target.value})} className="form-input" placeholder="Ex: 8.5" required />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Telefone</label>
+                <input type="tel" value={monitorData.telefone} onChange={e => setMonitorData({...monitorData, telefone: e.target.value})} className="form-input" placeholder="(00) 00000-0000" required />
+              </div>
+              <div className="md:col-span-2">
+                <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>Cadastrar Monitor</button>
+              </div>
+            </form>
+
+            <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Lista de Monitores Cadastrados</h3>
+            {monitors.length === 0 ? (
+              <p style={{ color: 'var(--text-secondary)' }}>Nenhum monitor cadastrado ainda.</p>
+            ) : (
+              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '500px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid var(--border-color)', textAlign: 'left' }}>
+                    <th style={{ padding: '0.75rem' }}>Nome</th>
+                    <th style={{ padding: '0.75rem' }}>Matrícula</th>
+                    <th style={{ padding: '0.75rem' }}>I.R.A</th>
+                    <th style={{ padding: '0.75rem' }}>Telefone</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {monitors.map(monitor => (
+                    <tr key={monitor.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                      <td style={{ padding: '0.75rem', fontWeight: '500' }}>{monitor.nome}</td>
+                      <td style={{ padding: '0.75rem' }}>{monitor.matricula}</td>
+                      <td style={{ padding: '0.75rem' }}>{monitor.ira}</td>
+                      <td style={{ padding: '0.75rem' }}>{monitor.telefone}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
         </div>
       </div>
 
