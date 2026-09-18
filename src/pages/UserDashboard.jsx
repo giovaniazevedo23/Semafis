@@ -214,7 +214,8 @@ export function UserDashboard({ submissions, events }) {
           ) : (
             mockIngressos.map(ing => {
               const evento = events.find(e => e.id === ing.eventId);
-              const qrUrl = `https://api.invertexto.com/v1/qrcode?text=${ing.id}&scale=3`;
+              const qrData = `SEMAFIS CREDENCIAL\nNome: ${ing.user}\nID: ${ing.id}\nEvento: ${evento?.title}`;
+              const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(qrData)}`;
               return (
                 <div key={ing.id} className="card" style={{ display: 'flex', overflow: 'hidden', padding: 0 }}>
                   <div style={{ backgroundColor: 'var(--accent-primary)', color: 'white', padding: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '150px' }}>
