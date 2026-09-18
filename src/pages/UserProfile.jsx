@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { User, Mail, CreditCard, GraduationCap, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
-
+import instituicoesData from '../data_instituicoes.json';
 export function UserProfile({ user, userProfile, setUserProfile }) {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
@@ -132,23 +132,38 @@ export function UserProfile({ user, userProfile, setUserProfile }) {
             </div>
             <div className="form-group">
               <label className="form-label">Instituição</label>
-              <select name="instituicao" value={formData.instituicao} onChange={handleChange} className="form-input">
-                <option value="">Selecione...</option>
-                <option value="Universidade Federal (UF)">Universidade Federal (UF)</option>
-                <option value="Instituto Federal (IF)">Instituto Federal (IF)</option>
-                <option value="Outra">Outra</option>
-              </select>
+              <input 
+                type="text" 
+                name="instituicao" 
+                list="instituicoes-list" 
+                value={formData.instituicao} 
+                onChange={handleChange} 
+                className="form-input" 
+                placeholder="Busque sua instituição ou digite uma nova..."
+              />
+              <datalist id="instituicoes-list">
+                {Object.keys(instituicoesData).map(inst => (
+                  <option key={inst} value={inst} />
+                ))}
+              </datalist>
             </div>
-            {formData.instituicao === 'Outra' && (
-              <div className="form-group">
-                <label className="form-label">Qual Instituição?</label>
-                <input type="text" name="instituicaoOutra" value={formData.instituicaoOutra} onChange={handleChange} className="form-input" />
-              </div>
-            )}
             
             <div className="form-group">
               <label className="form-label">Campus / Cidade</label>
-              <input type="text" name="campus" value={formData.campus} onChange={handleChange} className="form-input" placeholder="Ex: Maracanã, São José..." />
+              <input 
+                type="text" 
+                name="campus" 
+                list="campus-list" 
+                value={formData.campus} 
+                onChange={handleChange} 
+                className="form-input" 
+                placeholder="Busque o campus ou digite um novo..." 
+              />
+              <datalist id="campus-list">
+                {(instituicoesData[formData.instituicao] || []).map(campus => (
+                  <option key={campus} value={campus} />
+                ))}
+              </datalist>
             </div>
 
             <div className="form-group">
