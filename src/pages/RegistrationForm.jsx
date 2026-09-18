@@ -10,6 +10,8 @@ export function RegistrationForm({ events, user, userProfile, onSubmitWork }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const event = events.find(e => e.id === id);
+  const [step, setStep] = useState(1);
+  const [pixData, setPixData] = useState(null);
 
   const [formData, setFormData] = useState({
     nome: userProfile?.nome || user?.displayName || '',
@@ -24,7 +26,6 @@ export function RegistrationForm({ events, user, userProfile, onSubmitWork }) {
   });
   
   const [trabalhoFile, setTrabalhoFile] = useState(null);
-  const [step, setStep] = useState(1);
 
   if (!event) return <div className="container">Evento não encontrado.</div>;
   if (!user) {
@@ -214,8 +215,50 @@ export function RegistrationForm({ events, user, userProfile, onSubmitWork }) {
               </div>
               
               <div className="mt-8">
-                <h4 style={{ marginBottom: '1rem' }}>Selecione a forma de pagamento:</h4>
-                <div style={{ minHeight: '400px' }}>
+                {pixData ? (
+                  <div className="card text-center" style={{ padding: '3rem', backgroundColor: 'var(--bg-primary)' }}>
+                    <h3 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', color: '#10b981' }}>Escaneie o QR Code para pagar</h3>
+                    <img 
+                      src={`data:image/jpeg;base64,${pixData.qr_code_base64}`} 
+                      alt="QR Code PIX" 
+                      style={{ width: '250px', height: '250px', margin: '0 auto', display: 'block', border: '1px solid var(--border-color)', borderRadius: '8px' }} 
+                    />
+                    
+                    <div className="mt-6">
+                      <p style={{ color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Ou utilize o código Copia e Cola:</p>
+                      <div className="flex gap-2">
+                        <input 
+                          type="text" 
+                          readOnly 
+                          value={pixData.qr_code} 
+                          className="form-input" 
+                          style={{ fontFamily: 'monospace', fontSize: '0.875rem' }} 
+                        />
+                        <button 
+                          className="btn btn-outline" 
+                          onClick={() => {
+                            navigator.clipboard.writeText(pixData.qr_code);
+                            alert("Código copiado!");
+                          }}
+                        >
+                          Copiar
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="mt-8">
+                      <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+                        Após realizar o pagamento no seu banco, clique no botão abaixo para gerar sua credencial.
+                      </p>
+                      <button onClick={handleCheckout} className="btn btn-primary" style={{ width: '100%', padding: '1rem' }}>
+                        Já realizei o pagamento
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <h4 style={{ marginBottom: '1rem' }}>Selecione a forma de pagamento:</h4>
+                    <div style={{ minHeight: '400px' }}>
                   <Payment
                     initialization={{ amount: precoAtual, preferenceId: undefined }}
                     customization={{
@@ -226,8 +269,8 @@ export function RegistrationForm({ events, user, userProfile, onSubmitWork }) {
                         bankTransfer: 'all'
                       }
                     }}
-                    onSubmit={async (param) => {
-                      console.log("Enviando dados para o servidor de pagamentos...", param);
+                    onSubmit={async ({ formData }) => {
+                      console.log("Enviando dados para o servidor de pagamentos...", formData);
                       return new Promise(async (resolve, reject) => {
                         try {
                           const response = await fetch("/process_payment", {
@@ -235,15 +278,21 @@ export function RegistrationForm({ events, user, userProfile, onSubmitWork }) {
                             headers: {
                               "Content-Type": "application/json",
                             },
-                            body: JSON.stringify(param),
+                            body: JSON.stringify(formData),
                           });
                           
                           const data = await response.json();
                           
                           if (response.ok) {
                             console.log("Pagamento efetuado/solicitado com sucesso", data);
-                            handleCheckout(); // Avança para a tela final (Ticket)
-                            resolve();
+                            
+                            if (data.payment_method_id === 'pix' && data.point_of_interaction) {
+                              setPixData(data.point_of_interaction.transaction_data);
+                              resolve();
+                            } else {
+                              handleCheckout(); // Avança para a tela final (Ticket)
+                              resolve();
+                            }
                           } else {
                             console.error("Erro na resposta do servidor:", data);
                             alert("Ocorreu um problema ao processar o pagamento: " + (data.error || "Tente novamente."));
@@ -260,7 +309,9 @@ export function RegistrationForm({ events, user, userProfile, onSubmitWork }) {
                     onError={(error) => console.error('Mercado Pago Error', error)}
                   />
                 </div>
-              </div>
+              </>
+            )}
+          </div>
 
               <div className="flex gap-4 mt-4">
                 <button onClick={() => setStep(1)} className="btn btn-outline" style={{ flex: 1 }}>Voltar</button>
