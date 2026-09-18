@@ -3,6 +3,7 @@ import { CalendarDays, LayoutDashboard, UserCircle, FileText, Menu, ChevronDown,
 import { useState, useRef, useEffect } from 'react';
 import { signOut } from 'firebase/auth';
 import { auth } from '../firebase';
+import logoImg from '../assets/logo.png';
 
 export function Navbar({ user, monitors = [], avaliadores = [] }) {
   const location = useLocation();
@@ -36,9 +37,8 @@ export function Navbar({ user, monitors = [], avaliadores = [] }) {
   return (
     <nav className="navbar" style={{ position: 'relative', zIndex: 1000 }}>
       <div className="container navbar-content" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Link to="/" className="flex items-center gap-2" style={{ textDecoration: 'none', color: 'var(--text-primary)' }}>
-          <CalendarDays size={28} color="var(--accent-primary)" />
-          <span style={{ fontSize: '1.25rem', fontWeight: '700' }}>EventFlow</span>
+        <Link to="/" className="flex items-center" style={{ textDecoration: 'none' }}>
+          <img src={logoImg} alt="Semafis Logo" style={{ height: '48px', objectFit: 'contain' }} />
         </Link>
         
         <div style={{ position: 'relative' }} ref={menuRef}>
