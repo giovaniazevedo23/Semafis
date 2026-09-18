@@ -13,7 +13,11 @@ export function Login({ setUser }) {
     try {
       // Fazendo o login real com o Google usando o Firebase
       const result = await signInWithPopup(auth, googleProvider);
-      setUser(result.user);
+      setUser({
+        uid: result.user.uid,
+        email: result.user.email,
+        displayName: result.user.displayName
+      });
       navigate('/'); // Volta para a Home
     } catch (error) {
       console.error("Erro no login", error);
