@@ -10,7 +10,11 @@ export function UserProfile({ user, userProfile, setUserProfile }) {
     cpf: '',
     matricula: '',
     curso: '',
-    genero: ''
+    cursoOutro: '',
+    genero: '',
+    instituicao: '',
+    instituicaoOutra: '',
+    campus: ''
   });
 
   // Carrega os dados quando entra na tela
@@ -84,8 +88,16 @@ export function UserProfile({ user, userProfile, setUserProfile }) {
                 <strong style={{ fontSize: '1.1rem' }}>{formData.matricula || '-'}</strong>
               </div>
               <div>
+                <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', display: 'block' }}>Instituição:</span>
+                <strong style={{ fontSize: '1.1rem' }}>{formData.instituicao === 'Outra' ? formData.instituicaoOutra : formData.instituicao || '-'}</strong>
+              </div>
+              <div>
+                <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', display: 'block' }}>Campus / Cidade:</span>
+                <strong style={{ fontSize: '1.1rem' }}>{formData.campus || '-'}</strong>
+              </div>
+              <div>
                 <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', display: 'block' }}>Titulação / Curso:</span>
-                <strong style={{ fontSize: '1.1rem' }}>{formData.curso || '-'}</strong>
+                <strong style={{ fontSize: '1.1rem' }}>{formData.curso === 'Outro' ? formData.cursoOutro : formData.curso || '-'}</strong>
               </div>
             </div>
             <button onClick={() => setIsEditing(true)} className="btn btn-outline" style={{ width: '100%' }}>Editar Perfil</button>
@@ -119,9 +131,41 @@ export function UserProfile({ user, userProfile, setUserProfile }) {
               <input type="text" name="matricula" value={formData.matricula} onChange={handleChange} className="form-input" />
             </div>
             <div className="form-group">
-              <label className="form-label">Titulação / Curso</label>
-              <input type="text" name="curso" value={formData.curso} onChange={handleChange} className="form-input" />
+              <label className="form-label">Instituição</label>
+              <select name="instituicao" value={formData.instituicao} onChange={handleChange} className="form-input">
+                <option value="">Selecione...</option>
+                <option value="Universidade Federal (UF)">Universidade Federal (UF)</option>
+                <option value="Instituto Federal (IF)">Instituto Federal (IF)</option>
+                <option value="Outra">Outra</option>
+              </select>
             </div>
+            {formData.instituicao === 'Outra' && (
+              <div className="form-group">
+                <label className="form-label">Qual Instituição?</label>
+                <input type="text" name="instituicaoOutra" value={formData.instituicaoOutra} onChange={handleChange} className="form-input" />
+              </div>
+            )}
+            
+            <div className="form-group">
+              <label className="form-label">Campus / Cidade</label>
+              <input type="text" name="campus" value={formData.campus} onChange={handleChange} className="form-input" placeholder="Ex: Maracanã, São José..." />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Curso</label>
+              <select name="curso" value={formData.curso} onChange={handleChange} className="form-input">
+                <option value="">Selecione...</option>
+                <option value="Física">Física</option>
+                <option value="Matemática">Matemática</option>
+                <option value="Outro">Outro</option>
+              </select>
+            </div>
+            {formData.curso === 'Outro' && (
+              <div className="form-group">
+                <label className="form-label">Qual Curso?</label>
+                <input type="text" name="cursoOutro" value={formData.cursoOutro} onChange={handleChange} className="form-input" />
+              </div>
+            )}
             
             <div className="flex gap-4 md:col-span-2 mt-4">
               <button onClick={() => setIsEditing(false)} className="btn btn-outline" style={{ flex: 1 }}>Cancelar</button>

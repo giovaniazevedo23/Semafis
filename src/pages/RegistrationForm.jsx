@@ -19,7 +19,11 @@ export function RegistrationForm({ events, user, userProfile, onSubmitWork }) {
     cpf: userProfile?.cpf || '',
     matricula: userProfile?.matricula || '',
     curso: userProfile?.curso || '',
+    cursoOutro: userProfile?.cursoOutro || '',
     genero: userProfile?.genero || '',
+    instituicao: userProfile?.instituicao || '',
+    instituicaoOutra: userProfile?.instituicaoOutra || '',
+    campus: userProfile?.campus || '',
     modalidade: 'sem_submissao',
     tipoApresentacao: 'poster', // poster, oral
     atividadesExtras: []
@@ -114,9 +118,39 @@ export function RegistrationForm({ events, user, userProfile, onSubmitWork }) {
                   <input type="text" name="matricula" value={formData.matricula} onChange={handleChange} className="form-input" />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Titulação / Curso</label>
-                  <input type="text" name="curso" value={formData.curso} onChange={handleChange} className="form-input" placeholder="Ex: Graduando em Física" required />
+                  <label className="form-label">Instituição</label>
+                  <select name="instituicao" value={formData.instituicao} onChange={handleChange} className="form-input" required>
+                    <option value="">Selecione...</option>
+                    <option value="Universidade Federal (UF)">Universidade Federal (UF)</option>
+                    <option value="Instituto Federal (IF)">Instituto Federal (IF)</option>
+                    <option value="Outra">Outra</option>
+                  </select>
                 </div>
+                {formData.instituicao === 'Outra' && (
+                  <div className="form-group">
+                    <label className="form-label">Qual Instituição?</label>
+                    <input type="text" name="instituicaoOutra" value={formData.instituicaoOutra} onChange={handleChange} className="form-input" required />
+                  </div>
+                )}
+                <div className="form-group">
+                  <label className="form-label">Campus / Cidade</label>
+                  <input type="text" name="campus" value={formData.campus} onChange={handleChange} className="form-input" placeholder="Ex: Maracanã, São José..." required />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Curso</label>
+                  <select name="curso" value={formData.curso} onChange={handleChange} className="form-input" required>
+                    <option value="">Selecione...</option>
+                    <option value="Física">Física</option>
+                    <option value="Matemática">Matemática</option>
+                    <option value="Outro">Outro</option>
+                  </select>
+                </div>
+                {formData.curso === 'Outro' && (
+                  <div className="form-group">
+                    <label className="form-label">Qual Curso?</label>
+                    <input type="text" name="cursoOutro" value={formData.cursoOutro} onChange={handleChange} className="form-input" required />
+                  </div>
+                )}
               </div>
 
               <hr style={{ margin: '2rem 0', borderColor: 'var(--border-color)' }} />
@@ -370,7 +404,11 @@ export function RegistrationForm({ events, user, userProfile, onSubmitWork }) {
                 </div>
                 <div>
                   <span style={{ color: '#64748b', fontSize: '0.875rem', display: 'block' }}>Titulação/Curso:</span>
-                  <strong style={{ color: '#0f172a' }}>{formData.curso}</strong>
+                  <strong style={{ color: '#0f172a' }}>{formData.curso === 'Outro' ? formData.cursoOutro : formData.curso}</strong>
+                </div>
+                <div>
+                  <span style={{ color: '#64748b', fontSize: '0.875rem', display: 'block' }}>Instituição:</span>
+                  <strong style={{ color: '#0f172a' }}>{(formData.instituicao === 'Outra' ? formData.instituicaoOutra : formData.instituicao) + (formData.campus ? ` - ${formData.campus}` : '')}</strong>
                 </div>
                 <div>
                   <span style={{ color: '#64748b', fontSize: '0.875rem', display: 'block' }}>Crachá:</span>
@@ -422,7 +460,7 @@ export function RegistrationForm({ events, user, userProfile, onSubmitWork }) {
             <div style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', borderTop: '1px dashed #cbd5e1', paddingTop: '2rem' }}>
               <span style={{ color: '#64748b', fontSize: '0.875rem', marginBottom: '1rem', fontWeight: 'bold' }}>QR CODE DE AUTENTICAÇÃO</span>
               <img 
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`SEMAFIS CREDENCIAL\nNome: ${formData.nomeSocial || formData.nome}\nCPF: ${formData.cpf}\nCategoria: ${formData.modalidade === 'com_submissao' ? 'Apresentador' : 'Estudante - Presencial'}\nAtividades: ${formData.atividadesExtras.length > 0 ? formData.atividadesExtras.join(', ') : 'Nenhuma'}`)}`} 
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`SEMAFIS CREDENCIAL\nNome: ${formData.nomeSocial || formData.nome}\nCPF: ${formData.cpf}\nInstituição: ${formData.instituicao === 'Outra' ? formData.instituicaoOutra : formData.instituicao}\nCampus: ${formData.campus}\nCategoria: ${formData.modalidade === 'com_submissao' ? 'Apresentador' : 'Estudante - Presencial'}\nAtividades: ${formData.atividadesExtras.length > 0 ? formData.atividadesExtras.join(', ') : 'Nenhuma'}`)}`} 
                 alt="QR Code de Validação" 
                 style={{ borderRadius: '8px', border: '4px solid white', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
               />

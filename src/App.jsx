@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { ClientPortal } from './pages/ClientPortal';
@@ -8,6 +8,8 @@ import { RegistrationForm } from './pages/RegistrationForm';
 import { Login } from './pages/Login';
 import { UserDashboard } from './pages/UserDashboard';
 import { UserProfile } from './pages/UserProfile';
+import { auth } from './firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
 const DUMMY_EVENTS = [
   {
@@ -33,6 +35,21 @@ function App() {
   const [submissions, setSubmissions] = useState([]);
   const [user, setUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null); // Estado do perfil do usuário
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+        setUser({
+          uid: currentUser.uid,
+          email: currentUser.email,
+          displayName: currentUser.displayName
+        });
+      } else {
+        setUser(null);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   const handleAddEvent = (newEvent) => {
     setEvents(prev => [newEvent, ...prev]);
