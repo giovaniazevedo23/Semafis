@@ -54,7 +54,7 @@ app.post('/process_payment', async (req, res) => {
 app.use(express.static(path.join(__dirname, 'dist')));
 
 // Redirecionar todas as outras requisições para o index.html (React Router)
-app.get('*', (req, res) => {
+app.use((req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
