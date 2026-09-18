@@ -31,6 +31,7 @@ const DUMMY_EVENTS = [
 ];
 
 import { MonitorDashboard } from './pages/MonitorDashboard';
+import { EvaluatorDashboard } from './pages/EvaluatorDashboard';
 
 function App() {
   const [events, setEvents] = useState(DUMMY_EVENTS);
@@ -78,7 +79,7 @@ function App() {
   return (
     <Router>
       <div className="page-wrapper">
-        <Navbar user={user} monitors={monitors} />
+        <Navbar user={user} monitors={monitors} avaliadores={avaliadores} />
         <main className="main-content">
           <Routes>
             <Route path="/" element={<ClientPortal events={events} />} />
@@ -89,6 +90,7 @@ function App() {
             <Route path="/organizador" element={<OrganizerDashboard events={events} onAddEvent={handleAddEvent} submissions={submissions} onUpdateSubmission={handleUpdateSubmission} monitors={monitors} onAddMonitor={handleAddMonitor} avaliadores={avaliadores} onAddAvaliador={handleAddAvaliador} />} />
             <Route path="/painel-usuario" element={<UserDashboard submissions={submissions.filter(s => !user || s.usuario === user.displayName)} events={events} />} />
             <Route path="/painel-monitor" element={<MonitorDashboard user={user} monitors={monitors} submissions={submissions} avaliadores={avaliadores} events={events} />} />
+            <Route path="/painel-avaliador" element={<EvaluatorDashboard user={user} avaliadores={avaliadores} submissions={submissions} events={events} onUpdateSubmission={handleUpdateSubmission} />} />
           </Routes>
         </main>
       </div>

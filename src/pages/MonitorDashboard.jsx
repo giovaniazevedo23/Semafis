@@ -57,7 +57,7 @@ export function MonitorDashboard({ user, monitors, submissions, avaliadores, eve
       ) : (
         <div className="grid grid-cols-1 gap-6 mb-8">
           {mySubmissions.map(sub => {
-            const avaliador = avaliadores.find(a => a.email === sub.avaliadorEmail);
+            const assignedAvaliadores = avaliadores.filter(a => (sub.avaliadoresEmails || []).includes(a.email));
             const event = events.find(e => e.id === sub.eventId);
             
             return (
@@ -94,22 +94,26 @@ export function MonitorDashboard({ user, monitors, submissions, avaliadores, eve
 
                   <div style={{ backgroundColor: '#f8fafc', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                     <h4 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', color: '#0f172a' }}>
-                      <Users size={18} /> Avaliador Responsável
+                      <Users size={18} /> Avaliadores Responsáveis
                     </h4>
-                    {avaliador ? (
-                      <div className="flex items-center gap-4">
-                        {avaliador.fotoUrl ? (
-                          <img src={avaliador.fotoUrl} alt={avaliador.nome} style={{ width: '56px', height: '56px', borderRadius: '50%', objectFit: 'cover', border: '2px solid white', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }} />
-                        ) : (
-                          <div style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: '#cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <Users size={28} color="#64748b" />
+                    {assignedAvaliadores.length > 0 ? (
+                      <div className="flex flex-col gap-4">
+                        {assignedAvaliadores.map(avaliador => (
+                          <div key={avaliador.id} className="flex items-center gap-4">
+                            {avaliador.fotoUrl ? (
+                              <img src={avaliador.fotoUrl} alt={avaliador.nome} style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', border: '2px solid white', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }} />
+                            ) : (
+                              <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: '#cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <Users size={24} color="#64748b" />
+                              </div>
+                            )}
+                            <div>
+                              <strong style={{ display: 'block', color: 'var(--text-primary)', fontSize: '1rem' }}>{avaliador.nome}</strong>
+                              <a href={`mailto:${avaliador.email}`} style={{ fontSize: '0.875rem', color: 'var(--accent-primary)', textDecoration: 'none' }}>{avaliador.email}</a>
+                              <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>Tel: {avaliador.telefone}</span>
+                            </div>
                           </div>
-                        )}
-                        <div>
-                          <strong style={{ display: 'block', color: 'var(--text-primary)', fontSize: '1.1rem' }}>{avaliador.nome}</strong>
-                          <a href={`mailto:${avaliador.email}`} style={{ fontSize: '0.875rem', color: 'var(--accent-primary)', textDecoration: 'none' }}>{avaliador.email}</a>
-                          <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>Tel: {avaliador.telefone}</span>
-                        </div>
+                        ))}
                       </div>
                     ) : (
                       <p style={{ color: '#f59e0b', fontSize: '0.875rem', margin: 0, fontWeight: '500' }}>Nenhum avaliador atribuído ainda a este trabalho. A organização deve realizar este vínculo.</p>

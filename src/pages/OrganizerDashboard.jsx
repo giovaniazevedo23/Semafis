@@ -124,15 +124,29 @@ export function OrganizerDashboard({ events, onAddEvent, submissions, onUpdateSu
                             <option value="">Atribuir Monitor...</option>
                             {monitors.map(m => <option key={m.id} value={m.email}>{m.nome}</option>)}
                           </select>
-                          <select 
-                            className="form-input" 
-                            style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }} 
-                            value={sub.avaliadorEmail || ''} 
-                            onChange={(e) => onUpdateSubmission(sub.id, { avaliadorEmail: e.target.value })}
-                          >
-                            <option value="">Atribuir Avaliador...</option>
-                            {avaliadores.map(a => <option key={a.id} value={a.email}>{a.nome}</option>)}
-                          </select>
+                          <div style={{ backgroundColor: '#f8fafc', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border-color)', fontSize: '0.75rem' }}>
+                            <strong style={{ display: 'block', marginBottom: '0.25rem' }}>Atribuir Avaliadores:</strong>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', maxHeight: '80px', overflowY: 'auto' }}>
+                              {avaliadores.map(a => {
+                                const isAssigned = (sub.avaliadoresEmails || []).includes(a.email);
+                                return (
+                                  <label key={a.id} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', cursor: 'pointer' }}>
+                                    <input 
+                                      type="checkbox" 
+                                      checked={isAssigned} 
+                                      onChange={() => {
+                                        const current = sub.avaliadoresEmails || [];
+                                        const newEmails = isAssigned ? current.filter(e => e !== a.email) : [...current, a.email];
+                                        onUpdateSubmission(sub.id, { avaliadoresEmails: newEmails });
+                                      }}
+                                    />
+                                    {a.nome}
+                                  </label>
+                                );
+                              })}
+                              {avaliadores.length === 0 && <span style={{ color: 'var(--text-secondary)' }}>Nenhum cadastrado.</span>}
+                            </div>
+                          </div>
                         </div>
                       </td>
                     </tr>

@@ -26,6 +26,7 @@ export function RegistrationForm({ events, user, userProfile, onSubmitWork, moni
     campus: userProfile?.campus || '',
     categorias: ['sem_submissao'],
     tipoApresentacao: 'poster', // poster, oral
+    coAutores: '',
     atividadesExtras: []
   });
   
@@ -89,10 +90,13 @@ export function RegistrationForm({ events, user, userProfile, onSubmitWork, moni
     if (formData.categorias.includes('com_submissao') && trabalhoFile) {
       onSubmitWork(event.id, {
         usuario: formData.nome || user.displayName,
+        coAutores: formData.coAutores,
         trabalho: trabalhoFile.name,
         modalidade: formData.tipoApresentacao,
         status: 'em_analise',
-        data: new Date().toISOString()
+        data: new Date().toISOString(),
+        avaliadoresEmails: [],
+        avaliacoes: []
       });
     }
   };
@@ -226,6 +230,13 @@ export function RegistrationForm({ events, user, userProfile, onSubmitWork, moni
                         <input type="radio" name="tipoApresentacao" value="oral" checked={formData.tipoApresentacao === 'oral'} onChange={handleChange} /> Comunicação Oral
                       </label>
                     </div>
+                  </div>
+
+                  <div className="mb-4">
+                    <label className="form-label flex items-center gap-2">
+                      Co-autores (Opcional)
+                    </label>
+                    <input type="text" name="coAutores" value={formData.coAutores} onChange={handleChange} className="form-input" placeholder="Separe os nomes por vírgula. Ex: Maria Silva, José Pereira" />
                   </div>
 
                   <label className="form-label flex items-center gap-2">

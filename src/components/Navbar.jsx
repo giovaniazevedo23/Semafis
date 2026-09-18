@@ -4,12 +4,13 @@ import { useState, useRef, useEffect } from 'react';
 import { signOut } from 'firebase/auth';
 import { auth } from '../firebase';
 
-export function Navbar({ user, monitors = [] }) {
+export function Navbar({ user, monitors = [], avaliadores = [] }) {
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
   
   const isMonitor = monitors.some(m => m.email === user?.email);
+  const isAvaliador = avaliadores.some(a => a.email === user?.email);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -102,6 +103,14 @@ export function Navbar({ user, monitors = [] }) {
                 <div style={{ padding: '1rem', backgroundColor: '#eef2ff', borderTop: '1px solid var(--border-color)' }}>
                   <Link to="/painel-monitor" onClick={() => setIsMenuOpen(false)} className="btn btn-primary" style={{ textDecoration: 'none', width: '100%', display: 'flex', justifyContent: 'center' }}>
                     Painel do Monitor
+                  </Link>
+                </div>
+              )}
+
+              {isAvaliador && (
+                <div style={{ padding: '1rem', backgroundColor: '#f0fdf4', borderTop: '1px solid var(--border-color)' }}>
+                  <Link to="/painel-avaliador" onClick={() => setIsMenuOpen(false)} className="btn btn-primary" style={{ textDecoration: 'none', width: '100%', display: 'flex', justifyContent: 'center', backgroundColor: '#16a34a', border: 'none' }}>
+                    Painel do Avaliador
                   </Link>
                 </div>
               )}
