@@ -32,6 +32,7 @@ const DUMMY_EVENTS = [
 
 import { MonitorDashboard } from './pages/MonitorDashboard';
 import { EvaluatorDashboard } from './pages/EvaluatorDashboard';
+import { ValidarCredencial } from './pages/ValidarCredencial';
 
 const getInitialState = (key, defaultValue) => {
   const saved = localStorage.getItem(key);
@@ -109,6 +110,7 @@ function App() {
             <Route path="/painel-usuario" element={<UserDashboard submissions={submissions.filter(s => !user || s.usuario === user.displayName)} events={events} />} />
             <Route path="/painel-monitor" element={<MonitorDashboard user={user} monitors={monitors} submissions={submissions} avaliadores={avaliadores} events={events} />} />
             <Route path="/painel-avaliador" element={<EvaluatorDashboard user={user} avaliadores={avaliadores} submissions={submissions} events={events} onUpdateSubmission={handleUpdateSubmission} />} />
+            <Route path="/validar" element={<ValidarCredencial />} />
           </Routes>
         </main>
       </div>

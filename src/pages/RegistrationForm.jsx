@@ -527,7 +527,7 @@ export function RegistrationForm({ events, user, userProfile, onSubmitWork, moni
             <div style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', borderTop: '1px dashed #cbd5e1', paddingTop: '2rem' }}>
               <span style={{ color: '#64748b', fontSize: '0.875rem', marginBottom: '1rem', fontWeight: 'bold' }}>QR CODE DE AUTENTICAÇÃO</span>
               <img 
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`SEMAFIS CREDENCIAL\nNome: ${formData.nomeSocial || formData.nome}\nCPF: ${formData.cpf}\nInstituição: ${formData.instituicao === 'Outra' ? formData.instituicaoOutra : formData.instituicao}\nCampus: ${formData.campus}\nCategorias: ${getCategoriaDisplay()}\nAtividades: ${formData.atividadesExtras.length > 0 ? formData.atividadesExtras.join(', ') : 'Nenhuma'}`)}`} 
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`${window.location.origin}/validar?nome=${encodeURIComponent(formData.nomeSocial || formData.nome)}&cpf=${encodeURIComponent(formData.cpf)}&inst=${encodeURIComponent(formData.instituicao === 'Outra' ? formData.instituicaoOutra : formData.instituicao)}&campus=${encodeURIComponent(formData.campus)}&cat=${encodeURIComponent(getCategoriaDisplay())}&atividades=${encodeURIComponent(formData.atividadesExtras.length > 0 ? formData.atividadesExtras.join(', ') : 'Nenhuma')}`)}`} 
                 alt="QR Code de Validação" 
                 style={{ borderRadius: '8px', border: '4px solid white', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
               />

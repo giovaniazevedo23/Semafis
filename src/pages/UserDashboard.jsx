@@ -214,7 +214,7 @@ export function UserDashboard({ submissions, events }) {
           ) : (
             mockIngressos.map(ing => {
               const evento = events.find(e => e.id === ing.eventId);
-              const qrData = `SEMAFIS CREDENCIAL\nNome: ${ing.user}\nID: ${ing.id}\nEvento: ${evento?.title}`;
+              const qrData = `${window.location.origin}/validar?nome=${encodeURIComponent(ing.user)}&id=${encodeURIComponent(ing.id)}&evento=${encodeURIComponent(evento?.title)}`;
               const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(qrData)}`;
               return (
                 <div key={ing.id} className="card" style={{ display: 'flex', overflow: 'hidden', padding: 0 }}>
