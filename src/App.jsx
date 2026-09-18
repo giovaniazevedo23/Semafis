@@ -49,6 +49,7 @@ const getInitialState = (key, defaultValue) => {
 function App() {
   const [events, setEvents] = useState(() => getInitialState('events', DUMMY_EVENTS));
   const [submissions, setSubmissions] = useState(() => getInitialState('submissions', []));
+  const [ingressos, setIngressos] = useState(() => getInitialState('ingressos', []));
   const [monitors, setMonitors] = useState(() => getInitialState('monitors', []));
   const [avaliadores, setAvaliadores] = useState(() => getInitialState('avaliadores', []));
   const [user, setUser] = useState(null);
@@ -56,6 +57,7 @@ function App() {
 
   useEffect(() => { localStorage.setItem('events', JSON.stringify(events)); }, [events]);
   useEffect(() => { localStorage.setItem('submissions', JSON.stringify(submissions)); }, [submissions]);
+  useEffect(() => { localStorage.setItem('ingressos', JSON.stringify(ingressos)); }, [ingressos]);
   useEffect(() => { localStorage.setItem('monitors', JSON.stringify(monitors)); }, [monitors]);
   useEffect(() => { localStorage.setItem('avaliadores', JSON.stringify(avaliadores)); }, [avaliadores]);
   useEffect(() => { if (userProfile) localStorage.setItem('userProfile', JSON.stringify(userProfile)); }, [userProfile]);
@@ -95,19 +97,23 @@ function App() {
     setAvaliadores(prev => [...prev, { id: Date.now().toString(), ...avaliadorData }]);
   };
 
+  const handleRegister = (ingressoData) => {
+    setIngressos(prev => [...prev, { id: 'ING-' + Date.now().toString().slice(-6), timestamp: new Date().toISOString(), ...ingressoData }]);
+  };
+
   return (
     <Router>
       <div className="page-wrapper">
-        <Navbar user={user} monitors={monitors} avaliadores={avaliadores} />
+        <Navbar user={user} userProfile={userProfile} monitors={monitors} avaliadores={avaliadores} />
         <main className="main-content">
           <Routes>
             <Route path="/" element={<ClientPortal events={events} />} />
             <Route path="/login" element={<Login setUser={setUser} monitors={monitors} avaliadores={avaliadores} />} />
             <Route path="/perfil" element={<UserProfile user={user} userProfile={userProfile} setUserProfile={setUserProfile} />} />
             <Route path="/evento/:id" element={<EventDetails events={events} />} />
-            <Route path="/evento/:id/inscricao" element={<RegistrationForm events={events} user={user} userProfile={userProfile} onSubmitWork={handleSubmitWork} monitors={monitors} />} />
+            <Route path="/evento/:id/inscricao" element={<RegistrationForm events={events} user={user} userProfile={userProfile} onSubmitWork={handleSubmitWork} onRegister={handleRegister} monitors={monitors} />} />
             <Route path="/organizador" element={<OrganizerDashboard events={events} onAddEvent={handleAddEvent} submissions={submissions} onUpdateSubmission={handleUpdateSubmission} monitors={monitors} onAddMonitor={handleAddMonitor} avaliadores={avaliadores} onAddAvaliador={handleAddAvaliador} />} />
-            <Route path="/painel-usuario" element={<UserDashboard submissions={submissions.filter(s => !user || s.usuario === user.displayName)} events={events} />} />
+            <Route path="/painel-usuario" element={<UserDashboard submissions={submissions.filter(s => !user || s.usuario === user.displayName)} ingressos={ingressos.filter(i => !user || i.userEmail === user.email)} events={events} />} />
             <Route path="/painel-monitor" element={<MonitorDashboard user={user} monitors={monitors} submissions={submissions} avaliadores={avaliadores} events={events} />} />
             <Route path="/painel-avaliador" element={<EvaluatorDashboard user={user} avaliadores={avaliadores} submissions={submissions} events={events} onUpdateSubmission={handleUpdateSubmission} />} />
             <Route path="/validar" element={<ValidarCredencial />} />

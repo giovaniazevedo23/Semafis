@@ -203,4 +203,38 @@ p {
   .md\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .md\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
-.nav-link-dropdown:hover { background-color: #f1f5f9; } .active-dropdown { background-color: #e0f2fe; color: var(--accent-primary) !important; font-weight: 600; } 
+.nav-link-dropdown:hover { background-color: #f1f5f9; } 
+.active-dropdown { background-color: #e0f2fe; color: var(--accent-primary) !important; font-weight: 600; }
+
+@media (max-width: 768px) {
+  /* Diminuir o tamanho das fontes e margens */
+  h1 {
+    font-size: 1.5rem !important;
+  }
+  h2 {
+    font-size: 1.25rem !important;
+  }
+  .container {
+    padding: 0 1rem;
+  }
+  
+  /* Ajustar o tamanho da logo e o espaçamento da barra de navegação superior (Navbar) */
+  .navbar-content {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+  .navbar-content img {
+    height: 50px !important; /* Ajustar tamanho da logo */
+  }
+  
+  /* Corrigir margens internas de cards para não comerem espaço da tela */
+  .card {
+    padding: 1rem !important;
+  }
+
+  .ticket-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+}

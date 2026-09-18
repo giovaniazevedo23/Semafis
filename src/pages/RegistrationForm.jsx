@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { User, CreditCard, FileUp, ArrowLeft, CheckCircle } from 'lucide-react';
 import { initMercadoPago, Payment } from '@mercadopago/sdk-react';
 import instituicoesData from '../data_instituicoes.json';
+import { CredentialTicket } from '../components/CredentialTicket';
 
 // Inicializa com a chave pública fornecida pelo usuário
 initMercadoPago('APP_USR-b36f802e-840f-45c2-b81f-6249a435a48f');
@@ -88,6 +89,22 @@ export function RegistrationForm({ events, user, userProfile, onSubmitWork, moni
 
   const handleCheckout = () => {
     setStep(3);
+
+    if (onRegister) {
+      onRegister({
+        eventId: event.id,
+        userEmail: user.email,
+        nome: formData.nomeSocial || formData.nome,
+        cpf: formData.cpf,
+        curso: formData.curso === 'Outro' ? formData.cursoOutro : formData.curso,
+        instituicao: formData.instituicao === 'Outra' ? formData.instituicaoOutra : formData.instituicao,
+        campus: formData.campus,
+        categoriasDisplay: getCategoriaDisplay(),
+        precoAtual: precoAtual,
+        atividades: formData.atividadesExtras.length > 0 ? formData.atividadesExtras.join(', ') : 'Nenhuma',
+      });
+    }
+
     if (formData.categorias.includes('com_submissao') && trabalhoFile) {
       onSubmitWork(event.id, {
         usuario: formData.nome || user.displayName,
@@ -425,122 +442,19 @@ export function RegistrationForm({ events, user, userProfile, onSubmitWork, moni
 
       {/* TELA FINAL: COMPROVANTE (TICKET) NO NOVO FORMATO */}
       {step === 3 && (
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <div className="text-center mb-4">
-            <CheckCircle size={48} style={{ color: '#10b981', margin: '0 auto', marginBottom: '1rem' }} />
-            <h2>Pagamento Confirmado!</h2>
-          </div>
-
-          <div style={{ backgroundColor: '#f1f5f9', borderRadius: '12px', padding: '2rem', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0' }}>
-            
-            {/* Header Ticket */}
-            <div className="flex justify-between items-center" style={{ borderBottom: '2px solid #cbd5e1', paddingBottom: '1.5rem', marginBottom: '1.5rem' }}>
-              <h1 style={{ fontSize: '1.875rem', fontWeight: '800', color: '#0f172a', margin: 0 }}>DOCUMENTO DE INSCRIÇÃO</h1>
-              {event.logoUrl ? (
-                <img src={event.logoUrl} alt="Logo" style={{ height: '50px', objectFit: 'contain' }} />
-              ) : (
-                <div style={{ fontWeight: 'bold', fontSize: '1.25rem', color: 'var(--accent-primary)' }}>{event.title}</div>
-              )}
-            </div>
-
-            {/* Nome/Profile */}
-            <div className="flex items-center gap-4 mb-8">
-              {event.logoUrl && (
-                <img src={event.logoUrl} alt="Logo" style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: '2px solid white', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }} />
-              )}
-              <div>
-                <span style={{ color: '#64748b', fontSize: '0.875rem', display: 'block' }}>Nome:</span>
-                <span style={{ fontSize: '1.25rem', fontWeight: '800', color: '#0f172a', textTransform: 'uppercase' }}>
-                  {formData.nomeSocial || formData.nome}
-                </span>
-              </div>
-            </div>
-
-            {/* Dados Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8" style={{ borderBottom: '1px dashed #cbd5e1', paddingBottom: '2rem', marginBottom: '2rem' }}>
-              
-              {/* Coluna Esquerda */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <div>
-                  <span style={{ color: '#64748b', fontSize: '0.875rem', display: 'block' }}>E-mail:</span>
-                  <strong style={{ color: '#0f172a' }}>{user.email}</strong>
-                </div>
-                <div>
-                  <span style={{ color: '#64748b', fontSize: '0.875rem', display: 'block' }}>CPF/Passaporte:</span>
-                  <strong style={{ color: '#0f172a' }}>{formData.cpf}</strong>
-                </div>
-                <div>
-                  <span style={{ color: '#64748b', fontSize: '0.875rem', display: 'block' }}>Titulação/Curso:</span>
-                  <strong style={{ color: '#0f172a' }}>{formData.curso === 'Outro' ? formData.cursoOutro : formData.curso}</strong>
-                </div>
-                <div>
-                  <span style={{ color: '#64748b', fontSize: '0.875rem', display: 'block' }}>Instituição:</span>
-                  <strong style={{ color: '#0f172a' }}>{(formData.instituicao === 'Outra' ? formData.instituicaoOutra : formData.instituicao) + (formData.campus ? ` - ${formData.campus}` : '')}</strong>
-                </div>
-                <div>
-                  <span style={{ color: '#64748b', fontSize: '0.875rem', display: 'block' }}>Crachá:</span>
-                  <strong style={{ color: '#0f172a', textTransform: 'uppercase' }}>{(formData.nomeSocial || formData.nome).split(' ')[0]}</strong>
-                </div>
-                <div>
-                  <span style={{ color: '#64748b', fontSize: '0.875rem', display: 'block' }}>Categoria de inscrição:</span>
-                  <strong style={{ color: '#0f172a' }}>
-                    {getCategoriaDisplay()}
-                  </strong>
-                </div>
-                <div>
-                  <span style={{ color: '#64748b', fontSize: '0.875rem', display: 'block' }}>Data de inscrição:</span>
-                  <strong style={{ color: '#0f172a' }}>{new Date().toLocaleString('pt-BR')}</strong>
-                </div>
-              </div>
-
-              {/* Coluna Direita */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', backgroundColor: '#f8fafc', padding: '1rem', borderRadius: '8px' }}>
-                <div className="flex justify-between">
-                  <span style={{ color: '#64748b', fontSize: '0.875rem' }}>Valor da inscrição:</span>
-                  <span style={{ fontWeight: '600', color: '#64748b' }}>R$ {precoAtual.toFixed(2).replace('.', ',')}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span style={{ color: '#64748b', fontSize: '0.875rem' }}>Acréscimo:</span>
-                  <span style={{ fontWeight: '600', color: '#64748b' }}>R$ 0,00</span>
-                </div>
-                <div className="flex justify-between">
-                  <span style={{ color: '#64748b', fontSize: '0.875rem' }}>Desconto:</span>
-                  <span style={{ fontWeight: '600', color: '#64748b' }}>R$ 0,00</span>
-                </div>
-                
-                <div className="flex justify-between mt-2 pt-2" style={{ borderTop: '1px solid #cbd5e1' }}>
-                  <span style={{ color: '#64748b', fontSize: '0.875rem' }}>Valor Total:</span>
-                  <span style={{ fontWeight: '800', fontSize: '1.25rem', color: '#0f172a' }}>R$ {precoAtual.toFixed(2).replace('.', ',')}</span>
-                </div>
-
-                <div className="mt-4">
-                  <span style={{ color: '#64748b', fontSize: '0.875rem', display: 'block', marginBottom: '0.25rem' }}>Status de pagamento:</span>
-                  <div style={{ backgroundColor: '#475569', color: 'white', padding: '0.5rem', textAlign: 'center', fontWeight: '500' }}>
-                    Paga - Concluída
-                  </div>
-                </div>
-              </div>
-
-            </div>
-
-            {/* QR Code de Validação */}
-            <div style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', borderTop: '1px dashed #cbd5e1', paddingTop: '2rem' }}>
-              <span style={{ color: '#64748b', fontSize: '0.875rem', marginBottom: '1rem', fontWeight: 'bold' }}>QR CODE DE AUTENTICAÇÃO</span>
-              <img 
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`${window.location.origin}/validar?nome=${encodeURIComponent(formData.nomeSocial || formData.nome)}&cpf=${encodeURIComponent(formData.cpf)}&inst=${encodeURIComponent(formData.instituicao === 'Outra' ? formData.instituicaoOutra : formData.instituicao)}&campus=${encodeURIComponent(formData.campus)}&cat=${encodeURIComponent(getCategoriaDisplay())}&atividades=${encodeURIComponent(formData.atividadesExtras.length > 0 ? formData.atividadesExtras.join(', ') : 'Nenhuma')}`)}`} 
-                alt="QR Code de Validação" 
-                style={{ borderRadius: '8px', border: '4px solid white', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
-              />
-              <span style={{ color: '#94a3b8', fontSize: '0.75rem', marginTop: '0.5rem' }}>Apresente este código na entrada do evento</span>
-            </div>
-
-          </div>
-
-          <div className="text-center mt-8">
-            <Link to="/painel-usuario" className="btn btn-outline mr-4" style={{ textDecoration: 'none' }}>Ver Meus Trabalhos</Link>
-            <Link to="/" className="btn btn-primary" style={{ textDecoration: 'none' }}>Voltar ao Portal</Link>
-          </div>
-        </div>
+        <CredentialTicket 
+          event={event}
+          userEmail={user.email}
+          nome={formData.nomeSocial || formData.nome}
+          cpf={formData.cpf}
+          curso={formData.curso === 'Outro' ? formData.cursoOutro : formData.curso}
+          instituicao={formData.instituicao === 'Outra' ? formData.instituicaoOutra : formData.instituicao}
+          campus={formData.campus}
+          categoriasDisplay={getCategoriaDisplay()}
+          precoAtual={precoAtual}
+          atividades={formData.atividadesExtras.length > 0 ? formData.atividadesExtras.join(', ') : 'Nenhuma'}
+          showSuccessHeader={true}
+        />
       )}
 
     </div>

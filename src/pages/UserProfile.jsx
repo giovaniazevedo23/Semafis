@@ -14,7 +14,8 @@ export function UserProfile({ user, userProfile, setUserProfile }) {
     genero: '',
     instituicao: '',
     instituicaoOutra: '',
-    campus: ''
+    campus: '',
+    photoUrl: ''
   });
 
   // Carrega os dados quando entra na tela
@@ -46,6 +47,17 @@ export function UserProfile({ user, userProfile, setUserProfile }) {
     alert('Perfil atualizado com sucesso!');
   };
 
+  const handlePhotoUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({ ...prev, photoUrl: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   return (
     <div className="container" style={{ paddingTop: '2rem', paddingBottom: '4rem' }}>
       <h1 style={{ fontSize: '2.25rem', fontWeight: '700', marginBottom: '0.5rem' }}>Meu Perfil</h1>
@@ -53,8 +65,12 @@ export function UserProfile({ user, userProfile, setUserProfile }) {
 
       <div className="card" style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
         <div className="flex items-center gap-4 mb-8" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '2rem' }}>
-          <div style={{ width: '80px', height: '80px', borderRadius: '50%', backgroundColor: 'var(--accent-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem', fontWeight: 'bold' }}>
-            {formData.nome ? formData.nome.charAt(0).toUpperCase() : <User size={40} />}
+          <div style={{ width: '80px', height: '80px', borderRadius: '50%', backgroundColor: 'var(--accent-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem', fontWeight: 'bold', overflow: 'hidden' }}>
+            {formData.photoUrl ? (
+              <img src={formData.photoUrl} alt="Foto de Perfil" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              formData.nome ? formData.nome.charAt(0).toUpperCase() : <User size={40} />
+            )}
           </div>
           <div>
             <h2 style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>{formData.nomeSocial || formData.nome || 'Usuário'}</h2>
@@ -104,6 +120,11 @@ export function UserProfile({ user, userProfile, setUserProfile }) {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div className="form-group md:col-span-2">
+              <label className="form-label">Foto de Perfil</label>
+              <input type="file" accept="image/*" onChange={handlePhotoUpload} className="form-input" />
+              {formData.photoUrl && <p style={{ fontSize: '0.875rem', color: '#16a34a', marginTop: '0.5rem' }}>Imagem selecionada com sucesso.</p>}
+            </div>
             <div className="form-group">
               <label className="form-label">Nome Completo</label>
               <input type="text" name="nome" value={formData.nome} onChange={handleChange} className="form-input" />

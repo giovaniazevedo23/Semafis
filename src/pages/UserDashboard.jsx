@@ -2,15 +2,12 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, Clock, MonitorPlay, Presentation, FileText, Printer, Ticket, Award, MapPin } from 'lucide-react';
 
-export function UserDashboard({ submissions, events }) {
+import { CredentialTicket } from '../components/CredentialTicket';
+
+export function UserDashboard({ submissions, events, ingressos = [] }) {
   const [activeTab, setActiveTab] = useState('trabalhos'); // 'trabalhos', 'ingressos', 'certificados'
   const [viewingEvaluation, setViewingEvaluation] = useState(null);
   const [viewingCertificate, setViewingCertificate] = useState(null);
-  
-  // Mock de Ingressos (Para visualização)
-  const mockIngressos = events.length > 0 ? [
-    { id: 'ING-001', eventId: events[0].id, status: 'pago', user: 'Usuário Demo' }
-  ] : [];
 
   // Mock de Certificados (Para visualização)
   const mockCertificados = events.length > 0 ? [
@@ -206,35 +203,31 @@ export function UserDashboard({ submissions, events }) {
 
       {/* Ingressos Tab */}
       {activeTab === 'ingressos' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {mockIngressos.length === 0 ? (
+        <div className="grid grid-cols-1 gap-6">
+          {ingressos.length === 0 ? (
             <div className="card text-center" style={{ padding: '3rem 2rem', gridColumn: '1 / -1' }}>
               <h2>Você não possui ingressos.</h2>
             </div>
           ) : (
-            mockIngressos.map(ing => {
+            ingressos.map(ing => {
               const evento = events.find(e => e.id === ing.eventId);
-              const qrData = `${window.location.origin}/validar?nome=${encodeURIComponent(ing.user)}&id=${encodeURIComponent(ing.id)}&evento=${encodeURIComponent(evento?.title)}`;
-              const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(qrData)}`;
               return (
-                <div key={ing.id} className="card" style={{ display: 'flex', overflow: 'hidden', padding: 0 }}>
-                  <div style={{ backgroundColor: 'var(--accent-primary)', color: 'white', padding: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '150px' }}>
-                    <Ticket size={48} style={{ marginBottom: '1rem' }} />
-                    <span style={{ fontSize: '0.875rem', fontWeight: 'bold' }}>VIP Acesso</span>
-                  </div>
-                  <div style={{ padding: '1.5rem', flex: 1, display: 'flex', justifyContent: 'space-between' }}>
-                    <div>
-                      <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>{evento?.title}</h3>
-                      <p style={{ color: 'var(--text-secondary)', marginBottom: '0.25rem' }}><Calendar size={14} style={{ display: 'inline' }}/> {evento?.date}</p>
-                      <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}><MapPin size={14} style={{ display: 'inline' }}/> {evento?.location}</p>
-                      <p style={{ fontWeight: 'bold', fontSize: '0.875rem' }}>Participante: {ing.user}</p>
-                      <p style={{ fontSize: '0.75rem', color: '#16a34a', marginTop: '0.5rem', fontWeight: 'bold' }}>PAGAMENTO CONFIRMADO</p>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', paddingLeft: '1rem' }}>
-                       <img src={qrUrl} alt="QR Code" style={{ width: '100px', height: '100px', borderRadius: '8px' }} />
-                    </div>
-                  </div>
-                </div>
+                <CredentialTicket 
+                  key={ing.id}
+                  event={evento}
+                  userEmail={ing.userEmail}
+                  nome={ing.nome}
+                  cpf={ing.cpf}
+                  curso={ing.curso}
+                  instituicao={ing.instituicao}
+                  campus={ing.campus}
+                  categoriasDisplay={ing.categoriasDisplay}
+                  precoAtual={ing.precoAtual}
+                  atividades={ing.atividades}
+                  id={ing.id}
+                  timestamp={ing.timestamp}
+                  showSuccessHeader={false}
+                />
               );
             })
           )}

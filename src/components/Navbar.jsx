@@ -5,7 +5,7 @@ import { signOut } from 'firebase/auth';
 import { auth } from '../firebase';
 import logoImg from '../assets/logo.png';
 
-export function Navbar({ user, monitors = [], avaliadores = [] }) {
+export function Navbar({ user, userProfile, monitors = [], avaliadores = [] }) {
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
@@ -49,8 +49,12 @@ export function Navbar({ user, monitors = [], avaliadores = [] }) {
           >
             {user ? (
               <>
-                <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: 'var(--accent-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 'bold' }}>
-                  {user.displayName ? user.displayName.charAt(0).toUpperCase() : <UserCircle size={14} />}
+                <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: 'var(--accent-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 'bold', overflow: 'hidden' }}>
+                  {userProfile?.photoUrl ? (
+                    <img src={userProfile.photoUrl} alt="Perfil" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    user.displayName ? user.displayName.charAt(0).toUpperCase() : <UserCircle size={14} />
+                  )}
                 </div>
                 <span style={{ maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {user.displayName || 'Minha Conta'}
