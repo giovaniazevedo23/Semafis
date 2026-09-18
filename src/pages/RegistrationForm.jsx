@@ -6,7 +6,7 @@ import { initMercadoPago, Payment } from '@mercadopago/sdk-react';
 // Inicializa com a chave pública fornecida pelo usuário
 initMercadoPago('APP_USR-b36f802e-840f-45c2-b81f-6249a435a48f');
 
-export function RegistrationForm({ events, user, userProfile, onSubmitWork }) {
+export function RegistrationForm({ events, user, userProfile, onSubmitWork, monitors = [] }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const event = events.find(e => e.id === id);
@@ -199,16 +199,18 @@ export function RegistrationForm({ events, user, userProfile, onSubmitWork }) {
                   <p style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>R$ {Number(event.priceWithSubmission || 0).toFixed(2).replace('.', ',')}</p>
                 </label>
 
-                <label 
-                  className={`card ${formData.categorias.includes('monitor') ? 'active-border' : ''}`} 
-                  style={{ padding: '1.5rem', cursor: 'pointer', border: formData.categorias.includes('monitor') ? '2px solid var(--accent-primary)' : '1px solid var(--border-color)', display: 'block' }}
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <input type="checkbox" checked={formData.categorias.includes('monitor')} onChange={() => handleCategoriaChange('monitor')} style={{ width: '18px', height: '18px' }} />
-                    <h4 style={{ margin: 0, fontSize: '1rem' }}>Monitor</h4>
-                  </div>
-                  <p style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>Gratuito</p>
-                </label>
+                {monitors.some(m => m.email === user?.email) && (
+                  <label 
+                    className={`card ${formData.categorias.includes('monitor') ? 'active-border' : ''}`} 
+                    style={{ padding: '1.5rem', cursor: 'pointer', border: formData.categorias.includes('monitor') ? '2px solid var(--accent-primary)' : '1px solid var(--border-color)', display: 'block' }}
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      <input type="checkbox" checked={formData.categorias.includes('monitor')} onChange={() => handleCategoriaChange('monitor')} style={{ width: '18px', height: '18px' }} />
+                      <h4 style={{ margin: 0, fontSize: '1rem' }}>Monitor</h4>
+                    </div>
+                    <p style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>Gratuito</p>
+                  </label>
+                )}
               </div>
 
               {formData.categorias.includes('com_submissao') && (

@@ -4,10 +4,12 @@ import { useState, useRef, useEffect } from 'react';
 import { signOut } from 'firebase/auth';
 import { auth } from '../firebase';
 
-export function Navbar({ user }) {
+export function Navbar({ user, monitors = [] }) {
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
+  
+  const isMonitor = monitors.some(m => m.email === user?.email);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -96,8 +98,16 @@ export function Navbar({ user }) {
                 </Link>
               )}
 
-              <div style={{ padding: '1rem', backgroundColor: '#f8fafc' }}>
-                <Link to="/organizador" onClick={() => setIsMenuOpen(false)} className="btn btn-primary" style={{ textDecoration: 'none', width: '100%', display: 'flex', justifyContent: 'center' }}>
+              {isMonitor && (
+                <div style={{ padding: '1rem', backgroundColor: '#eef2ff', borderTop: '1px solid var(--border-color)' }}>
+                  <Link to="/painel-monitor" onClick={() => setIsMenuOpen(false)} className="btn btn-primary" style={{ textDecoration: 'none', width: '100%', display: 'flex', justifyContent: 'center' }}>
+                    Painel do Monitor
+                  </Link>
+                </div>
+              )}
+
+              <div style={{ padding: '1rem', backgroundColor: '#f8fafc', borderTop: '1px solid var(--border-color)' }}>
+                <Link to="/organizador" onClick={() => setIsMenuOpen(false)} className="btn btn-primary" style={{ textDecoration: 'none', width: '100%', display: 'flex', justifyContent: 'center', backgroundColor: '#475569', border: 'none' }}>
                   <LayoutDashboard size={18} />
                   Área do Organizador
                 </Link>

@@ -30,10 +30,13 @@ const DUMMY_EVENTS = [
   }
 ];
 
+import { MonitorDashboard } from './pages/MonitorDashboard';
+
 function App() {
   const [events, setEvents] = useState(DUMMY_EVENTS);
   const [submissions, setSubmissions] = useState([]);
   const [monitors, setMonitors] = useState([]);
+  const [avaliadores, setAvaliadores] = useState([]);
   const [user, setUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null); // Estado do perfil do usuário
 
@@ -68,19 +71,24 @@ function App() {
     setMonitors(prev => [...prev, { id: Date.now().toString(), ...monitorData }]);
   };
 
+  const handleAddAvaliador = (avaliadorData) => {
+    setAvaliadores(prev => [...prev, { id: Date.now().toString(), ...avaliadorData }]);
+  };
+
   return (
     <Router>
       <div className="page-wrapper">
-        <Navbar user={user} />
+        <Navbar user={user} monitors={monitors} />
         <main className="main-content">
           <Routes>
             <Route path="/" element={<ClientPortal events={events} />} />
             <Route path="/login" element={<Login setUser={setUser} />} />
             <Route path="/perfil" element={<UserProfile user={user} userProfile={userProfile} setUserProfile={setUserProfile} />} />
             <Route path="/evento/:id" element={<EventDetails events={events} />} />
-            <Route path="/evento/:id/inscricao" element={<RegistrationForm events={events} user={user} userProfile={userProfile} onSubmitWork={handleSubmitWork} />} />
-            <Route path="/organizador" element={<OrganizerDashboard events={events} onAddEvent={handleAddEvent} submissions={submissions} onUpdateSubmission={handleUpdateSubmission} monitors={monitors} onAddMonitor={handleAddMonitor} />} />
+            <Route path="/evento/:id/inscricao" element={<RegistrationForm events={events} user={user} userProfile={userProfile} onSubmitWork={handleSubmitWork} monitors={monitors} />} />
+            <Route path="/organizador" element={<OrganizerDashboard events={events} onAddEvent={handleAddEvent} submissions={submissions} onUpdateSubmission={handleUpdateSubmission} monitors={monitors} onAddMonitor={handleAddMonitor} avaliadores={avaliadores} onAddAvaliador={handleAddAvaliador} />} />
             <Route path="/painel-usuario" element={<UserDashboard submissions={submissions.filter(s => !user || s.usuario === user.displayName)} events={events} />} />
+            <Route path="/painel-monitor" element={<MonitorDashboard user={user} monitors={monitors} submissions={submissions} avaliadores={avaliadores} events={events} />} />
           </Routes>
         </main>
       </div>

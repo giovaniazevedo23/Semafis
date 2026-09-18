@@ -3,7 +3,7 @@ import { EventForm } from '../components/EventForm';
 import { EventCard } from '../components/EventCard';
 import { FileDown, Users, Check, X } from 'lucide-react';
 
-export function OrganizerDashboard({ events, onAddEvent, submissions, onUpdateSubmission, monitors = [], onAddMonitor }) {
+export function OrganizerDashboard({ events, onAddEvent, submissions, onUpdateSubmission, monitors = [], onAddMonitor, avaliadores = [], onAddAvaliador }) {
   const [approvingSubId, setApprovingSubId] = useState(null);
   const [approvalData, setApprovalData] = useState({
     dataApresentacao: '',
@@ -12,13 +12,21 @@ export function OrganizerDashboard({ events, onAddEvent, submissions, onUpdateSu
     numeroPoster: ''
   });
 
-  const [monitorData, setMonitorData] = useState({ nome: '', matricula: '', ira: '', telefone: '' });
+  const [monitorData, setMonitorData] = useState({ nome: '', email: '', matricula: '', ira: '', telefone: '' });
+  const [avaliadorData, setAvaliadorData] = useState({ nome: '', email: '', matricula: '', telefone: '', fotoUrl: '' });
 
   const handleMonitorSubmit = (e) => {
     e.preventDefault();
     onAddMonitor(monitorData);
-    setMonitorData({ nome: '', matricula: '', ira: '', telefone: '' });
+    setMonitorData({ nome: '', email: '', matricula: '', ira: '', telefone: '' });
     alert("Monitor cadastrado com sucesso!");
+  };
+
+  const handleAvaliadorSubmit = (e) => {
+    e.preventDefault();
+    onAddAvaliador(avaliadorData);
+    setAvaliadorData({ nome: '', email: '', matricula: '', telefone: '', fotoUrl: '' });
+    alert("Avaliador cadastrado com sucesso!");
   };
 
   const handleApproveClick = (subId) => {
@@ -92,20 +100,40 @@ export function OrganizerDashboard({ events, onAddEvent, submissions, onUpdateSu
                       </td>
                       <td style={{ padding: '1rem 0.75rem' }}>
                         {sub.status === 'em_analise' && (
-                          <div className="flex gap-2">
+                          <div className="flex gap-2 mb-2">
                             <button onClick={() => handleApproveClick(sub.id)} className="btn" style={{ backgroundColor: '#10b981', color: 'white', padding: '0.5rem' }}>
-                              <Check size={16} />
+                              <Check size={16} /> Aprovar
                             </button>
                             <button onClick={() => handleReject(sub.id)} className="btn" style={{ backgroundColor: '#ef4444', color: 'white', padding: '0.5rem' }}>
-                              <X size={16} />
+                              <X size={16} /> Rejeitar
                             </button>
                           </div>
                         )}
                         {approvingSubId === sub.id && (
-                          <div className="flex gap-2">
+                          <div className="flex gap-2 mb-2">
                             <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Aguardando preenchimento...</span>
                           </div>
                         )}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
+                          <select 
+                            className="form-input" 
+                            style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }} 
+                            value={sub.monitorEmail || ''} 
+                            onChange={(e) => onUpdateSubmission(sub.id, { monitorEmail: e.target.value })}
+                          >
+                            <option value="">Atribuir Monitor...</option>
+                            {monitors.map(m => <option key={m.id} value={m.email}>{m.nome}</option>)}
+                          </select>
+                          <select 
+                            className="form-input" 
+                            style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }} 
+                            value={sub.avaliadorEmail || ''} 
+                            onChange={(e) => onUpdateSubmission(sub.id, { avaliadorEmail: e.target.value })}
+                          >
+                            <option value="">Atribuir Avaliador...</option>
+                            {avaliadores.map(a => <option key={a.id} value={a.email}>{a.nome}</option>)}
+                          </select>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -135,6 +163,10 @@ export function OrganizerDashboard({ events, onAddEvent, submissions, onUpdateSu
                 <input type="text" value={monitorData.nome} onChange={e => setMonitorData({...monitorData, nome: e.target.value})} className="form-input" required />
               </div>
               <div className="form-group">
+                <label className="form-label">E-mail</label>
+                <input type="email" value={monitorData.email} onChange={e => setMonitorData({...monitorData, email: e.target.value})} className="form-input" required />
+              </div>
+              <div className="form-group">
                 <label className="form-label">Matrícula</label>
                 <input type="text" value={monitorData.matricula} onChange={e => setMonitorData({...monitorData, matricula: e.target.value})} className="form-input" required />
               </div>
@@ -159,6 +191,7 @@ export function OrganizerDashboard({ events, onAddEvent, submissions, onUpdateSu
                 <thead>
                   <tr style={{ borderBottom: '2px solid var(--border-color)', textAlign: 'left' }}>
                     <th style={{ padding: '0.75rem' }}>Nome</th>
+                    <th style={{ padding: '0.75rem' }}>E-mail</th>
                     <th style={{ padding: '0.75rem' }}>Matrícula</th>
                     <th style={{ padding: '0.75rem' }}>I.R.A</th>
                     <th style={{ padding: '0.75rem' }}>Telefone</th>
@@ -168,9 +201,68 @@ export function OrganizerDashboard({ events, onAddEvent, submissions, onUpdateSu
                   {monitors.map(monitor => (
                     <tr key={monitor.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                       <td style={{ padding: '0.75rem', fontWeight: '500' }}>{monitor.nome}</td>
+                      <td style={{ padding: '0.75rem' }}>{monitor.email}</td>
                       <td style={{ padding: '0.75rem' }}>{monitor.matricula}</td>
                       <td style={{ padding: '0.75rem' }}>{monitor.ira}</td>
                       <td style={{ padding: '0.75rem' }}>{monitor.telefone}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+
+          <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', marginTop: '2rem' }}>Cadastro de Avaliadores</h2>
+          <div className="card mb-8" style={{ padding: '1.5rem', overflowX: 'auto' }}>
+            <form onSubmit={handleAvaliadorSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8" style={{ paddingBottom: '2rem', borderBottom: '1px dashed var(--border-color)' }}>
+              <div className="form-group">
+                <label className="form-label">Nome Completo</label>
+                <input type="text" value={avaliadorData.nome} onChange={e => setAvaliadorData({...avaliadorData, nome: e.target.value})} className="form-input" required />
+              </div>
+              <div className="form-group">
+                <label className="form-label">E-mail Institucional</label>
+                <input type="email" value={avaliadorData.email} onChange={e => setAvaliadorData({...avaliadorData, email: e.target.value})} className="form-input" required />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Matrícula</label>
+                <input type="text" value={avaliadorData.matricula} onChange={e => setAvaliadorData({...avaliadorData, matricula: e.target.value})} className="form-input" required />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Telefone</label>
+                <input type="tel" value={avaliadorData.telefone} onChange={e => setAvaliadorData({...avaliadorData, telefone: e.target.value})} className="form-input" placeholder="(00) 00000-0000" required />
+              </div>
+              <div className="form-group md:col-span-2">
+                <label className="form-label">Link da Foto de Perfil (Ex: LinkedIn, Lattes)</label>
+                <input type="url" value={avaliadorData.fotoUrl} onChange={e => setAvaliadorData({...avaliadorData, fotoUrl: e.target.value})} className="form-input" placeholder="https://..." />
+              </div>
+              <div className="md:col-span-2">
+                <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>Cadastrar Avaliador</button>
+              </div>
+            </form>
+
+            <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Lista de Avaliadores</h3>
+            {avaliadores.length === 0 ? (
+              <p style={{ color: 'var(--text-secondary)' }}>Nenhum avaliador cadastrado ainda.</p>
+            ) : (
+              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '500px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid var(--border-color)', textAlign: 'left' }}>
+                    <th style={{ padding: '0.75rem' }}>Nome</th>
+                    <th style={{ padding: '0.75rem' }}>E-mail Institucional</th>
+                    <th style={{ padding: '0.75rem' }}>Matrícula</th>
+                    <th style={{ padding: '0.75rem' }}>Telefone</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {avaliadores.map(avaliador => (
+                    <tr key={avaliador.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                      <td style={{ padding: '0.75rem', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        {avaliador.fotoUrl ? <img src={avaliador.fotoUrl} alt={avaliador.nome} style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} /> : <Users size={32} style={{ color: 'var(--text-secondary)', backgroundColor: '#e2e8f0', borderRadius: '50%', padding: '0.25rem' }} />}
+                        {avaliador.nome}
+                      </td>
+                      <td style={{ padding: '0.75rem' }}>{avaliador.email}</td>
+                      <td style={{ padding: '0.75rem' }}>{avaliador.matricula}</td>
+                      <td style={{ padding: '0.75rem' }}>{avaliador.telefone}</td>
                     </tr>
                   ))}
                 </tbody>
