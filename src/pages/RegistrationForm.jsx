@@ -401,7 +401,7 @@ export function RegistrationForm({ events, user, userProfile, onSubmitWork, onRe
                       console.log("Enviando dados para o servidor de pagamentos...", formData);
                       return new Promise(async (resolve, reject) => {
                         try {
-                          const response = await fetch("/process_payment", {
+                          const response = await fetch("/api/process_payment", {
                             method: "POST",
                             headers: {
                               "Content-Type": "application/json",

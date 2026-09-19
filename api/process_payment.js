@@ -1,24 +1,28 @@
-import express from 'express';
-import cors from 'cors';
 import { MercadoPagoConfig, Payment } from 'mercadopago';
-import path from 'path';
-import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const app = express();
-app.use(cors());
-app.use(express.json());
-
-// Inicializa a SDK com o Access Token enviado pelo usuário
+// Inicializa a SDK
 const client = new MercadoPagoConfig({ 
   accessToken: 'APP_USR-7430180943099085-091811-2f4dc121b34762ea415943f3f1df04db-1745666103', 
   options: { timeout: 5000 } 
 });
 const payment = new Payment(client);
 
-app.post('/api/process_payment', async (req, res) => {
+export default async function handler(req, res) {
+  // CORS setup
+  res.setHeader('Access-Control-Allow-Credentials', true);
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method Not Allowed' });
+  }
+
   try {
     const { transaction_amount, token, description, installments, payment_method_id, issuer_id, payer } = req.body;
     
@@ -26,7 +30,7 @@ app.post('/api/process_payment', async (req, res) => {
       body: {
         transaction_amount: transaction_amount,
         token: token,
-        description: description || 'Inscrição EventFlow',
+        description: description || 'Inscrição Semafis',
         installments: installments,
         payment_method_id: payment_method_id,
         issuer_id: issuer_id,
@@ -49,18 +53,4 @@ app.post('/api/process_payment', async (req, res) => {
     console.error("Erro ao processar pagamento:", error);
     res.status(500).json({ error: error.message || 'Erro interno no servidor de pagamentos' });
   }
-});
-
-// Servir os arquivos estáticos do React (Frontend)
-app.use(express.static(path.join(__dirname, 'dist')));
-
-// Redirecionar todas as outras requisições para o index.html (React Router)
-app.use((req, res) => {
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
-});
-
-// Porta dinâmica para Render ou local
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-  console.log(`Servidor unificado rodando na porta ${PORT}`);
-});
+}
