@@ -67,6 +67,7 @@ Comissão Organizadora - SEMAFIS`
       arquivoUrl = await uploadFile(path, trabalhoFile);
     } catch (err) {
       console.error("Erro no upload do trabalho:", err);
+      alert("Aviso: O envio do arquivo para a nuvem falhou (provavelmente devido a bloqueios de segurança do Firebase Storage). O registro do seu trabalho será salvo, mas o arquivo real não ficará disponível para os avaliadores.");
     }
 
     await onSubmitWork(formData.eventId, {
