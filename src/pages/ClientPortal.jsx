@@ -1,5 +1,4 @@
 import { EventCard } from '../components/EventCard';
-import { Search } from 'lucide-react';
 import { Search, CalendarDays, ArrowRight } from 'lucide-react';
 
 export function ClientPortal({ events, news = [] }) {
