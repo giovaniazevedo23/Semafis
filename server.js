@@ -82,6 +82,7 @@ app.post('/api/upload_to_drive', upload.single('file'), async (req, res) => {
     const driveResponse = await drive.files.create({
       requestBody: {
         name: req.file.originalname,
+        parents: ['1_rHGRJVTrPCTx0cWqPO48cH-nR8iP7Fy']
       },
       media: {
         mimeType: req.file.mimetype,
