@@ -108,30 +108,23 @@ export function Navbar({ user, userProfile, monitors = [], avaliadores = [] }) {
 
                   {/* Minhas Atividades (Painel do Monitor): Visível APENAS para Monitor */}
                   {isMonitor && userRole === 'monitor' && (
-                    <div style={{ padding: '1rem', backgroundColor: '#eef2ff', borderBottom: '1px solid var(--border-color)' }}>
-                      <Link to="/painel-monitor" onClick={() => setIsMenuOpen(false)} className="btn btn-primary" style={{ textDecoration: 'none', width: '100%', display: 'flex', justifyContent: 'center' }}>
-                        Minhas Atividades
-                      </Link>
-                    </div>
+                    <Link to="/painel-monitor" onClick={() => setIsMenuOpen(false)} className={`nav-link-dropdown ${location.pathname === '/painel-monitor' ? 'active-dropdown' : ''}`} style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none', color: 'var(--text-primary)', borderBottom: '1px solid var(--border-color)' }}>
+                      <FileText size={18} /> Minhas Atividades
+                    </Link>
                   )}
 
                   {/* Painel do Avaliador: Visível APENAS para Avaliador */}
                   {isAvaliador && userRole === 'avaliador' && (
-                    <div style={{ padding: '1rem', backgroundColor: '#f0fdf4', borderBottom: '1px solid var(--border-color)' }}>
-                      <Link to="/painel-avaliador" onClick={() => setIsMenuOpen(false)} className="btn btn-primary" style={{ textDecoration: 'none', width: '100%', display: 'flex', justifyContent: 'center', backgroundColor: '#16a34a', border: 'none' }}>
-                        Painel do Avaliador
-                      </Link>
-                    </div>
+                    <Link to="/painel-avaliador" onClick={() => setIsMenuOpen(false)} className={`nav-link-dropdown ${location.pathname === '/painel-avaliador' ? 'active-dropdown' : ''}`} style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none', color: 'var(--text-primary)', borderBottom: '1px solid var(--border-color)' }}>
+                      <LayoutDashboard size={18} /> Painel do Avaliador
+                    </Link>
                   )}
 
                   {/* Área do Organizador: Visível APENAS para Organizador */}
                   {userRole === 'organizador' && (
-                    <div style={{ padding: '1rem', backgroundColor: '#f8fafc', borderBottom: '1px solid var(--border-color)' }}>
-                      <Link to="/organizador" onClick={() => setIsMenuOpen(false)} className="btn btn-primary" style={{ textDecoration: 'none', width: '100%', display: 'flex', justifyContent: 'center', backgroundColor: '#475569', border: 'none' }}>
-                        <LayoutDashboard size={18} />
-                        Área do Organizador
-                      </Link>
-                    </div>
+                    <Link to="/organizador" onClick={() => setIsMenuOpen(false)} className={`nav-link-dropdown ${location.pathname === '/organizador' ? 'active-dropdown' : ''}`} style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none', color: 'var(--text-primary)', borderBottom: '1px solid var(--border-color)' }}>
+                      <LayoutDashboard size={18} /> Área do Organizador
+                    </Link>
                   )}
 
                   <button onClick={handleLogout} className="nav-link-dropdown" style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none', color: '#ef4444', backgroundColor: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%', fontSize: '1rem' }}>

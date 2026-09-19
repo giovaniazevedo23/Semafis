@@ -16,7 +16,7 @@ export function ClientPortal({ events }) {
       <div className="flex justify-between items-center mb-8">
         <h2 style={{ fontSize: '1.875rem' }}>Próximos Eventos</h2>
         
-        <div style={{ position: 'relative', width: '300px' }}>
+        <div style={{ position: 'relative', width: '450px', maxWidth: '100%' }}>
           <input 
             type="text" 
             placeholder="Buscar eventos..." 
