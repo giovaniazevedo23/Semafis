@@ -4,7 +4,7 @@ import { MessageSquare, X, Send, Bot, User } from 'lucide-react';
 export function AIChat({ events }) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { id: 1, sender: 'ai', text: 'Olá! Sou o assistente de IA da Semafis. Como posso ajudar você hoje?' }
+    { id: 1, sender: 'ai', text: 'Olá! Sou o Daniel, o assistente virtual da Semafis. Como posso ajudar você hoje?' }
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -132,7 +132,7 @@ export function AIChat({ events }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <img src="/avatar.png" alt="IA Avatar" style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', border: '2px solid white' }} />
               <div>
-                <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: '600' }}>Ajuda por IA</h3>
+                <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: '600' }}>Daniel - Assistente</h3>
                 <span style={{ fontSize: '0.75rem', color: '#cbd5e1', display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <span style={{ width: '8px', height: '8px', backgroundColor: '#10b981', borderRadius: '50%', display: 'inline-block' }}></span> Online
                 </span>

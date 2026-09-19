@@ -367,7 +367,7 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
                       <td style={{ padding: '1rem 0.75rem', fontWeight: '500' }}>
                         {sub.usuario}
                         <br/>
-                        <button className="btn btn-outline mt-2" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}>
+                        <button onClick={() => sub.arquivoUrl ? window.open(sub.arquivoUrl, '_blank') : alert('Arquivo não disponível')} className="btn btn-outline mt-2" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}>
                           <FileDown size={12} style={{ display: 'inline' }} /> Baixar {sub.trabalho}
                         </button>
                       </td>

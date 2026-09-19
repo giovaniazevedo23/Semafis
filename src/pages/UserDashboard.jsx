@@ -5,6 +5,7 @@ import { Calendar, Clock, MonitorPlay, Presentation, FileText, Printer, Ticket, 
 import { CredentialTicket } from '../components/CredentialTicket';
 import { Badge } from '../components/Badge';
 import { uploadFile } from '../services/db';
+import { uploadToDrive } from '../services/driveService';
 
 export function UserDashboard({ submissions, events, ingressos = [], user, onSubmitWork, onUpdateSubmission, notifications = [], onUpdateIngresso }) {
   const [activeTab, setActiveTab] = useState('trabalhos');
@@ -81,11 +82,10 @@ Comissão Organizadora - SEMAFIS`
     setIsSubmitting(true);
     let arquivoUrl = '';
     try {
-      const path = `trabalhos/${formData.eventId}/${user.email}_${trabalhoFile.name}`;
-      arquivoUrl = await uploadFile(path, trabalhoFile);
+      arquivoUrl = await uploadToDrive(trabalhoFile);
     } catch (err) {
-      console.error("Erro no upload do trabalho:", err);
-      alert("Aviso: O envio do arquivo para a nuvem falhou (provavelmente devido a bloqueios de segurança do Firebase Storage). O registro do seu trabalho será salvo, mas o arquivo real não ficará disponível para os avaliadores.");
+      console.error("Erro no upload do trabalho para o Google Drive:", err);
+      alert("Aviso: O envio do arquivo para o Google Drive falhou. Verifique as credenciais no backend.");
     }
 
     await onSubmitWork(formData.eventId, {

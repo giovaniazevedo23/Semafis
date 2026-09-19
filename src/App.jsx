@@ -269,7 +269,16 @@ function App() {
   return (
     <Router>
       <div className="page-wrapper">
-        <Navbar user={user} userProfile={userProfile} monitors={monitors} avaliadores={avaliadores} events={events} />
+        <Navbar 
+          user={user} 
+          userProfile={userProfile} 
+          monitors={monitors} 
+          avaliadores={avaliadores} 
+          events={events} 
+          notifications={notifications.filter(n => !user || n.userEmail === user.email || !n.userEmail)}
+          onMarkRead={handleMarkNotificationRead}
+          onMarkUnread={handleMarkNotificationUnread}
+        />
         <main className="main-content">
           <Routes>
             <Route path="/" element={<ClientPortal events={events} news={allNews} user={user} notifications={notifications.filter(n => !user || n.userEmail === user.email || !n.userEmail)} onMarkRead={handleMarkNotificationRead} onMarkUnread={handleMarkNotificationUnread} />} />

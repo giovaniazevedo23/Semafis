@@ -3,6 +3,12 @@ import cors from 'cors';
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import multer from 'multer';
+import { google } from 'googleapis';
+import stream from 'stream';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -48,6 +54,62 @@ app.post('/api/process_payment', async (req, res) => {
   } catch (error) {
     console.error("Erro ao processar pagamento:", error);
     res.status(500).json({ error: error.message || 'Erro interno no servidor de pagamentos' });
+  }
+});
+
+// Configuração de upload via Google Drive API
+const upload = multer({ storage: multer.memoryStorage() });
+const SCOPES = ['https://www.googleapis.com/auth/drive.file'];
+
+async function getDriveService() {
+  const auth = new google.auth.GoogleAuth({
+    scopes: SCOPES,
+    keyFile: 'credentials.json', // Arquivo de credenciais baixado do Google Cloud
+  });
+  return google.drive({ version: 'v3', auth });
+}
+
+app.post('/api/upload_to_drive', upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
+    }
+
+    const drive = await getDriveService();
+    const bufferStream = new stream.PassThrough();
+    bufferStream.end(req.file.buffer);
+
+    const driveResponse = await drive.files.create({
+      requestBody: {
+        name: req.file.originalname,
+      },
+      media: {
+        mimeType: req.file.mimetype,
+        body: bufferStream,
+      },
+      fields: 'id, webViewLink',
+    });
+
+    const fileId = driveResponse.data.id;
+
+    // Torna o arquivo público (leitura)
+    await drive.permissions.create({
+      fileId: fileId,
+      requestBody: {
+        role: 'reader',
+        type: 'anyone',
+      },
+    });
+
+    res.status(200).json({ 
+      success: true, 
+      fileId: fileId,
+      webViewLink: driveResponse.data.webViewLink 
+    });
+
+  } catch (error) {
+    console.error('Erro no upload para o Google Drive:', error);
+    res.status(500).json({ error: error.message || 'Erro ao enviar arquivo para o Drive.' });
   }
 });
 
