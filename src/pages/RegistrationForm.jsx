@@ -111,28 +111,6 @@ export function RegistrationForm({ events, user, userProfile, onSubmitWork, onRe
     }
 
     setStep(3);
-
-    if (formData.categorias.includes('com_submissao') && trabalhoFile) {
-      let arquivoUrl = '';
-      try {
-        const path = `trabalhos/${event.id}/${user.email}_${trabalhoFile.name}`;
-        arquivoUrl = await uploadFile(path, trabalhoFile);
-      } catch (e) {
-        console.error("Erro no upload do trabalho:", e);
-      }
-
-      onSubmitWork(event.id, {
-        usuario: formData.nome || user.displayName,
-        coAutores: formData.coAutores,
-        trabalho: trabalhoFile.name,
-        arquivoUrl: arquivoUrl,
-        modalidade: formData.tipoApresentacao,
-        status: 'em_analise',
-        data: new Date().toISOString(),
-        avaliadoresEmails: [],
-        avaliacoes: []
-      });
-    }
   };
 
   return (
@@ -265,31 +243,11 @@ export function RegistrationForm({ events, user, userProfile, onSubmitWork, onRe
               </div>
 
               {formData.categorias.includes('com_submissao') && (
-                <div className="form-group" style={{ backgroundColor: '#f0f9ff', padding: '1.5rem', borderRadius: '8px', border: '1px dashed var(--accent-primary)', marginBottom: '2rem' }}>
-                  
-                  <div className="mb-4">
-                    <label className="form-label">Tipo de Apresentação</label>
-                    <div className="flex gap-4">
-                      <label className="flex items-center gap-2">
-                        <input type="radio" name="tipoApresentacao" value="poster" checked={formData.tipoApresentacao === 'poster'} onChange={handleChange} /> Pôster (PO)
-                      </label>
-                      <label className="flex items-center gap-2">
-                        <input type="radio" name="tipoApresentacao" value="oral" checked={formData.tipoApresentacao === 'oral'} onChange={handleChange} /> Comunicação Oral
-                      </label>
-                    </div>
-                  </div>
-
-                  <div className="mb-4">
-                    <label className="form-label flex items-center gap-2">
-                      Co-autores (Opcional)
-                    </label>
-                    <input type="text" name="coAutores" value={formData.coAutores} onChange={handleChange} className="form-input" placeholder="Separe os nomes por vírgula. Ex: Maria Silva, José Pereira" />
-                  </div>
-
-                  <label className="form-label flex items-center gap-2">
-                    <FileUp size={18} /> Enviar Arquivo do Trabalho (PDF, DOCX)
-                  </label>
-                  <input type="file" onChange={(e) => setTrabalhoFile(e.target.files[0])} className="form-input" required />
+                <div className="card text-center" style={{ backgroundColor: '#f0f9ff', padding: '1.5rem', borderRadius: '8px', border: '1px dashed var(--accent-primary)', marginBottom: '2rem' }}>
+                  <h4 style={{ color: 'var(--accent-primary)', marginBottom: '0.5rem' }}>Submissão de Trabalho</h4>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0 }}>
+                    Para facilitar, o envio do arquivo do seu trabalho será feito <strong>após a confirmação do pagamento</strong>, diretamente no seu Painel do Participante (Aba "Meus Trabalhos").
+                  </p>
                 </div>
               )}
 

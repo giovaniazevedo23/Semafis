@@ -1,19 +1,63 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, Clock, MonitorPlay, Presentation, FileText, Printer, Ticket, Award, MapPin } from 'lucide-react';
+import { Calendar, Clock, MonitorPlay, Presentation, FileText, Printer, Ticket, Award, FileUp } from 'lucide-react';
 
 import { CredentialTicket } from '../components/CredentialTicket';
 import { Badge } from '../components/Badge';
+import { uploadFile } from '../services/db';
 
-export function UserDashboard({ submissions, events, ingressos = [] }) {
-  const [activeTab, setActiveTab] = useState('trabalhos'); // 'trabalhos', 'ingressos', 'certificados'
+export function UserDashboard({ submissions, events, ingressos = [], user, onSubmitWork }) {
+  const [activeTab, setActiveTab] = useState('trabalhos');
   const [viewingEvaluation, setViewingEvaluation] = useState(null);
   const [viewingCertificate, setViewingCertificate] = useState(null);
 
-  // Mock de Certificados (Para visualização)
-  const mockCertificados = events.length > 0 ? [
-    { id: 'CERT-001', eventId: events[0].id, type: 'Participação no Evento', ch: '40h' }
-  ] : [];
+  // Estados para o formulário de submissão
+  const [showSubmitForm, setShowSubmitForm] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    eventId: '',
+    tipoApresentacao: 'poster',
+    coAutores: '',
+  });
+  const [trabalhoFile, setTrabalhoFile] = useState(null);
+
+  const ingressosApresentador = ingressos.filter(i => i.categoriasDisplay && i.categoriasDisplay.includes('Apresentador'));
+  const canSubmit = ingressosApresentador.length > submissions.length;
+
+  const handleSubmitAction = async (e) => {
+    e.preventDefault();
+    if (!trabalhoFile || !formData.eventId) {
+      alert("Selecione o evento e o arquivo PDF.");
+      return;
+    }
+    
+    setIsSubmitting(true);
+    let arquivoUrl = '';
+    try {
+      const path = `trabalhos/${formData.eventId}/${user.email}_${trabalhoFile.name}`;
+      arquivoUrl = await uploadFile(path, trabalhoFile);
+    } catch (err) {
+      console.error("Erro no upload do trabalho:", err);
+    }
+
+    await onSubmitWork(formData.eventId, {
+      usuario: user.displayName || user.email.split('@')[0],
+      userEmail: user.email,
+      coAutores: formData.coAutores,
+      trabalho: trabalhoFile.name,
+      arquivoUrl: arquivoUrl,
+      modalidade: formData.tipoApresentacao,
+      status: 'em_analise',
+      data: new Date().toISOString(),
+      avaliadoresEmails: [],
+      avaliacoes: []
+    });
+
+    setShowSubmitForm(false);
+    setIsSubmitting(false);
+    setFormData({ eventId: '', tipoApresentacao: 'poster', coAutores: '' });
+    setTrabalhoFile(null);
+  };
 
   const handlePrint = () => {
     window.print();
@@ -142,12 +186,79 @@ export function UserDashboard({ submissions, events, ingressos = [] }) {
       {/* Trabalhos Tab */}
       {activeTab === 'trabalhos' && (
         <>
-          {submissions.length === 0 ? (
+          {canSubmit && !showSubmitForm && (
+            <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'flex-start' }}>
+              <button onClick={() => setShowSubmitForm(true)} className="btn btn-primary" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', padding: '1rem 1.5rem' }}>
+                <FileUp size={20} /> Enviar Arquivo do Trabalho
+              </button>
+            </div>
+          )}
+
+          {showSubmitForm && (
+            <div className="card" style={{ marginBottom: '2rem', padding: '2rem', backgroundColor: '#f8fafc', border: '1px dashed var(--accent-primary)' }}>
+              <h3 style={{ marginBottom: '1.5rem', color: 'var(--accent-primary)' }}>Submissão de Novo Trabalho</h3>
+              <form onSubmit={handleSubmitAction}>
+                <div className="mb-4">
+                  <label className="form-label">Selecione o Evento</label>
+                  <select 
+                    className="form-input" 
+                    value={formData.eventId} 
+                    onChange={e => setFormData({...formData, eventId: e.target.value})}
+                    required
+                  >
+                    <option value="">-- Selecione o evento --</option>
+                    {events.map(ev => (
+                      <option key={ev.id} value={ev.id}>{ev.title}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="mb-4">
+                  <label className="form-label">Tipo de Apresentação</label>
+                  <div className="flex gap-4">
+                    <label className="flex items-center gap-2">
+                      <input type="radio" value="poster" checked={formData.tipoApresentacao === 'poster'} onChange={() => setFormData({...formData, tipoApresentacao: 'poster'})} /> Pôster (PO)
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input type="radio" value="oral" checked={formData.tipoApresentacao === 'oral'} onChange={() => setFormData({...formData, tipoApresentacao: 'oral'})} /> Comunicação Oral
+                    </label>
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <label className="form-label flex items-center gap-2">
+                    Co-autores (Opcional)
+                  </label>
+                  <input type="text" value={formData.coAutores} onChange={e => setFormData({...formData, coAutores: e.target.value})} className="form-input" placeholder="Separe os nomes por vírgula. Ex: Maria Silva, José Pereira" />
+                </div>
+
+                <div className="mb-6">
+                  <label className="form-label flex items-center gap-2">
+                    <FileUp size={18} /> Selecione o Arquivo (PDF, DOCX)
+                  </label>
+                  <input type="file" onChange={(e) => setTrabalhoFile(e.target.files[0])} className="form-input" required />
+                </div>
+
+                <div className="flex gap-4">
+                  <button type="submit" disabled={isSubmitting} className="btn btn-primary" style={{ flex: 1 }}>
+                    {isSubmitting ? 'Enviando...' : 'Concluir Submissão'}
+                  </button>
+                  <button type="button" onClick={() => setShowSubmitForm(false)} className="btn btn-outline" style={{ flex: 1 }}>
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {submissions.length === 0 && !showSubmitForm ? (
             <div className="card text-center" style={{ padding: '3rem 2rem' }}>
               <h2>Você não possui trabalhos submetidos.</h2>
-              <Link to="/" className="btn btn-primary mt-4" style={{ textDecoration: 'none' }}>Ver Eventos</Link>
+              {!canSubmit && (
+                <Link to="/" className="btn btn-primary mt-4" style={{ textDecoration: 'none' }}>Ver Eventos</Link>
+              )}
             </div>
-          ) : (
+          ) : !showSubmitForm && (
             <div className="grid grid-cols-1 gap-6">
               {submissions.map((sub) => {
                 const evento = events.find(e => e.id === sub.eventId);
