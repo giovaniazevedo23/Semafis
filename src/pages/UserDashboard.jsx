@@ -81,11 +81,35 @@ Comissão Organizadora - SEMAFIS`
     setIsSubmitting(true);
     let arquivoUrl = '';
     try {
-      const path = `trabalhos/${formData.eventId}/${user.email}_${trabalhoFile.name}`;
-      arquivoUrl = await uploadFile(path, trabalhoFile);
+      const fileToBase64 = (file) => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = error => reject(error);
+      });
+
+      const base64Data = await fileToBase64(trabalhoFile);
+      
+      const response = await fetch("https://script.google.com/macros/s/AKfycbwChGj7f-egqX2cPS48JfB2-MW3WWmx9XD16WCqCCUVbt310rFALpYs3l9PHzDI_1I9/exec", {
+        method: "POST",
+        body: JSON.stringify({
+          fileName: `${user.email}_${trabalhoFile.name}`,
+          mimeType: trabalhoFile.type,
+          base64: base64Data
+        })
+      });
+      
+      const result = await response.json();
+      if (result.success) {
+        arquivoUrl = result.url;
+      } else {
+        throw new Error(result.error || "Erro desconhecido no Apps Script");
+      }
     } catch (err) {
       console.error("Erro no upload do trabalho:", err);
-      alert("Aviso: O envio do arquivo para a nuvem falhou (provavelmente devido a bloqueios de segurança do Firebase Storage).");
+      alert("Aviso: Falha ao enviar arquivo para o Google Drive. Verifique sua conexão ou tente novamente.");
+      setIsSubmitting(false);
+      return; // Interrompe o envio se falhar
     }
 
     await onSubmitWork(formData.eventId, {
