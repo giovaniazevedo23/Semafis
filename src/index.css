@@ -236,4 +236,18 @@ p {
     align-items: flex-start;
     gap: 1rem;
   }
+  
+  .md\:flex-row {
+    flex-direction: row !important;
+  }
+
+  .nav-links {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .grid {
+    grid-template-columns: 1fr !important;
+  }
 }

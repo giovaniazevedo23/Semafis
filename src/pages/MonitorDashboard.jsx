@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Users, FileText, CheckCircle, Calendar, Camera, QrCode } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Badge } from '../components/Badge';
@@ -8,6 +8,43 @@ export function MonitorDashboard({ user, monitors, submissions, avaliadores, eve
   const [viewingReport, setViewingReport] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
   const [scannedUserId, setScannedUserId] = useState(null);
+  const scannerRef = useRef(null);
+
+  useEffect(() => {
+    let html5QrcodeScanner = null;
+    if (isScanning && window.Html5QrcodeScanner) {
+      html5QrcodeScanner = new window.Html5QrcodeScanner(
+        "reader",
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        /* verbose= */ false
+      );
+      
+      html5QrcodeScanner.render(
+        (decodedText, decodedResult) => {
+          setScannedUserId(decodedText);
+          alert(`Usuário ${decodedText} lido com sucesso!`);
+          setIsScanning(false);
+          if (html5QrcodeScanner) {
+            html5QrcodeScanner.clear().catch(error => {
+              console.error("Failed to clear html5QrcodeScanner. ", error);
+            });
+          }
+        },
+        (errorMessage) => {
+          // ignora os erros de scan contínuo
+        }
+      );
+      scannerRef.current = html5QrcodeScanner;
+    }
+
+    return () => {
+      if (scannerRef.current) {
+        scannerRef.current.clear().catch(e => console.error(e));
+        scannerRef.current = null;
+      }
+    };
+  }, [isScanning]);
+
   if (!user) {
     return (
       <div className="container text-center" style={{ paddingTop: '5rem' }}>
@@ -229,12 +266,16 @@ export function MonitorDashboard({ user, monitors, submissions, avaliadores, eve
             <div className="card mb-8" style={{ padding: '1.5rem', backgroundColor: '#0f172a', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               <div style={{ width: '100%', maxWidth: '400px', borderRadius: '8px', overflow: 'hidden', backgroundColor: 'white', padding: '1.5rem' }}>
                 <h4 style={{ color: '#0f172a', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <QrCode size={20} /> Leitura Manual
+                  <Camera size={20} /> Leitura Automática (Câmera)
                 </h4>
-                <p style={{ color: '#64748b', fontSize: '0.875rem', marginBottom: '1rem' }}>A câmera foi desativada temporariamente para evitar travamentos no seu dispositivo.</p>
+                <div id="reader" style={{ width: '100%' }}></div>
+                
+                <h4 style={{ color: '#0f172a', margin: '1.5rem 0 1rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <QrCode size={20} /> Ou digite manualmente
+                </h4>
                 <input 
                   type="text" 
-                  placeholder="Digite o ID ou Email do Participante" 
+                  placeholder="ID ou Email do Participante" 
                   className="form-input"
                   style={{ borderColor: '#cbd5e1' }}
                   onKeyDown={(e) => {
@@ -246,7 +287,6 @@ export function MonitorDashboard({ user, monitors, submissions, avaliadores, eve
                   }} 
                 />
               </div>
-              <p style={{ color: 'white', marginTop: '1rem' }}>Digite o identificador e pressione ENTER para confirmar.</p>
             </div>
           )}
 

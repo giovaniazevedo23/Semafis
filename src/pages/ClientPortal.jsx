@@ -1,9 +1,62 @@
 import { EventCard } from '../components/EventCard';
-import { Search, CalendarDays, ArrowRight } from 'lucide-react';
+import { Search, CalendarDays, ArrowRight, Bell, CheckCircle, Circle } from 'lucide-react';
 
-export function ClientPortal({ events, news = [] }) {
+export function ClientPortal({ events, news = [], user, notifications = [], onMarkRead, onMarkUnread }) {
   return (
     <div className="container">
+      {user && (
+        <div style={{ marginTop: '2rem', padding: '1.5rem', backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h2 style={{ margin: 0, color: '#166534', fontSize: '1.5rem' }}>Boas-vindas ao Semafis, {user.displayName || user.email}!</h2>
+            <p style={{ margin: '0.25rem 0 0 0', color: '#15803d' }}>Aqui estão as últimas atualizações para você.</p>
+          </div>
+        </div>
+      )}
+
+      {user && notifications.length > 0 && (
+        <div style={{ marginTop: '2rem' }}>
+          <h3 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Bell size={24} /> Suas Mensagens
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {notifications.map(notif => {
+              const isRead = (notif.readBy || []).includes(user.email);
+              return (
+                <div key={notif.id} style={{ 
+                  padding: '1.25rem', 
+                  backgroundColor: 'white', 
+                  borderRadius: '12px', 
+                  borderLeft: `4px solid ${isRead ? '#cbd5e1' : '#3b82f6'}`,
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
+                  position: 'relative'
+                }}>
+                  {!isRead && (
+                    <div style={{ position: 'absolute', top: '-6px', left: '-6px', width: '12px', height: '12px', backgroundColor: '#ef4444', borderRadius: '50%', border: '2px solid white' }} />
+                  )}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div>
+                      <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '1.125rem', color: isRead ? '#475569' : '#0f172a' }}>{notif.title}</h4>
+                      <p style={{ margin: 0, color: '#64748b', fontSize: '0.95rem', lineHeight: '1.5' }}>{notif.content}</p>
+                      <span style={{ display: 'block', marginTop: '0.5rem', fontSize: '0.75rem', color: '#94a3b8' }}>
+                        {new Date(notif.timestamp).toLocaleString('pt-BR')}
+                      </span>
+                    </div>
+                    <button 
+                      onClick={() => isRead ? onMarkUnread(notif.id, user.email) : onMarkRead(notif.id, user.email)}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: isRead ? '#94a3b8' : '#3b82f6', display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.875rem' }}
+                      title={isRead ? "Marcar como não lida" : "Marcar como lida"}
+                    >
+                      {isRead ? <CheckCircle size={20} /> : <Circle size={20} />}
+                      <span className="hidden md:inline">{isRead ? 'Lida' : 'Marcar como lida'}</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <div className="text-center mb-8" style={{ marginTop: '3rem' }}>
         <h1 style={{ fontSize: '4rem', fontWeight: '900', color: 'black', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '2px' }}>
           SEMAFIS

@@ -39,6 +39,7 @@ import { MonitorDashboard } from './pages/MonitorDashboard';
 import { EvaluatorDashboard } from './pages/EvaluatorDashboard';
 import { ValidarCredencial } from './pages/ValidarCredencial';
 import { listenCollection, listenDocument, addDocument, setDocument, updateDocument } from './services/db';
+import { AIChat } from './components/AIChat';
 
 function App() {
   const [events, setEvents] = useState(DUMMY_EVENTS);
@@ -82,7 +83,15 @@ function App() {
           email: currentUser.email,
           displayName: currentUser.displayName
         });
-        unsubProfile = listenDocument('userProfiles', currentUser.email, setUserProfile);
+        unsubProfile = listenDocument('userProfiles', currentUser.email, (data) => {
+          if (data) {
+            setUserProfile(data);
+          } else {
+            const local = JSON.parse(localStorage.getItem('fallback_profiles') || '{}');
+            if (local[currentUser.email]) setUserProfile(local[currentUser.email]);
+            else setUserProfile(null);
+          }
+        });
       } else {
         setUser(null);
         setUserProfile(null);
@@ -188,6 +197,31 @@ function App() {
     }
   };
 
+  const handleMarkNotificationRead = async (notifId, userEmail) => {
+    try {
+      const notif = notifications.find(n => n.id === notifId);
+      if (!notif) return;
+      const readBy = notif.readBy || [];
+      if (!readBy.includes(userEmail)) {
+        await updateDocument('notifications', notifId, { readBy: [...readBy, userEmail] });
+      }
+    } catch (e) {
+      console.error("Local fallback for mark read", e);
+      setNotifications(prev => prev.map(n => n.id === notifId ? { ...n, readBy: [...(n.readBy||[]), userEmail] } : n));
+    }
+  };
+
+  const handleMarkNotificationUnread = async (notifId, userEmail) => {
+    try {
+      const notif = notifications.find(n => n.id === notifId);
+      if (!notif) return;
+      const readBy = notif.readBy || [];
+      await updateDocument('notifications', notifId, { readBy: readBy.filter(e => e !== userEmail) });
+    } catch (e) {
+      setNotifications(prev => prev.map(n => n.id === notifId ? { ...n, readBy: (n.readBy||[]).filter(e => e !== userEmail) } : n));
+    }
+  };
+
   const handleRegister = async (ingressoData) => {
     const id = 'ING-' + Date.now().toString().slice(-6);
     
@@ -238,7 +272,7 @@ function App() {
         <Navbar user={user} userProfile={userProfile} monitors={monitors} avaliadores={avaliadores} events={events} />
         <main className="main-content">
           <Routes>
-            <Route path="/" element={<ClientPortal events={events} news={allNews} />} />
+            <Route path="/" element={<ClientPortal events={events} news={allNews} user={user} notifications={notifications.filter(n => !user || n.userEmail === user.email || !n.userEmail)} onMarkRead={handleMarkNotificationRead} onMarkUnread={handleMarkNotificationUnread} />} />
             <Route path="/login" element={<Login setUser={setUser} monitors={monitors} avaliadores={avaliadores} />} />
             <Route path="/perfil" element={<UserProfile user={user} userProfile={userProfile} setUserProfile={setUserProfile} />} />
             <Route path="/evento/:id" element={<EventDetails events={events} />} />
@@ -250,6 +284,7 @@ function App() {
             <Route path="/validar" element={<ValidarCredencial />} />
           </Routes>
         </main>
+        <AIChat events={events} />
       </div>
     </Router>
   );
