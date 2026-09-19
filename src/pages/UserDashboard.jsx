@@ -227,6 +227,7 @@ export function UserDashboard({ submissions, events, ingressos = [] }) {
                   id={ing.id}
                   timestamp={ing.timestamp}
                   showSuccessHeader={false}
+                  variant="compact"
                 />
               );
             })

@@ -14,7 +14,8 @@ export function CredentialTicket({
   atividades,
   id,
   timestamp,
-  showSuccessHeader = false
+  showSuccessHeader = false,
+  variant = 'full'
 }) {
   const dataInscricao = timestamp ? new Date(timestamp).toLocaleString('pt-BR') : new Date().toLocaleString('pt-BR');
   
@@ -30,6 +31,40 @@ export function CredentialTicket({
   });
   
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`${window.location.origin}/validar?${qrUrlParams.toString()}`)}`;
+
+  if (variant === 'compact') {
+    return (
+      <div className="card" style={{ padding: '0', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ backgroundColor: '#f1f5f9', padding: '1.5rem', borderBottom: '1px dashed #cbd5e1', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: '1.25rem', color: '#0f172a' }}>{event?.title || 'Evento'}</h3>
+            <span style={{ fontSize: '0.875rem', color: '#64748b' }}>Data da Inscrição: {dataInscricao}</span>
+          </div>
+          <span style={{ backgroundColor: '#e0f2fe', color: '#0369a1', padding: '0.25rem 0.75rem', borderRadius: '99px', fontSize: '0.875rem', fontWeight: 'bold' }}>
+            {categoriasDisplay}
+          </span>
+        </div>
+        
+        <div className="flex" style={{ padding: '1.5rem' }}>
+          <div style={{ flex: 1 }}>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '0.25rem', fontSize: '0.875rem' }}>Participante:</p>
+            <h4 style={{ fontSize: '1.1rem', marginBottom: '1rem', textTransform: 'uppercase' }}>{nome}</h4>
+            
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '0.25rem', fontSize: '0.875rem' }}>Ingresso ID:</p>
+            <p style={{ fontWeight: '500', fontFamily: 'monospace' }}>{id}</p>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderLeft: '1px dashed #e2e8f0', paddingLeft: '1.5rem', marginLeft: '1.5rem' }}>
+            <img 
+              src={qrUrl} 
+              alt="QR Code" 
+              style={{ width: '120px', height: '120px', borderRadius: '4px' }}
+            />
+            <span style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.5rem', textAlign: 'center' }}>Apresente na portaria</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', width: '100%' }}>
