@@ -90,7 +90,7 @@ Comissão Organizadora - SEMAFIS`
 
       const base64Data = await fileToBase64(trabalhoFile);
       
-      const response = await fetch("https://script.google.com/macros/s/AKfycbwChGj7f-egqX2cPS48JfB2-MW3WWmx9XD16WCqCCUVbt310rFALpYs3l9PHzDI_1I9/exec", {
+      const response = await fetch("https://script.google.com/macros/s/AKfycbwsr1rn7RN1WycAG3vjqsz7w21_n6pysUMlZsDhA7w5mUedEpQVx9uSRBheoDatJys_/exec", {
         method: "POST",
         body: JSON.stringify({
           fileName: `${user.email}_${trabalhoFile.name}`,
