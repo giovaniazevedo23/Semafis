@@ -579,27 +579,31 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
                 <thead>
                   <tr>
                     <th style={{ border: '1px solid #000', padding: '0.5rem', width: '10%', backgroundColor: '#f0f0f0' }}>Código</th>
-                    <th style={{ border: '1px solid #000', padding: '0.5rem', width: '35%', backgroundColor: '#f0f0f0', textAlign: 'left' }}>Título do Trabalho</th>
-                    <th style={{ border: '1px solid #000', padding: '0.5rem', width: '25%', backgroundColor: '#f0f0f0', textAlign: 'left' }}>Autores</th>
+                    <th style={{ border: '1px solid #000', padding: '0.5rem', width: '30%', backgroundColor: '#f0f0f0', textAlign: 'left' }}>Título do Trabalho</th>
+                    <th style={{ border: '1px solid #000', padding: '0.5rem', width: '20%', backgroundColor: '#f0f0f0', textAlign: 'left' }}>Autores</th>
                     <th style={{ border: '1px solid #000', padding: '0.5rem', width: '15%', backgroundColor: '#f0f0f0', textAlign: 'left' }}>Sessão/Local</th>
-                    <th style={{ border: '1px solid #000', padding: '0.5rem', width: '15%', backgroundColor: '#f0f0f0', textAlign: 'left' }}>Avaliação</th>
+                    <th style={{ border: '1px solid #000', padding: '0.5rem', width: '15%', backgroundColor: '#f0f0f0', textAlign: 'left' }}>Monitor Responsável</th>
+                    <th style={{ border: '1px solid #000', padding: '0.5rem', width: '10%', backgroundColor: '#f0f0f0', textAlign: 'left' }}>Avaliação</th>
                   </tr>
                 </thead>
                 <tbody>
                   {submissions.filter(s => s.status === 'aprovado').map((sub, idx) => {
                     const autores = sub.coAutores ? `${sub.usuario}, ${sub.coAutores}` : sub.usuario;
+                    const monitor = monitors.find(m => m.email === sub.monitorEmail);
+                    const monitorNome = monitor ? monitor.nome : '';
                     return (
                       <tr key={idx}>
                         <td style={{ border: '1px solid #000', padding: '0.5rem', textAlign: 'center', fontWeight: 'bold' }}>{sub.detalhesApresentacao?.numeroPoster || 'N/A'}</td>
                         <td style={{ border: '1px solid #000', padding: '0.5rem', textTransform: 'uppercase' }}>{sub.trabalho}</td>
                         <td style={{ border: '1px solid #000', padding: '0.5rem' }}>{autores}</td>
                         <td style={{ border: '1px solid #000', padding: '0.5rem' }}>{sub.detalhesApresentacao?.localApresentacao || ''}</td>
+                        <td style={{ border: '1px solid #000', padding: '0.5rem', textTransform: 'uppercase' }}>{monitorNome}</td>
                         <td style={{ border: '1px solid #000', padding: '0.5rem' }}></td>
                       </tr>
                     );
                   })}
                   {submissions.filter(s => s.status === 'aprovado').length === 0 && (
-                    <tr><td colSpan="5" style={{ border: '1px solid #000', padding: '1rem', textAlign: 'center' }}>Nenhum trabalho aprovado.</td></tr>
+                    <tr><td colSpan="6" style={{ border: '1px solid #000', padding: '1rem', textAlign: 'center' }}>Nenhum trabalho aprovado.</td></tr>
                   )}
                 </tbody>
               </table>
