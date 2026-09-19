@@ -127,16 +127,6 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
     alert("Notícia publicada com sucesso!");
   };
 
-  const handleApproveClick = (subId) => setApprovingSubId(subId);
-  const handleConfirmApproval = () => {
-    onUpdateSubmission(approvingSubId, { status: 'aprovado', detalhesApresentacao: approvalData });
-    setApprovingSubId(null);
-    setApprovalData({ dataApresentacao: '', horaApresentacao: '', localApresentacao: '', numeroPoster: '' });
-  };
-  const handleReject = (subId) => {
-    if (window.confirm("Deseja rejeitar este trabalho?")) onUpdateSubmission(subId, { status: 'rejeitado' });
-  };
-
   const handleSendChatMessage = (subId) => {
     if (!chatInputs[subId]?.trim()) return;
     const sub = submissions.find(s => s.id === subId);
@@ -380,12 +370,7 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
                         {sub.status === 'rejeitado' && <span style={{ backgroundColor: '#fecaca', color: '#991b1b', padding: '0.25rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 'bold' }}>Rejeitado</span>}
                       </td>
                       <td style={{ padding: '1rem 0.75rem' }}>
-                        {sub.status === 'em_analise' && (
-                          <div className="flex gap-2 mb-2">
-                            <button onClick={() => handleApproveClick(sub.id)} className="btn" style={{ backgroundColor: '#10b981', color: 'white', padding: '0.5rem' }}>Aprovar</button>
-                            <button onClick={() => handleReject(sub.id)} className="btn" style={{ backgroundColor: '#ef4444', color: 'white', padding: '0.5rem' }}>Rejeitar</button>
-                          </div>
-                        )}
+                        {/* Botões de Aprovar/Rejeitar removidos (Lógica automática de 80%) */}
                         <button onClick={() => setChatSubId(sub.id)} className="btn btn-outline" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', width: '100%', marginBottom: '0.5rem', position: 'relative' }}>
                           Ver Chat do Participante
                           {sub.mensagens?.length > 0 && (
@@ -1104,31 +1089,6 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
               .no-print { display: none !important; }
             }
           `}</style>
-        </div>
-      )}
-
-      {/* Modal Renderizado Fora da Tabela */}
-      {approvingSubId && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
-          <div style={{ backgroundColor: 'white', padding: '2.5rem', borderRadius: '12px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', minWidth: '400px', maxWidth: '90%' }}>
-            <h4 style={{ marginBottom: '1.5rem', fontSize: '1.5rem', fontWeight: 'bold' }}>Dados da Apresentação</h4>
-            <div className="form-group mb-4">
-              <label className="form-label" style={{ fontWeight: '500', marginBottom: '0.25rem' }}>Data</label>
-              <input type="text" placeholder="Ex: 10/10/2026" value={approvalData.dataApresentacao} onChange={(e) => setApprovalData({...approvalData, dataApresentacao: e.target.value})} className="form-input" />
-            </div>
-            <div className="form-group mb-4">
-              <label className="form-label" style={{ fontWeight: '500', marginBottom: '0.25rem' }}>Horário</label>
-              <input type="text" placeholder="Ex: 16:00" value={approvalData.horaApresentacao} onChange={(e) => setApprovalData({...approvalData, horaApresentacao: e.target.value})} className="form-input" />
-            </div>
-            <div className="form-group mb-4">
-              <label className="form-label" style={{ fontWeight: '500', marginBottom: '0.25rem' }}>Local / Sessão</label>
-              <input type="text" placeholder="Ex: Área de Pôster - Sessão 1" value={approvalData.localApresentacao} onChange={(e) => setApprovalData({...approvalData, localApresentacao: e.target.value})} className="form-input" />
-            </div>
-            <div className="flex gap-4">
-              <button onClick={() => setApprovingSubId(null)} className="btn btn-outline" style={{ flex: 1, padding: '0.75rem' }}>Cancelar</button>
-              <button onClick={handleConfirmApproval} className="btn btn-primary" style={{ flex: 1, padding: '0.75rem' }}>Confirmar Aprovação</button>
-            </div>
-          </div>
         </div>
       )}
 

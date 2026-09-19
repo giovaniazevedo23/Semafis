@@ -3,7 +3,7 @@ import { Users, FileText, CheckCircle, Calendar, Camera, QrCode } from 'lucide-r
 import { Link } from 'react-router-dom';
 import { Badge } from '../components/Badge';
 
-export function MonitorDashboard({ user, monitors, submissions, avaliadores, events, ingressos = [] }) {
+export function MonitorDashboard({ user, monitors, submissions, avaliadores, events, ingressos = [], onUpdateIngresso }) {
   const [activeTab, setActiveTab] = useState('escala'); // 'escala', 'trabalhos', 'credenciamento', 'relatorios'
   const [viewingReport, setViewingReport] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
@@ -22,7 +22,15 @@ export function MonitorDashboard({ user, monitors, submissions, avaliadores, eve
       html5QrcodeScanner.render(
         (decodedText, decodedResult) => {
           setScannedUserId(decodedText);
-          alert(`Usuário ${decodedText} lido com sucesso!`);
+          const ing = ingressos.find(i => i.userEmail === decodedText || i.id === decodedText);
+          if (ing) {
+            if (onUpdateIngresso) {
+              onUpdateIngresso(ing.id, { checkinGeral: true });
+            }
+            alert(`Usuário ${ing.nome} credenciado com sucesso!`);
+          } else {
+            alert(`Usuário ${decodedText} lido, mas ingresso não encontrado.`);
+          }
           setIsScanning(false);
           if (html5QrcodeScanner) {
             html5QrcodeScanner.clear().catch(error => {
@@ -280,8 +288,17 @@ export function MonitorDashboard({ user, monitors, submissions, avaliadores, eve
                   style={{ borderColor: '#cbd5e1' }}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && e.target.value) {
-                      setScannedUserId(e.target.value);
-                      alert(`Usuário ${e.target.value} lido com sucesso!`);
+                      const decodedText = e.target.value;
+                      setScannedUserId(decodedText);
+                      const ing = ingressos.find(i => i.userEmail === decodedText || i.id === decodedText);
+                      if (ing) {
+                        if (onUpdateIngresso) {
+                          onUpdateIngresso(ing.id, { checkinGeral: true });
+                        }
+                        alert(`Usuário ${ing.nome} credenciado com sucesso!`);
+                      } else {
+                        alert(`Usuário ${decodedText} lido, mas ingresso não encontrado.`);
+                      }
                       setIsScanning(false);
                     }
                   }} 
@@ -326,11 +343,11 @@ export function MonitorDashboard({ user, monitors, submissions, avaliadores, eve
                       <span style={{ fontSize: '0.875rem', fontWeight: 'bold', color: '#64748b' }}>Check-in / Presença</span>
                       <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
                         <div style={{ position: 'relative' }}>
-                          <input type="checkbox" className="sr-only" style={{ display: 'none' }} defaultChecked={isHighlighted} onChange={(e) => {
-                            if (e.target.checked) alert(`Presença confirmada para ${ing.nome}`);
+                          <input type="checkbox" className="sr-only" style={{ display: 'none' }} checked={ing.checkinGeral || false} onChange={(e) => {
+                            if (onUpdateIngresso) onUpdateIngresso(ing.id, { checkinGeral: e.target.checked });
                           }} />
-                          <div style={{ width: '48px', height: '24px', backgroundColor: isHighlighted ? '#10b981' : '#cbd5e1', borderRadius: '9999px', transition: 'background-color 0.3s', display: 'flex', alignItems: 'center', padding: '2px' }}>
-                            <div style={{ width: '20px', height: '20px', backgroundColor: 'white', borderRadius: '50%', transform: isHighlighted ? 'translateX(24px)' : 'translateX(0)', transition: 'transform 0.3s', boxShadow: '0 1px 3px rgba(0,0,0,0.3)' }}></div>
+                          <div style={{ width: '48px', height: '24px', backgroundColor: ing.checkinGeral ? '#10b981' : '#cbd5e1', borderRadius: '9999px', transition: 'background-color 0.3s', display: 'flex', alignItems: 'center', padding: '2px' }}>
+                            <div style={{ width: '20px', height: '20px', backgroundColor: 'white', borderRadius: '50%', transform: ing.checkinGeral ? 'translateX(24px)' : 'translateX(0)', transition: 'transform 0.3s', boxShadow: '0 1px 3px rgba(0,0,0,0.3)' }}></div>
                           </div>
                         </div>
                       </label>

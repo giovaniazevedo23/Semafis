@@ -73,8 +73,8 @@ Comissão Organizadora - SEMAFIS`
 
   const handleSubmitAction = async (e) => {
     e.preventDefault();
-    if (!trabalhoFile || !formData.eventId) {
-      alert("Selecione o evento e o arquivo PDF.");
+    if (!trabalhoFile || !formData.eventId || !formData.tituloTrabalho) {
+      alert("Preencha todos os campos obrigatórios (Evento, Título do Trabalho e Arquivo PDF).");
       return;
     }
     
@@ -116,7 +116,8 @@ Comissão Organizadora - SEMAFIS`
       usuario: user.displayName || user.email.split('@')[0],
       userEmail: user.email,
       coAutores: formData.coAutores,
-      trabalho: trabalhoFile.name,
+      trabalho: formData.tituloTrabalho,
+      nomeArquivoOriginal: trabalhoFile.name,
       arquivoUrl: arquivoUrl,
       modalidade: formData.tipoApresentacao,
       status: 'em_analise',
@@ -125,9 +126,10 @@ Comissão Organizadora - SEMAFIS`
       avaliacoes: []
     });
 
+    alert("Seu trabalho foi enviado com sucesso e está em análise!");
     setShowSubmitForm(false);
     setIsSubmitting(false);
-    setFormData({ eventId: '', tipoApresentacao: 'poster', coAutores: '' });
+    setFormData({ eventId: '', tipoApresentacao: 'poster', coAutores: '', tituloTrabalho: '' });
     setTrabalhoFile(null);
   };
 
@@ -227,7 +229,7 @@ Comissão Organizadora - SEMAFIS`
           )}
 
           <div style={{ fontSize: '1.1rem', lineHeight: '1.6', marginBottom: '4rem' }}>
-            <p><strong>Modalidade:</strong> {sub.modalidade === 'poster' ? 'Pôster (PO)' : 'Comunicação Oral'}</p>
+            <p><strong>Modalidade:</strong> {sub.modalidade === 'poster' ? 'Pôster (PO)' : sub.modalidade === 'comunicacao_oral' ? 'Comunicação Oral' : sub.modalidade === 'material_didatico' ? 'Material Didático' : sub.modalidade}</p>
             <p><strong>Título:</strong> {sub.trabalho.toUpperCase()}</p>
             <p><strong>Autor(es):</strong> {autores.toUpperCase()}</p>
           </div>
@@ -498,13 +500,28 @@ Comissão Organizadora - SEMAFIS`
                 <div className="mb-4">
                   <label className="form-label">Tipo de Apresentação</label>
                   <div className="flex gap-4">
-                    <label className="flex items-center gap-2">
-                      <input type="radio" value="poster" checked={formData.tipoApresentacao === 'poster'} onChange={() => setFormData({...formData, tipoApresentacao: 'poster'})} /> Pôster (PO)
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', cursor: 'pointer' }}>
+                      <input type="radio" name="tipoApresentacao" value="poster" checked={formData.tipoApresentacao === 'poster'} onChange={() => setFormData({...formData, tipoApresentacao: 'poster'})} /> Pôster (PO)
                     </label>
-                    <label className="flex items-center gap-2">
-                      <input type="radio" value="oral" checked={formData.tipoApresentacao === 'oral'} onChange={() => setFormData({...formData, tipoApresentacao: 'oral'})} /> Comunicação Oral
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', cursor: 'pointer' }}>
+                      <input type="radio" name="tipoApresentacao" value="comunicacao_oral" checked={formData.tipoApresentacao === 'comunicacao_oral'} onChange={() => setFormData({...formData, tipoApresentacao: 'comunicacao_oral'})} /> Comunicação Oral
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', cursor: 'pointer' }}>
+                      <input type="radio" name="tipoApresentacao" value="material_didatico" checked={formData.tipoApresentacao === 'material_didatico'} onChange={() => setFormData({...formData, tipoApresentacao: 'material_didatico'})} /> Material Didático
                     </label>
                   </div>
+                </div>
+
+                <div className="mb-4">
+                  <label className="form-label">Título do Trabalho</label>
+                  <input 
+                    type="text" 
+                    className="form-input" 
+                    value={formData.tituloTrabalho || ''} 
+                    onChange={e => setFormData({...formData, tituloTrabalho: e.target.value})}
+                    placeholder="Digite o título do seu trabalho..."
+                    required
+                  />
                 </div>
 
                 <div className="mb-4">
