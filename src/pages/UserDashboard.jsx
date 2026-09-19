@@ -6,10 +6,11 @@ import { CredentialTicket } from '../components/CredentialTicket';
 import { Badge } from '../components/Badge';
 import { uploadFile } from '../services/db';
 
-export function UserDashboard({ submissions, events, ingressos = [], user, onSubmitWork, onUpdateSubmission, notifications = [] }) {
+export function UserDashboard({ submissions, events, ingressos = [], user, onSubmitWork, onUpdateSubmission, notifications = [], onUpdateIngresso }) {
   const [activeTab, setActiveTab] = useState('trabalhos');
   const [viewingEvaluation, setViewingEvaluation] = useState(null);
   const [viewingCertificate, setViewingCertificate] = useState(null);
+  const [expandedActivityInfo, setExpandedActivityInfo] = useState(null);
 
   // Estados para o formulário de submissão
   const [showSubmitForm, setShowSubmitForm] = useState(false);
@@ -246,6 +247,9 @@ Comissão Organizadora - SEMAFIS`
         <button onClick={() => setActiveTab('ingressos')} className={`btn ${activeTab === 'ingressos' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
           <Ticket size={18} /> Ingressos
         </button>
+        <button onClick={() => setActiveTab('programacao')} className={`btn ${activeTab === 'programacao' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <Calendar size={18} /> Programação / Atividades
+        </button>
         <button onClick={() => setActiveTab('certificados')} className={`btn ${activeTab === 'certificados' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
           <Award size={18} /> Certificados
         </button>
@@ -258,6 +262,159 @@ Comissão Organizadora - SEMAFIS`
           )}
         </button>
       </div>
+
+      {/* Programação Tab */}
+      {activeTab === 'programacao' && (
+        <div className="grid grid-cols-1 gap-8">
+          {events.length === 0 ? (
+            <div className="card text-center" style={{ padding: '3rem 2rem' }}>
+              <h2>Nenhum evento disponível no momento.</h2>
+            </div>
+          ) : (
+            events.map(evento => {
+              const myIngresso = ingressos.find(ing => ing.eventId === evento.id);
+              if (!evento.activities || evento.activities.length === 0) return null;
+              
+              const userActivities = myIngresso ? (myIngresso.atividades || '').split(',').map(a => a.trim()) : [];
+              
+              const toggleInscricao = (actName) => {
+                if (!myIngresso) {
+                  alert("Você precisa adquirir o ingresso principal deste evento primeiro na página do evento!");
+                  return;
+                }
+                const isEnrolled = userActivities.includes(actName);
+                const newActivities = isEnrolled 
+                  ? userActivities.filter(a => a !== actName) 
+                  : [...userActivities, actName];
+                
+                onUpdateIngresso(myIngresso.id, { atividades: newActivities.join(', ') || 'Nenhuma' });
+                alert(isEnrolled ? `Inscrição em ${actName} cancelada.` : `Inscrito com sucesso em ${actName}!`);
+              };
+
+              return (
+                <div key={evento.id}>
+                  <h3 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', color: 'var(--accent-primary)' }}>
+                    {evento.title} - Quadro de Atividades
+                  </h3>
+                  {myIngresso ? (
+                    <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>Você possui ingresso para este evento. Navegue pelas atividades abaixo e se inscreva nas que desejar participar.</p>
+                  ) : (
+                    <div style={{ backgroundColor: '#fffbeb', color: '#b45309', padding: '1rem', borderRadius: '8px', border: '1px dashed #d97706', marginBottom: '2rem' }}>
+                      <strong>Aviso:</strong> Você não possui ingresso para este evento. Inscreva-se no evento para poder participar destas atividades.
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {evento.activities.map((act, idx) => {
+                      const isEnrolled = userActivities.includes(act.name);
+                      
+                      // Identify top border color by activity type
+                      let borderColor = '#3b82f6'; // Minicurso (default blue)
+                      if (act.type === 'Palestra' || act.type === 'Palestra Magna' || act.type === 'Palestra de Encerramento') borderColor = '#0ea5e9'; // Cyan
+                      if (act.type === 'Oficina') borderColor = '#8b5cf6'; // Violet
+                      if (act.type === 'Mesa Redonda') borderColor = '#f59e0b'; // Amber
+
+                      // Find speaker data
+                      const speaker = (evento.speakers || []).find(s => s.nome === act.minister) || {
+                        nome: act.minister,
+                        bio: 'Biografia não cadastrada pela organização.',
+                        detalhesAtividade: 'Nenhum detalhamento extra disponível para esta atividade.',
+                        fotoUrl: 'https://via.placeholder.com/150?text=Sem+Foto',
+                        papel: 'Ministrante'
+                      };
+
+                      const isExpanded = expandedActivityInfo === `${evento.id}-${idx}`;
+
+                      return (
+                        <div key={idx} style={{ 
+                          backgroundColor: 'white', 
+                          borderRadius: '12px', 
+                          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                          borderTop: `6px solid ${borderColor}`,
+                          overflow: 'hidden',
+                          display: 'flex',
+                          flexDirection: 'column'
+                        }}>
+                          {/* Header section */}
+                          <div style={{ padding: '1.5rem', flex: 1 }}>
+                            <div className="flex justify-between items-start mb-2">
+                              <span style={{ color: borderColor, fontWeight: 'bold', fontSize: '0.875rem', textTransform: 'uppercase' }}>
+                                {act.type || 'Minicurso'}
+                              </span>
+                              {isEnrolled && (
+                                <span style={{ backgroundColor: '#10b981', color: 'white', fontSize: '0.75rem', fontWeight: 'bold', padding: '0.25rem 0.5rem', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  ✓ Inscrito
+                                </span>
+                              )}
+                            </div>
+                            
+                            <h4 style={{ fontSize: '1.25rem', color: '#0f172a', marginBottom: '1.5rem', lineHeight: '1.4' }}>
+                              {act.name}
+                            </h4>
+
+                            <div className="flex items-center gap-3 mb-4">
+                              <img src={speaker.fotoUrl} alt={speaker.nome} style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', border: '1px solid #e2e8f0' }} />
+                              <div style={{ fontSize: '0.875rem', color: '#475569' }}>
+                                Com <strong>{speaker.nome}</strong>
+                              </div>
+                            </div>
+
+                            <div style={{ fontSize: '0.875rem', color: '#64748b', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                              <div className="flex items-center gap-2">
+                                <Calendar size={16} /> <span>{act.time}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <MonitorPlay size={16} /> <span>{act.room}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Expanded Info */}
+                          {isExpanded && (
+                            <div style={{ backgroundColor: '#f8fafc', padding: '1.5rem', borderTop: '1px dashed #e2e8f0', fontSize: '0.9rem', color: '#334155' }}>
+                              <strong style={{ display: 'block', marginBottom: '0.5rem', color: '#0f172a' }}>O que você vai aprender:</strong>
+                              <p style={{ marginBottom: '1rem', whiteSpace: 'pre-wrap', lineHeight: '1.5' }}>{speaker.detalhesAtividade}</p>
+                              
+                              <strong style={{ display: 'block', marginBottom: '0.5rem', color: '#0f172a' }}>Sobre o Ministrante ({speaker.papel}):</strong>
+                              <p style={{ whiteSpace: 'pre-wrap', lineHeight: '1.5' }}>{speaker.bio}</p>
+                            </div>
+                          )}
+
+                          {/* Actions Footer */}
+                          <div style={{ backgroundColor: '#f1f5f9', padding: '1rem 1.5rem', display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #e2e8f0', alignItems: 'center' }}>
+                            <button 
+                              onClick={() => setExpandedActivityInfo(isExpanded ? null : `${evento.id}-${idx}`)}
+                              style={{ background: 'none', border: 'none', color: '#64748b', fontWeight: 'bold', fontSize: '0.875rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                            >
+                              <AlertCircle size={16} /> {isExpanded ? 'Ocultar informações' : 'Mais informações'}
+                            </button>
+                            
+                            {myIngresso && (
+                              <button 
+                                onClick={() => toggleInscricao(act.name)}
+                                style={{ 
+                                  background: 'none', 
+                                  border: 'none', 
+                                  color: isEnrolled ? '#ef4444' : '#10b981', 
+                                  fontWeight: 'bold', 
+                                  fontSize: '0.875rem', 
+                                  cursor: 'pointer' 
+                                }}
+                              >
+                                {isEnrolled ? '× Cancelar inscrição' : '+ Inscrever-se'}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      )}
 
       {/* Mensagens Tab */}
       {activeTab === 'mensagens' && (
