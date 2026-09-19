@@ -38,7 +38,7 @@ export function Navbar({ user, userProfile, monitors = [], avaliadores = [] }) {
     <nav className="navbar" style={{ position: 'relative', zIndex: 1000 }}>
       <div className="container navbar-content" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Link to="/" className="flex items-center" style={{ textDecoration: 'none' }}>
-          <img src={logoImg} alt="Semafis Logo" style={{ height: '90px', objectFit: 'contain' }} />
+          <img src={logoImg} alt="Semafis Logo" style={{ height: '140px', objectFit: 'contain', margin: '-20px 0' }} />
         </Link>
         
         <div style={{ position: 'relative' }} ref={menuRef}>
