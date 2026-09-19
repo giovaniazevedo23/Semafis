@@ -225,10 +225,6 @@ p {
     flex-direction: row;
     justify-content: space-between;
   }
-  .navbar-content img {
-    height: 90px !important; /* Ajustar tamanho da logo para mobile */
-    margin: -10px 0;
-  }
   
   /* Corrigir margens internas de cards para não comerem espaço da tela */
   .card {
