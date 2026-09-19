@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { EventForm } from '../components/EventForm';
 import { EventCard } from '../components/EventCard';
 import { FileDown, Users, Check, X, ArrowLeft, ClipboardList, GraduationCap, MonitorPlay } from 'lucide-react';
+import { uploadFile } from '../services/db';
 
 export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissions, onUpdateSubmission, monitors = [], onAddMonitor, avaliadores = [], onAddAvaliador, ingressos = [], onUpdateIngresso }) {
   const [selectedEventId, setSelectedEventId] = useState(null);
@@ -18,6 +19,8 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
   const [activityData, setActivityData] = useState({ name: '', minister: '', time: '', room: '', type: 'Minicurso' });
   const [assignmentData, setAssignmentData] = useState({ monitorEmail: '', dia: '', horario: '', local: '', funcao: '', ministranteIds: [] });
   const [speakerData, setSpeakerData] = useState({ nome: '', papel: 'Palestrante', bio: '', detalhesAtividade: '', fotoUrl: '' });
+  const [speakerPhotoFile, setSpeakerPhotoFile] = useState(null);
+  const [isUploadingSpeaker, setIsUploadingSpeaker] = useState(false);
 
   const selectedEvent = events.find(e => e.id === selectedEventId);
 
@@ -59,13 +62,34 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
     alert("Função delegada com sucesso ao monitor!");
   };
 
-  const handleAddSpeaker = (e) => {
+  const handleAddSpeaker = async (e) => {
     e.preventDefault();
     if (!selectedEvent) return;
+
+    setIsUploadingSpeaker(true);
+    let finalFotoUrl = speakerData.fotoUrl;
+    
+    if (speakerPhotoFile) {
+      try {
+        const fileName = `speakers/${Date.now()}_${speakerPhotoFile.name}`;
+        finalFotoUrl = await uploadFile(fileName, speakerPhotoFile);
+      } catch (error) {
+        console.error("Erro no upload para o Storage. Salvando localmente como fallback.", error);
+        finalFotoUrl = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.readAsDataURL(speakerPhotoFile);
+        });
+        alert("Atenção: O upload da foto falhou devido a permissões do Firebase. A foto foi salva localmente no navegador temporariamente.");
+      }
+    }
+
     const currentSpeakers = selectedEvent.speakers || [];
-    const newSpeaker = { ...speakerData, id: Date.now().toString() };
+    const newSpeaker = { ...speakerData, fotoUrl: finalFotoUrl, id: Date.now().toString() };
     onUpdateEvent(selectedEvent.id, { speakers: [...currentSpeakers, newSpeaker] });
     setSpeakerData({ nome: '', papel: 'Palestrante', bio: '', detalhesAtividade: '', fotoUrl: '' });
+    setSpeakerPhotoFile(null);
+    setIsUploadingSpeaker(false);
     alert("Ministrante cadastrado com sucesso!");
   };
 
@@ -424,8 +448,13 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
                 </select>
                 <textarea placeholder="Breve Biografia / De onde é?" value={speakerData.bio} onChange={e => setSpeakerData({...speakerData, bio: e.target.value})} className="form-input mb-2" rows="3" required></textarea>
                 <textarea placeholder="Detalhamento da Atividade (O que vai abordar)" value={speakerData.detalhesAtividade} onChange={e => setSpeakerData({...speakerData, detalhesAtividade: e.target.value})} className="form-input mb-2" rows="3" required></textarea>
-                <input type="url" placeholder="Link da Foto de Perfil" value={speakerData.fotoUrl} onChange={e => setSpeakerData({...speakerData, fotoUrl: e.target.value})} className="form-input mb-4" required />
-                <button type="submit" className="btn btn-primary" style={{ width: '100%', backgroundColor: '#f59e0b', border: 'none' }}>Cadastrar</button>
+                <div className="form-group mb-4">
+                  <label className="form-label" style={{ fontSize: '0.875rem' }}>Foto de Perfil</label>
+                  <input type="file" accept="image/*" onChange={e => setSpeakerPhotoFile(e.target.files[0])} className="form-input" required={!speakerData.fotoUrl} />
+                </div>
+                <button type="submit" className="btn btn-primary" disabled={isUploadingSpeaker} style={{ width: '100%', backgroundColor: '#f59e0b', border: 'none' }}>
+                  {isUploadingSpeaker ? 'Cadastrando e Enviando Foto...' : 'Cadastrar'}
+                </button>
               </form>
             </div>
           </div>
