@@ -3,10 +3,11 @@ import { EventForm } from '../components/EventForm';
 import { EventCard } from '../components/EventCard';
 import { FileDown, Users, Check, X, ArrowLeft, ClipboardList, GraduationCap, MonitorPlay } from 'lucide-react';
 
-export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissions, onUpdateSubmission, monitors = [], onAddMonitor, avaliadores = [], onAddAvaliador }) {
+export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissions, onUpdateSubmission, monitors = [], onAddMonitor, avaliadores = [], onAddAvaliador, ingressos = [] }) {
   const [selectedEventId, setSelectedEventId] = useState(null);
   const [isCreatingEvent, setIsCreatingEvent] = useState(false);
-  const [activeTab, setActiveTab] = useState('submissoes'); // 'submissoes', 'equipe', 'credenciamento', 'atividades'
+  const [activeTab, setActiveTab] = useState('submissoes'); // 'submissoes', 'equipe', 'atividades', 'credenciamento', 'relatorios'
+  const [viewingReport, setViewingReport] = useState(null); // 'credenciamento', 'oficinas', 'monitores', 'trabalhos'
   
   const [approvingSubId, setApprovingSubId] = useState(null);
   const [chatSubId, setChatSubId] = useState(null);
@@ -94,6 +95,10 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
     alert(`Numeração automática gerada para ${posterSubmissions.length} pôsteres!`);
   };
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   // Se não tem evento selecionado E não está criando, mostra a lista de eventos
   if (!selectedEventId && !isCreatingEvent) {
     return (
@@ -171,6 +176,9 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
         </button>
         <button onClick={() => setActiveTab('credenciamento')} className={`btn ${activeTab === 'credenciamento' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none' }}>
           Credenciamento (Presença)
+        </button>
+        <button onClick={() => setActiveTab('relatorios')} className={`btn ${activeTab === 'relatorios' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none' }}>
+          Relatórios / Impressão
         </button>
       </div>
 
@@ -380,17 +388,16 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
 
                 <div style={{ backgroundColor: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                   <h4 style={{ fontSize: '1rem', marginBottom: '1rem' }}>Inscritos</h4>
-                  {/* Mock: Usaremos os submissores como mock de inscritos por enquanto */}
-                  {submissions.length === 0 ? (
-                    <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Nenhum participante comprou ingresso/se inscreveu ainda.</p>
+                  {ingressos.filter(ing => ing.eventId === selectedEvent.id && (ing.atividades || '').includes(act.name)).length === 0 ? (
+                    <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Nenhum participante inscrito nesta atividade ainda.</p>
                   ) : (
                     <table style={{ width: '100%', fontSize: '0.875rem' }}>
                       <tbody>
-                        {submissions.map((sub, i) => (
+                        {ingressos.filter(ing => ing.eventId === selectedEvent.id && (ing.atividades || '').includes(act.name)).map((ing, i) => (
                           <tr key={i} style={{ borderBottom: '1px solid #cbd5e1' }}>
-                            <td style={{ padding: '0.75rem' }}>{sub.usuario}</td>
+                            <td style={{ padding: '0.75rem' }}>{ing.nome}</td>
                             <td style={{ padding: '0.75rem', textAlign: 'right' }}>
-                              <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                              <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', justifyContent: 'flex-end' }}>
                                 <div style={{ position: 'relative' }}>
                                   <input type="checkbox" className="sr-only" style={{ display: 'none' }} />
                                   <div style={{ width: '48px', height: '24px', backgroundColor: '#cbd5e1', borderRadius: '9999px', transition: 'background-color 0.3s', display: 'flex', alignItems: 'center', padding: '2px' }} onMouseDown={(e) => {
@@ -414,6 +421,201 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
               </div>
             ))
           )}
+        </div>
+      )}
+
+      {/* Aba de Relatórios */}
+      {activeTab === 'relatorios' && (
+        <div>
+          <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <ClipboardList size={24} /> Relatórios e Fichas de Impressão
+          </h2>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>Selecione um dos relatórios abaixo para gerar uma ficha pronta para impressão (A4).</p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="card text-center" style={{ padding: '2rem', cursor: 'pointer', transition: 'transform 0.2s', border: '1px solid var(--border-color)' }} onClick={() => setViewingReport('credenciamento')} onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-4px)'} onMouseOut={(e) => e.currentTarget.style.transform = 'none'}>
+              <Users size={32} style={{ margin: '0 auto 1rem', color: 'var(--accent-primary)' }} />
+              <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Ficha de Credenciamento</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Lista de todos os inscritos no evento para controle de entrada e assinaturas.</p>
+            </div>
+            <div className="card text-center" style={{ padding: '2rem', cursor: 'pointer', transition: 'transform 0.2s', border: '1px solid var(--border-color)' }} onClick={() => setViewingReport('oficinas')} onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-4px)'} onMouseOut={(e) => e.currentTarget.style.transform = 'none'}>
+              <ClipboardList size={32} style={{ margin: '0 auto 1rem', color: 'var(--accent-primary)' }} />
+              <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Fichas de Oficinas/Minicursos</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Listas de presença separadas por atividade com o nome dos alunos matriculados.</p>
+            </div>
+            <div className="card text-center" style={{ padding: '2rem', cursor: 'pointer', transition: 'transform 0.2s', border: '1px solid var(--border-color)' }} onClick={() => setViewingReport('monitores')} onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-4px)'} onMouseOut={(e) => e.currentTarget.style.transform = 'none'}>
+              <MonitorPlay size={32} style={{ margin: '0 auto 1rem', color: 'var(--accent-primary)' }} />
+              <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Escala de Monitores</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Lista da equipe de monitores com campos para registrar função, horários e assinatura.</p>
+            </div>
+            <div className="card text-center" style={{ padding: '2rem', cursor: 'pointer', transition: 'transform 0.2s', border: '1px solid var(--border-color)' }} onClick={() => setViewingReport('trabalhos')} onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-4px)'} onMouseOut={(e) => e.currentTarget.style.transform = 'none'}>
+              <GraduationCap size={32} style={{ margin: '0 auto 1rem', color: 'var(--accent-primary)' }} />
+              <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Ficha de Trabalhos Aceitos</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Lista com todos os trabalhos aprovados, seus códigos, autores e local de apresentação.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE IMPRESSÃO (TELA CHEIA) */}
+      {viewingReport && (
+        <div className="print-modal" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'white', zIndex: 99999, overflowY: 'auto' }}>
+          <div className="no-print" style={{ position: 'sticky', top: 0, backgroundColor: '#f1f5f9', padding: '1rem', borderBottom: '1px solid #cbd5e1', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 10 }}>
+            <button onClick={() => setViewingReport(null)} className="btn btn-outline flex items-center gap-2">
+              <ArrowLeft size={16} /> Voltar
+            </button>
+            <button onClick={handlePrint} className="btn btn-primary" style={{ backgroundColor: '#16a34a', border: 'none' }}>
+              Imprimir Relatório
+            </button>
+          </div>
+
+          <div className="print-area" style={{ padding: '2rem 4rem', color: 'black', fontFamily: 'Arial, sans-serif' }}>
+            <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+              <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: 0, textTransform: 'uppercase' }}>{selectedEvent?.title}</h1>
+              <h2 style={{ fontSize: '1.25rem', margin: '0.5rem 0 0 0', color: '#333' }}>
+                {viewingReport === 'credenciamento' && 'FICHA DE CREDENCIAMENTO / PRESENÇA'}
+                {viewingReport === 'oficinas' && 'FICHAS DE FREQUÊNCIA - ATIVIDADES'}
+                {viewingReport === 'monitores' && 'ESCALA E CONTROLE DE MONITORES'}
+                {viewingReport === 'trabalhos' && 'LISTAGEM OFICIAL DE TRABALHOS APROVADOS'}
+              </h2>
+            </div>
+
+            {/* REPORT: CREDENCIAMENTO */}
+            {viewingReport === 'credenciamento' && (
+              <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000' }}>
+                <thead>
+                  <tr>
+                    <th style={{ border: '1px solid #000', padding: '0.5rem', width: '5%', backgroundColor: '#f0f0f0' }}>Nº</th>
+                    <th style={{ border: '1px solid #000', padding: '0.5rem', width: '45%', backgroundColor: '#f0f0f0', textAlign: 'left' }}>Nome do Participante</th>
+                    <th style={{ border: '1px solid #000', padding: '0.5rem', width: '50%', backgroundColor: '#f0f0f0', textAlign: 'left' }}>Assinatura</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ingressos.filter(i => i.eventId === selectedEvent.id).map((ing, idx) => (
+                    <tr key={idx}>
+                      <td style={{ border: '1px solid #000', padding: '0.5rem', textAlign: 'center' }}>{idx + 1}</td>
+                      <td style={{ border: '1px solid #000', padding: '0.5rem', textTransform: 'uppercase' }}>{ing.nome}</td>
+                      <td style={{ border: '1px solid #000', padding: '0.5rem' }}></td>
+                    </tr>
+                  ))}
+                  {ingressos.filter(i => i.eventId === selectedEvent.id).length === 0 && (
+                    <tr><td colSpan="3" style={{ border: '1px solid #000', padding: '1rem', textAlign: 'center' }}>Nenhum participante inscrito.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            )}
+
+            {/* REPORT: OFICINAS */}
+            {viewingReport === 'oficinas' && (
+              <div>
+                {(!selectedEvent?.activities || selectedEvent.activities.length === 0) ? (
+                  <p style={{ textAlign: 'center' }}>Nenhuma atividade cadastrada neste evento.</p>
+                ) : (
+                  selectedEvent.activities.map((act, idx) => {
+                    const inscritos = ingressos.filter(ing => ing.eventId === selectedEvent.id && (ing.atividades || '').includes(act.name));
+                    return (
+                      <div key={idx} style={{ marginBottom: '3rem', pageBreakInside: 'avoid' }}>
+                        <div style={{ backgroundColor: '#f0f0f0', border: '1px solid #000', padding: '0.5rem', fontWeight: 'bold' }}>
+                          ATIVIDADE: {act.name.toUpperCase()} <br/>
+                          <span style={{ fontSize: '0.875rem', fontWeight: 'normal' }}>Local: {act.room} | Ministrante: {act.minister} | Horário: {act.time}</span>
+                        </div>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000', borderTop: 'none' }}>
+                          <thead>
+                            <tr>
+                              <th style={{ border: '1px solid #000', padding: '0.5rem', width: '5%' }}>Nº</th>
+                              <th style={{ border: '1px solid #000', padding: '0.5rem', width: '45%', textAlign: 'left' }}>Nome do Matriculado</th>
+                              <th style={{ border: '1px solid #000', padding: '0.5rem', width: '50%', textAlign: 'left' }}>Assinatura</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {inscritos.map((ing, i) => (
+                              <tr key={i}>
+                                <td style={{ border: '1px solid #000', padding: '0.5rem', textAlign: 'center' }}>{i + 1}</td>
+                                <td style={{ border: '1px solid #000', padding: '0.5rem', textTransform: 'uppercase' }}>{ing.nome}</td>
+                                <td style={{ border: '1px solid #000', padding: '0.5rem' }}></td>
+                              </tr>
+                            ))}
+                            {inscritos.length === 0 && (
+                              <tr><td colSpan="3" style={{ border: '1px solid #000', padding: '1rem', textAlign: 'center' }}>Nenhum participante matriculado.</td></tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            )}
+
+            {/* REPORT: MONITORES */}
+            {viewingReport === 'monitores' && (
+              <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000' }}>
+                <thead>
+                  <tr>
+                    <th style={{ border: '1px solid #000', padding: '0.5rem', width: '25%', backgroundColor: '#f0f0f0', textAlign: 'left' }}>Nome do Monitor</th>
+                    <th style={{ border: '1px solid #000', padding: '0.5rem', width: '25%', backgroundColor: '#f0f0f0', textAlign: 'left' }}>Função / Local de Atuação</th>
+                    <th style={{ border: '1px solid #000', padding: '0.5rem', width: '25%', backgroundColor: '#f0f0f0', textAlign: 'left' }}>Horários / Dias</th>
+                    <th style={{ border: '1px solid #000', padding: '0.5rem', width: '25%', backgroundColor: '#f0f0f0', textAlign: 'left' }}>Assinatura</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {monitors.map((m, idx) => (
+                    <tr key={idx}>
+                      <td style={{ border: '1px solid #000', padding: '0.5rem', textTransform: 'uppercase' }}>{m.nome}</td>
+                      <td style={{ border: '1px solid #000', padding: '0.5rem' }}></td>
+                      <td style={{ border: '1px solid #000', padding: '0.5rem' }}></td>
+                      <td style={{ border: '1px solid #000', padding: '0.5rem' }}></td>
+                    </tr>
+                  ))}
+                  {monitors.length === 0 && (
+                    <tr><td colSpan="4" style={{ border: '1px solid #000', padding: '1rem', textAlign: 'center' }}>Nenhum monitor cadastrado.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            )}
+
+            {/* REPORT: TRABALHOS */}
+            {viewingReport === 'trabalhos' && (
+              <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000', fontSize: '0.875rem' }}>
+                <thead>
+                  <tr>
+                    <th style={{ border: '1px solid #000', padding: '0.5rem', width: '10%', backgroundColor: '#f0f0f0' }}>Código</th>
+                    <th style={{ border: '1px solid #000', padding: '0.5rem', width: '35%', backgroundColor: '#f0f0f0', textAlign: 'left' }}>Título do Trabalho</th>
+                    <th style={{ border: '1px solid #000', padding: '0.5rem', width: '25%', backgroundColor: '#f0f0f0', textAlign: 'left' }}>Autores</th>
+                    <th style={{ border: '1px solid #000', padding: '0.5rem', width: '15%', backgroundColor: '#f0f0f0', textAlign: 'left' }}>Sessão/Local</th>
+                    <th style={{ border: '1px solid #000', padding: '0.5rem', width: '15%', backgroundColor: '#f0f0f0', textAlign: 'left' }}>Avaliação</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {submissions.filter(s => s.status === 'aprovado').map((sub, idx) => {
+                    const autores = sub.coAutores ? `${sub.usuario}, ${sub.coAutores}` : sub.usuario;
+                    return (
+                      <tr key={idx}>
+                        <td style={{ border: '1px solid #000', padding: '0.5rem', textAlign: 'center', fontWeight: 'bold' }}>{sub.detalhesApresentacao?.numeroPoster || 'N/A'}</td>
+                        <td style={{ border: '1px solid #000', padding: '0.5rem', textTransform: 'uppercase' }}>{sub.trabalho}</td>
+                        <td style={{ border: '1px solid #000', padding: '0.5rem' }}>{autores}</td>
+                        <td style={{ border: '1px solid #000', padding: '0.5rem' }}>{sub.detalhesApresentacao?.localApresentacao || ''}</td>
+                        <td style={{ border: '1px solid #000', padding: '0.5rem' }}></td>
+                      </tr>
+                    );
+                  })}
+                  {submissions.filter(s => s.status === 'aprovado').length === 0 && (
+                    <tr><td colSpan="5" style={{ border: '1px solid #000', padding: '1rem', textAlign: 'center' }}>Nenhum trabalho aprovado.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            )}
+          </div>
+
+          <style>{`
+            @media print {
+              body * { visibility: hidden !important; }
+              .print-modal { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; background: white !important; }
+              .print-area, .print-area * { visibility: visible !important; color: black !important; }
+              .print-area { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; padding: 0 !important; }
+              .no-print { display: none !important; }
+            }
+          `}</style>
         </div>
       )}
 
