@@ -379,7 +379,13 @@ Comissão Organizadora - SEMAFIS`
                       <h4 style={{ fontSize: '1.1rem', marginBottom: '1.5rem' }}>{evento?.title || 'Evento não encontrado'}</h4>
 
                       <p style={{ color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Arquivo Submetido:</p>
-                      <p style={{ fontWeight: '500', marginBottom: '1.5rem', textTransform: 'uppercase' }}>{sub.trabalho}</p>
+                      {sub.arquivoUrl ? (
+                        <button onClick={() => window.open(sub.arquivoUrl, '_blank')} style={{ background: 'none', border: 'none', padding: 0, fontWeight: '500', marginBottom: '1.5rem', textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: '#16a34a', textDecoration: 'none', cursor: 'pointer' }}>
+                          <FileText size={18} /> {sub.trabalho}
+                        </button>
+                      ) : (
+                        <p style={{ fontWeight: '500', marginBottom: '1.5rem', textTransform: 'uppercase' }}>{sub.trabalho}</p>
+                      )}
 
                       {(sub.status === 'aprovado' || sub.status === 'rejeitado') && (
                         <div style={{ marginTop: '2rem', display: 'flex', gap: '1rem', borderTop: '1px dashed var(--border-color)', paddingTop: '1.5rem' }}>

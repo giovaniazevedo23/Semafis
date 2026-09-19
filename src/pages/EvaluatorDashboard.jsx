@@ -176,9 +176,15 @@ Comissão Científica - SEMAFIS`;
                 </div>
 
                 <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
-                   <button className="btn btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <FileText size={16} /> Baixar Arquivo do Trabalho
-                  </button>
+                  {sub.arquivoUrl ? (
+                    <button onClick={() => window.open(sub.arquivoUrl, '_blank')} className="btn btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <FileText size={16} /> Baixar Arquivo do Trabalho
+                    </button>
+                  ) : (
+                    <button className="btn btn-outline" disabled style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', opacity: 0.5, cursor: 'not-allowed' }}>
+                      <FileText size={16} /> Arquivo indisponível
+                    </button>
+                  )}
                 </div>
 
                 <hr style={{ margin: '1.5rem 0', borderColor: 'var(--border-color)' }} />
