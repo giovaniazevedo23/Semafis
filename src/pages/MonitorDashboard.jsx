@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { Badge } from '../components/Badge';
 
 export function MonitorDashboard({ user, monitors, submissions, avaliadores, events, ingressos = [] }) {
-  const [activeTab, setActiveTab] = useState('trabalhos'); // 'trabalhos', 'credenciamento'
+  const [activeTab, setActiveTab] = useState('escala'); // 'escala', 'trabalhos', 'credenciamento'
   const [isScanning, setIsScanning] = useState(false);
   const [scannedUserId, setScannedUserId] = useState(null);
   if (!user) {
@@ -36,7 +36,7 @@ export function MonitorDashboard({ user, monitors, submissions, avaliadores, eve
       <div className="flex justify-between items-center mb-8" style={{ marginTop: '2rem' }}>
         <div>
           <h1 style={{ fontSize: '2.25rem', fontWeight: '700', color: 'var(--accent-primary)' }}>Painel do Monitor</h1>
-          <p>Olá, {user.displayName || user.email}! Aqui estão os trabalhos sob sua supervisão e os avaliadores que você deve acompanhar.</p>
+          <p>Olá, {user.displayName || user.email}! Aqui está sua escala de trabalho, trabalhos sob sua supervisão e credenciamento.</p>
         </div>
       </div>
 
@@ -62,6 +62,9 @@ export function MonitorDashboard({ user, monitors, submissions, avaliadores, eve
       </div>
 
       <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', borderBottom: '2px solid var(--border-color)', paddingBottom: '0.5rem' }}>
+        <button onClick={() => setActiveTab('escala')} className={`btn ${activeTab === 'escala' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none' }}>
+          Sua Escala de Trabalho
+        </button>
         <button onClick={() => setActiveTab('trabalhos')} className={`btn ${activeTab === 'trabalhos' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none' }}>
           Trabalhos Sob Sua Supervisão
         </button>
@@ -69,6 +72,60 @@ export function MonitorDashboard({ user, monitors, submissions, avaliadores, eve
           Credenciamento e Check-in
         </button>
       </div>
+      
+      {activeTab === 'escala' && (
+        <div className="grid grid-cols-1 gap-8 mb-8">
+          {events.length === 0 ? (
+            <p>Nenhum evento disponível.</p>
+          ) : (
+            events.map(event => {
+              const myAssignments = (event.monitorAssignments || []).filter(a => a.monitorEmail === user.email);
+              if (myAssignments.length === 0) return null;
+              
+              return (
+                <div key={event.id} className="card" style={{ padding: '2rem' }}>
+                  <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', color: 'var(--accent-primary)' }}>{event.title} - Suas Funções</h2>
+                  
+                  {myAssignments.map((assig, idx) => (
+                    <div key={idx} style={{ padding: '1.5rem', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '1.5rem' }}>
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <h3 style={{ fontSize: '1.25rem', marginBottom: '0.25rem' }}>{assig.funcao}</h3>
+                          <p style={{ color: 'var(--text-secondary)' }}>
+                            <strong>Dia:</strong> {assig.dia} | <strong>Horário:</strong> {assig.horario} | <strong>Local:</strong> {assig.local}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      {assig.ministranteIds && assig.ministranteIds.length > 0 && (
+                        <div>
+                          <h4 style={{ fontSize: '1rem', color: '#0f172a', marginBottom: '1rem', marginTop: '1rem' }}>Palestrantes/Ministrantes para acompanhar:</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {assig.ministranteIds.map(spkId => {
+                              const speaker = (event.speakers || []).find(s => s.id === spkId);
+                              if (!speaker) return null;
+                              return (
+                                <div key={spkId} style={{ display: 'flex', gap: '1rem', backgroundColor: 'white', padding: '1rem', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
+                                  <img src={speaker.fotoUrl} alt={speaker.nome} style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover' }} />
+                                  <div>
+                                    <div style={{ fontSize: '0.7rem', backgroundColor: '#e2e8f0', padding: '0.2rem 0.4rem', borderRadius: '4px', textTransform: 'uppercase', fontWeight: 'bold', display: 'inline-block', marginBottom: '0.25rem' }}>{speaker.papel}</div>
+                                    <h5 style={{ margin: 0, fontSize: '1rem' }}>{speaker.nome}</h5>
+                                    <p style={{ fontSize: '0.75rem', color: '#64748b', margin: '0.25rem 0' }}>{speaker.bio}</p>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              );
+            })
+          )}
+        </div>
+      )}
       
       {activeTab === 'trabalhos' && (
         <>

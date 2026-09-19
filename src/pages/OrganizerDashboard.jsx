@@ -3,7 +3,7 @@ import { EventForm } from '../components/EventForm';
 import { EventCard } from '../components/EventCard';
 import { FileDown, Users, Check, X, ArrowLeft, ClipboardList, GraduationCap, MonitorPlay } from 'lucide-react';
 
-export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissions, onUpdateSubmission, monitors = [], onAddMonitor, avaliadores = [], onAddAvaliador, ingressos = [] }) {
+export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissions, onUpdateSubmission, monitors = [], onAddMonitor, avaliadores = [], onAddAvaliador, ingressos = [], onUpdateIngresso }) {
   const [selectedEventId, setSelectedEventId] = useState(null);
   const [isCreatingEvent, setIsCreatingEvent] = useState(false);
   const [activeTab, setActiveTab] = useState('submissoes'); // 'submissoes', 'equipe', 'atividades', 'credenciamento', 'relatorios'
@@ -16,6 +16,8 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
   const [monitorData, setMonitorData] = useState({ nome: '', email: '', matricula: '', ira: '', telefone: '' });
   const [avaliadorData, setAvaliadorData] = useState({ nome: '', email: '', matricula: '', telefone: '', fotoUrl: '' });
   const [activityData, setActivityData] = useState({ name: '', minister: '', time: '', room: '', type: 'Minicurso' });
+  const [assignmentData, setAssignmentData] = useState({ monitorEmail: '', dia: '', horario: '', local: '', funcao: '', ministranteIds: [] });
+  const [speakerData, setSpeakerData] = useState({ nome: '', papel: 'Palestrante', bio: '', detalhesAtividade: '', fotoUrl: '' });
 
   const selectedEvent = events.find(e => e.id === selectedEventId);
 
@@ -45,6 +47,26 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
     onUpdateEvent(selectedEvent.id, { activities: [...currentActivities, activityData] });
     setActivityData({ name: '', minister: '', time: '', room: '', type: 'Minicurso' });
     alert("Atividade cadastrada com sucesso!");
+  };
+
+  const handleAddAssignment = (e) => {
+    e.preventDefault();
+    if (!selectedEvent) return;
+    const currentAssignments = selectedEvent.monitorAssignments || [];
+    const newAssignment = { ...assignmentData, id: Date.now().toString() };
+    onUpdateEvent(selectedEvent.id, { monitorAssignments: [...currentAssignments, newAssignment] });
+    setAssignmentData({ monitorEmail: '', dia: '', horario: '', local: '', funcao: '', ministranteIds: [] });
+    alert("Função delegada com sucesso ao monitor!");
+  };
+
+  const handleAddSpeaker = (e) => {
+    e.preventDefault();
+    if (!selectedEvent) return;
+    const currentSpeakers = selectedEvent.speakers || [];
+    const newSpeaker = { ...speakerData, id: Date.now().toString() };
+    onUpdateEvent(selectedEvent.id, { speakers: [...currentSpeakers, newSpeaker] });
+    setSpeakerData({ nome: '', papel: 'Palestrante', bio: '', detalhesAtividade: '', fotoUrl: '' });
+    alert("Ministrante cadastrado com sucesso!");
   };
 
   const handleApproveClick = (subId) => setApprovingSubId(subId);
@@ -164,7 +186,7 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', borderBottom: '2px solid var(--border-color)', paddingBottom: '0.5rem' }}>
+      <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '2rem', borderBottom: '2px solid var(--border-color)', paddingBottom: '0.5rem' }}>
         <button onClick={() => setActiveTab('submissoes')} className={`btn ${activeTab === 'submissoes' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none' }}>
           Submissões
         </button>
@@ -173,6 +195,12 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
         </button>
         <button onClick={() => setActiveTab('atividades')} className={`btn ${activeTab === 'atividades' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none' }}>
           Atividades (Minicursos/Oficinas)
+        </button>
+        <button onClick={() => setActiveTab('ministrantes')} className={`btn ${activeTab === 'ministrantes' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none' }}>
+          Ministrantes/Palestrantes
+        </button>
+        <button onClick={() => setActiveTab('org-monitores')} className={`btn ${activeTab === 'org-monitores' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none' }}>
+          Organização de Monitores
         </button>
         <button onClick={() => setActiveTab('credenciamento')} className={`btn ${activeTab === 'credenciamento' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none' }}>
           Credenciamento (Presença)
@@ -362,6 +390,127 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
         </div>
       )}
 
+      {/* Aba de Ministrantes */}
+      {activeTab === 'ministrantes' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>Cadastrar Ministrante / Palestrante</h2>
+            <div className="card" style={{ padding: '1.5rem' }}>
+              <form onSubmit={handleAddSpeaker} className="mb-6">
+                <input type="text" placeholder="Nome Completo" value={speakerData.nome} onChange={e => setSpeakerData({...speakerData, nome: e.target.value})} className="form-input mb-2" required />
+                <select value={speakerData.papel} onChange={e => setSpeakerData({...speakerData, papel: e.target.value})} className="form-input mb-2" required>
+                  <option value="Palestrante">Palestrante</option>
+                  <option value="Ministrante">Ministrante</option>
+                  <option value="Professor">Professor(a)</option>
+                  <option value="Convidado">Convidado(a) Especial</option>
+                </select>
+                <textarea placeholder="Breve Biografia / De onde é?" value={speakerData.bio} onChange={e => setSpeakerData({...speakerData, bio: e.target.value})} className="form-input mb-2" rows="3" required></textarea>
+                <textarea placeholder="Detalhamento da Atividade (O que vai abordar)" value={speakerData.detalhesAtividade} onChange={e => setSpeakerData({...speakerData, detalhesAtividade: e.target.value})} className="form-input mb-2" rows="3" required></textarea>
+                <input type="url" placeholder="Link da Foto de Perfil" value={speakerData.fotoUrl} onChange={e => setSpeakerData({...speakerData, fotoUrl: e.target.value})} className="form-input mb-4" required />
+                <button type="submit" className="btn btn-primary" style={{ width: '100%', backgroundColor: '#f59e0b', border: 'none' }}>Cadastrar</button>
+              </form>
+            </div>
+          </div>
+
+          <div>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>Ministrantes Cadastrados</h2>
+            <div className="card" style={{ padding: '1.5rem' }}>
+              {(!selectedEvent?.speakers || selectedEvent.speakers.length === 0) ? (
+                <p style={{ color: 'var(--text-secondary)' }}>Nenhum ministrante cadastrado ainda.</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {selectedEvent.speakers.map((spk, idx) => (
+                    <div key={idx} style={{ padding: '1rem', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', gap: '1rem' }}>
+                      <img src={spk.fotoUrl} alt={spk.nome} style={{ width: '60px', height: '60px', borderRadius: '50%', objectFit: 'cover' }} />
+                      <div>
+                        <div style={{ fontSize: '0.75rem', backgroundColor: '#e2e8f0', padding: '0.25rem 0.5rem', borderRadius: '4px', textTransform: 'uppercase', fontWeight: 'bold', display: 'inline-block', marginBottom: '0.5rem' }}>
+                          {spk.papel}
+                        </div>
+                        <h3 style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>{spk.nome}</h3>
+                        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                          <strong>Bio:</strong> {spk.bio} <br/>
+                          <strong>Atividade:</strong> {spk.detalhesAtividade}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Aba de Organização de Monitores */}
+      {activeTab === 'org-monitores' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>Delegar Função a Monitor</h2>
+            <div className="card" style={{ padding: '1.5rem' }}>
+              <form onSubmit={handleAddAssignment} className="mb-6">
+                <select value={assignmentData.monitorEmail} onChange={e => setAssignmentData({...assignmentData, monitorEmail: e.target.value})} className="form-input mb-2" required>
+                  <option value="">Selecione o Monitor...</option>
+                  {monitors.map(m => <option key={m.id} value={m.email}>{m.nome}</option>)}
+                </select>
+                <input type="text" placeholder="Dia (Ex: Dia 1, 10/10/2026)" value={assignmentData.dia} onChange={e => setAssignmentData({...assignmentData, dia: e.target.value})} className="form-input mb-2" required />
+                <input type="text" placeholder="Horário (Ex: 08:00 às 12:00)" value={assignmentData.horario} onChange={e => setAssignmentData({...assignmentData, horario: e.target.value})} className="form-input mb-2" required />
+                <input type="text" placeholder="Local de Atuação (Ex: Portaria Principal, Bloco C)" value={assignmentData.local} onChange={e => setAssignmentData({...assignmentData, local: e.target.value})} className="form-input mb-2" required />
+                <textarea placeholder="Descrição da Função (O que ele vai fazer?)" value={assignmentData.funcao} onChange={e => setAssignmentData({...assignmentData, funcao: e.target.value})} className="form-input mb-2" rows="3" required></textarea>
+                
+                <div style={{ backgroundColor: '#f1f5f9', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border-color)', fontSize: '0.875rem', marginBottom: '1rem' }}>
+                  <strong style={{ display: 'block', marginBottom: '0.25rem' }}>Aguardar quais Palestrantes/Ministrantes?</strong>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', maxHeight: '100px', overflowY: 'auto' }}>
+                    {(selectedEvent?.speakers || []).length === 0 ? <span style={{ color: '#64748b' }}>Nenhum ministrante cadastrado no evento.</span> : null}
+                    {(selectedEvent?.speakers || []).map(spk => {
+                      const isAssigned = assignmentData.ministranteIds.includes(spk.id);
+                      return (
+                        <label key={spk.id} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', cursor: 'pointer' }}>
+                          <input type="checkbox" checked={isAssigned} onChange={() => {
+                            setAssignmentData(prev => ({
+                              ...prev,
+                              ministranteIds: isAssigned ? prev.ministranteIds.filter(id => id !== spk.id) : [...prev.ministranteIds, spk.id]
+                            }))
+                          }} /> {spk.nome} ({spk.papel})
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <button type="submit" className="btn btn-primary" style={{ width: '100%', backgroundColor: '#0ea5e9', border: 'none' }}>Delegar Função</button>
+              </form>
+            </div>
+          </div>
+
+          <div>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>Escala de Monitores Gerada</h2>
+            <div className="card" style={{ padding: '1.5rem' }}>
+              {(!selectedEvent?.monitorAssignments || selectedEvent.monitorAssignments.length === 0) ? (
+                <p style={{ color: 'var(--text-secondary)' }}>Nenhuma função delegada ainda.</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {selectedEvent.monitorAssignments.map((assig, idx) => {
+                    const monitor = monitors.find(m => m.email === assig.monitorEmail);
+                    return (
+                      <div key={idx} style={{ padding: '1rem', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                        <h3 style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>Monitor: {monitor ? monitor.nome : assig.monitorEmail}</h3>
+                        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+                          <strong>Dia:</strong> {assig.dia} | <strong>Horário:</strong> {assig.horario} <br/>
+                          <strong>Local:</strong> {assig.local}
+                        </p>
+                        <div style={{ padding: '0.5rem', backgroundColor: '#e0f2fe', borderRadius: '4px', fontSize: '0.875rem', color: '#0369a1' }}>
+                          <strong>Função:</strong> {assig.funcao}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Aba de Credenciamento */}
       {activeTab === 'credenciamento' && (
         <div>
@@ -370,6 +519,49 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
           </h2>
           <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>Lista de inscritos no evento. Marque a caixa para confirmar a presença de cada participante nas atividades (necessário para liberar o certificado).</p>
           
+          <div className="card mb-6" style={{ padding: '1.5rem', borderLeft: '4px solid #3b82f6' }}>
+            <div style={{ marginBottom: '1.5rem' }}>
+              <span style={{ fontSize: '0.75rem', backgroundColor: '#e0f2fe', padding: '0.25rem 0.5rem', borderRadius: '4px', textTransform: 'uppercase', fontWeight: 'bold', color: '#0369a1' }}>Geral</span>
+              <h3 style={{ fontSize: '1.25rem', marginTop: '0.5rem' }}>Credenciamento Geral do Evento</h3>
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Controle de entrada principal para quem chegou no evento.</p>
+            </div>
+            <div style={{ backgroundColor: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+              {ingressos.filter(ing => ing.eventId === selectedEvent?.id).length === 0 ? (
+                <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Nenhum participante inscrito ainda.</p>
+              ) : (
+                <table style={{ width: '100%', fontSize: '0.875rem' }}>
+                  <tbody>
+                    {ingressos.filter(ing => ing.eventId === selectedEvent?.id).map((ing, i) => (
+                      <tr key={i} style={{ borderBottom: '1px solid #cbd5e1' }}>
+                        <td style={{ padding: '0.75rem' }}>{ing.nome}</td>
+                        <td style={{ padding: '0.75rem', textAlign: 'right' }}>
+                          <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', justifyContent: 'flex-end' }}>
+                            <div style={{ position: 'relative' }}>
+                              <div 
+                                style={{ width: '48px', height: '24px', backgroundColor: (ing.presenca && ing.presenca['GERAL']) ? '#10b981' : '#cbd5e1', borderRadius: '9999px', transition: 'background-color 0.3s', display: 'flex', alignItems: 'center', padding: '2px' }} 
+                                onClick={() => {
+                                  if(onUpdateIngresso) {
+                                    const newPresenca = { ...(ing.presenca || {}) };
+                                    newPresenca['GERAL'] = !newPresenca['GERAL'];
+                                    onUpdateIngresso(ing.id, { presenca: newPresenca });
+                                  }
+                                }}
+                              >
+                                <div style={{ width: '20px', height: '20px', backgroundColor: 'white', borderRadius: '50%', transform: (ing.presenca && ing.presenca['GERAL']) ? 'translateX(24px)' : 'translateX(0)', transition: 'transform 0.3s', boxShadow: '0 1px 3px rgba(0,0,0,0.3)' }}></div>
+                              </div>
+                            </div>
+                            <span style={{ marginLeft: '0.5rem', fontWeight: 'bold', color: (ing.presenca && ing.presenca['GERAL']) ? '#10b981' : '#64748b' }}>
+                              {(ing.presenca && ing.presenca['GERAL']) ? 'Confirmado' : 'Presente'}
+                            </span>
+                          </label>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
           {(!selectedEvent?.activities || selectedEvent.activities.length === 0) ? (
             <div className="card text-center" style={{ padding: '2rem' }}>
               <p>Nenhuma atividade cadastrada neste evento.</p>
@@ -398,17 +590,22 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
                             <td style={{ padding: '0.75rem', textAlign: 'right' }}>
                               <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', justifyContent: 'flex-end' }}>
                                 <div style={{ position: 'relative' }}>
-                                  <input type="checkbox" className="sr-only" style={{ display: 'none' }} />
-                                  <div style={{ width: '48px', height: '24px', backgroundColor: '#cbd5e1', borderRadius: '9999px', transition: 'background-color 0.3s', display: 'flex', alignItems: 'center', padding: '2px' }} onMouseDown={(e) => {
-                                    const parent = e.currentTarget;
-                                    const isChecked = parent.style.backgroundColor === 'rgb(16, 185, 129)' || parent.style.backgroundColor === '#10b981';
-                                    parent.style.backgroundColor = isChecked ? '#cbd5e1' : '#10b981';
-                                    parent.firstChild.style.transform = isChecked ? 'translateX(0)' : 'translateX(24px)';
-                                  }}>
-                                    <div style={{ width: '20px', height: '20px', backgroundColor: 'white', borderRadius: '50%', transform: 'translateX(0)', transition: 'transform 0.3s', boxShadow: '0 1px 3px rgba(0,0,0,0.3)' }}></div>
+                                  <div 
+                                    style={{ width: '48px', height: '24px', backgroundColor: (ing.presenca && ing.presenca[act.name]) ? '#10b981' : '#cbd5e1', borderRadius: '9999px', transition: 'background-color 0.3s', display: 'flex', alignItems: 'center', padding: '2px' }} 
+                                    onClick={() => {
+                                      if(onUpdateIngresso) {
+                                        const newPresenca = { ...(ing.presenca || {}) };
+                                        newPresenca[act.name] = !newPresenca[act.name];
+                                        onUpdateIngresso(ing.id, { presenca: newPresenca });
+                                      }
+                                    }}
+                                  >
+                                    <div style={{ width: '20px', height: '20px', backgroundColor: 'white', borderRadius: '50%', transform: (ing.presenca && ing.presenca[act.name]) ? 'translateX(24px)' : 'translateX(0)', transition: 'transform 0.3s', boxShadow: '0 1px 3px rgba(0,0,0,0.3)' }}></div>
                                   </div>
                                 </div>
-                                <span style={{ marginLeft: '0.5rem', fontWeight: 'bold', color: '#64748b' }}>Presente</span>
+                                <span style={{ marginLeft: '0.5rem', fontWeight: 'bold', color: (ing.presenca && ing.presenca[act.name]) ? '#10b981' : '#64748b' }}>
+                                  {(ing.presenca && ing.presenca[act.name]) ? 'Confirmado' : 'Presente'}
+                                </span>
                               </label>
                             </td>
                           </tr>
@@ -494,7 +691,9 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
                     <tr key={idx}>
                       <td style={{ border: '1px solid #000', padding: '0.5rem', textAlign: 'center' }}>{idx + 1}</td>
                       <td style={{ border: '1px solid #000', padding: '0.5rem', textTransform: 'uppercase' }}>{ing.nome}</td>
-                      <td style={{ border: '1px solid #000', padding: '0.5rem' }}></td>
+                      <td style={{ border: '1px solid #000', padding: '0.5rem', textAlign: 'center', fontWeight: 'bold', fontSize: '1.25rem' }}>
+                        {(ing.presenca && ing.presenca['GERAL']) ? 'ASSINADO' : ''}
+                      </td>
                     </tr>
                   ))}
                   {ingressos.filter(i => i.eventId === selectedEvent.id).length === 0 && (
@@ -531,7 +730,9 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
                               <tr key={i}>
                                 <td style={{ border: '1px solid #000', padding: '0.5rem', textAlign: 'center' }}>{i + 1}</td>
                                 <td style={{ border: '1px solid #000', padding: '0.5rem', textTransform: 'uppercase' }}>{ing.nome}</td>
-                                <td style={{ border: '1px solid #000', padding: '0.5rem' }}></td>
+                                <td style={{ border: '1px solid #000', padding: '0.5rem', textAlign: 'center', fontWeight: 'bold', fontSize: '1.25rem' }}>
+                                  {(ing.presenca && ing.presenca[act.name]) ? 'ASSINADO' : ''}
+                                </td>
                               </tr>
                             ))}
                             {inscritos.length === 0 && (
@@ -548,29 +749,43 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
 
             {/* REPORT: MONITORES */}
             {viewingReport === 'monitores' && (
-              <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000' }}>
-                <thead>
-                  <tr>
-                    <th style={{ border: '1px solid #000', padding: '0.5rem', width: '25%', backgroundColor: '#f0f0f0', textAlign: 'left' }}>Nome do Monitor</th>
-                    <th style={{ border: '1px solid #000', padding: '0.5rem', width: '25%', backgroundColor: '#f0f0f0', textAlign: 'left' }}>Função / Local de Atuação</th>
-                    <th style={{ border: '1px solid #000', padding: '0.5rem', width: '25%', backgroundColor: '#f0f0f0', textAlign: 'left' }}>Horários / Dias</th>
-                    <th style={{ border: '1px solid #000', padding: '0.5rem', width: '25%', backgroundColor: '#f0f0f0', textAlign: 'left' }}>Assinatura</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {monitors.map((m, idx) => (
-                    <tr key={idx}>
-                      <td style={{ border: '1px solid #000', padding: '0.5rem', textTransform: 'uppercase' }}>{m.nome}</td>
-                      <td style={{ border: '1px solid #000', padding: '0.5rem' }}></td>
-                      <td style={{ border: '1px solid #000', padding: '0.5rem' }}></td>
-                      <td style={{ border: '1px solid #000', padding: '0.5rem' }}></td>
-                    </tr>
-                  ))}
-                  {monitors.length === 0 && (
-                    <tr><td colSpan="4" style={{ border: '1px solid #000', padding: '1rem', textAlign: 'center' }}>Nenhum monitor cadastrado.</td></tr>
-                  )}
-                </tbody>
-              </table>
+              <div>
+                {(!selectedEvent?.monitorAssignments || selectedEvent.monitorAssignments.length === 0) ? (
+                  <p style={{ textAlign: 'center' }}>Nenhuma função delegada aos monitores neste evento.</p>
+                ) : (
+                  Array.from(new Set(selectedEvent.monitorAssignments.map(a => a.dia))).map((dia, dIdx) => (
+                    <div key={dIdx} style={{ marginBottom: '3rem', pageBreakInside: 'avoid' }}>
+                      <div style={{ backgroundColor: '#f0f0f0', border: '1px solid #000', padding: '0.5rem', fontWeight: 'bold' }}>
+                        DATA / DIA: {dia.toUpperCase()}
+                      </div>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000', borderTop: 'none' }}>
+                        <thead>
+                          <tr>
+                            <th style={{ border: '1px solid #000', padding: '0.5rem', width: '25%', textAlign: 'left' }}>Nome do Monitor</th>
+                            <th style={{ border: '1px solid #000', padding: '0.5rem', width: '25%', textAlign: 'left' }}>Função / Tarefa</th>
+                            <th style={{ border: '1px solid #000', padding: '0.5rem', width: '25%', textAlign: 'left' }}>Local</th>
+                            <th style={{ border: '1px solid #000', padding: '0.5rem', width: '25%', textAlign: 'left' }}>Horário</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {selectedEvent.monitorAssignments.filter(a => a.dia === dia).map((assig, i) => {
+                            const monitor = monitors.find(m => m.email === assig.monitorEmail);
+                            const nome = monitor ? monitor.nome : assig.monitorEmail;
+                            return (
+                              <tr key={i}>
+                                <td style={{ border: '1px solid #000', padding: '0.5rem', textTransform: 'uppercase' }}>{nome}</td>
+                                <td style={{ border: '1px solid #000', padding: '0.5rem' }}>{assig.funcao}</td>
+                                <td style={{ border: '1px solid #000', padding: '0.5rem' }}>{assig.local}</td>
+                                <td style={{ border: '1px solid #000', padding: '0.5rem' }}>{assig.horario}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  ))
+                )}
+              </div>
             )}
 
             {/* REPORT: TRABALHOS */}
@@ -583,7 +798,7 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
                     <th style={{ border: '1px solid #000', padding: '0.5rem', width: '20%', backgroundColor: '#f0f0f0', textAlign: 'left' }}>Autores</th>
                     <th style={{ border: '1px solid #000', padding: '0.5rem', width: '15%', backgroundColor: '#f0f0f0', textAlign: 'left' }}>Sessão/Local</th>
                     <th style={{ border: '1px solid #000', padding: '0.5rem', width: '15%', backgroundColor: '#f0f0f0', textAlign: 'left' }}>Monitor Responsável</th>
-                    <th style={{ border: '1px solid #000', padding: '0.5rem', width: '10%', backgroundColor: '#f0f0f0', textAlign: 'left' }}>Avaliação</th>
+                    <th style={{ border: '1px solid #000', padding: '0.5rem', width: '10%', backgroundColor: '#f0f0f0', textAlign: 'left' }}>Avaliadores</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -591,6 +806,12 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
                     const autores = sub.coAutores ? `${sub.usuario}, ${sub.coAutores}` : sub.usuario;
                     const monitor = monitors.find(m => m.email === sub.monitorEmail);
                     const monitorNome = monitor ? monitor.nome : '';
+                    
+                    const avaliadoresNomes = (sub.avaliadoresEmails || []).map(email => {
+                      const av = avaliadores.find(a => a.email === email);
+                      return av ? av.nome : email;
+                    }).join(', ');
+
                     return (
                       <tr key={idx}>
                         <td style={{ border: '1px solid #000', padding: '0.5rem', textAlign: 'center', fontWeight: 'bold' }}>{sub.detalhesApresentacao?.numeroPoster || 'N/A'}</td>
@@ -598,7 +819,7 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
                         <td style={{ border: '1px solid #000', padding: '0.5rem' }}>{autores}</td>
                         <td style={{ border: '1px solid #000', padding: '0.5rem' }}>{sub.detalhesApresentacao?.localApresentacao || ''}</td>
                         <td style={{ border: '1px solid #000', padding: '0.5rem', textTransform: 'uppercase' }}>{monitorNome}</td>
-                        <td style={{ border: '1px solid #000', padding: '0.5rem' }}></td>
+                        <td style={{ border: '1px solid #000', padding: '0.5rem', textTransform: 'uppercase', fontSize: '0.75rem' }}>{avaliadoresNomes}</td>
                       </tr>
                     );
                   })}

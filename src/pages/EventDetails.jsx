@@ -94,6 +94,29 @@ export function EventDetails({ events }) {
                 </div>
               </div>
             )}
+
+            {event.speakers && event.speakers.length > 0 && (
+              <div style={{ marginTop: '3rem' }}>
+                <h3 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  Convidados Especiais
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {event.speakers.map(spk => (
+                    <div key={spk.id} style={{ display: 'flex', gap: '1rem', backgroundColor: '#f8fafc', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                      <img src={spk.fotoUrl} alt={spk.nome} style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: '3px solid white', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }} />
+                      <div>
+                        <div style={{ fontSize: '0.75rem', backgroundColor: '#e0f2fe', color: '#0369a1', padding: '0.25rem 0.5rem', borderRadius: '4px', textTransform: 'uppercase', fontWeight: 'bold', display: 'inline-block', marginBottom: '0.5rem' }}>
+                          {spk.papel}
+                        </div>
+                        <h4 style={{ fontSize: '1.1rem', marginBottom: '0.25rem', color: '#0f172a' }}>{spk.nome}</h4>
+                        <p style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '0.5rem' }}>{spk.bio}</p>
+                        <p style={{ fontSize: '0.875rem', color: '#334155', fontStyle: 'italic' }}>"{spk.detalhesAtividade}"</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
           
           <div style={{ position: 'sticky', top: '100px' }}>
