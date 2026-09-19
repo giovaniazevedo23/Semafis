@@ -110,7 +110,19 @@ function App() {
 
   const handleRegister = async (ingressoData) => {
     const id = 'ING-' + Date.now().toString().slice(-6);
-    await setDocument('ingressos', id, { timestamp: new Date().toISOString(), ...ingressoData });
+    
+    // Firestore não aceita valores undefined, então garantimos que tudo null/undefined seja string vazia
+    const cleanData = Object.fromEntries(
+      Object.entries(ingressoData).map(([k, v]) => [k, v === undefined ? '' : v])
+    );
+    
+    try {
+      await setDocument('ingressos', id, { timestamp: new Date().toISOString(), ...cleanData });
+      console.log('Ingresso salvo com sucesso no Firestore');
+    } catch (e) {
+      console.error('Falha ao salvar ingresso no App.jsx', e);
+      alert('Erro ao comunicar com o servidor. Seu ingresso não pôde ser salvo.');
+    }
   };
 
   return (

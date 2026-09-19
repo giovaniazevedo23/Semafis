@@ -90,22 +90,27 @@ export function RegistrationForm({ events, user, userProfile, onSubmitWork, onRe
   };
 
   const handleCheckout = async () => {
-    setStep(3);
-
     if (onRegister) {
-      onRegister({
-        eventId: event.id,
-        userEmail: user.email,
-        nome: formData.nomeSocial || formData.nome,
-        cpf: formData.cpf,
-        curso: formData.curso === 'Outro' ? formData.cursoOutro : formData.curso,
-        instituicao: formData.instituicao === 'Outra' ? formData.instituicaoOutra : formData.instituicao,
-        campus: formData.campus,
-        categoriasDisplay: getCategoriaDisplay(),
-        precoAtual: precoAtual,
-        atividades: formData.atividadesExtras.length > 0 ? formData.atividadesExtras.join(', ') : 'Nenhuma',
-      });
+      try {
+        await onRegister({
+          eventId: event.id,
+          userEmail: user.email,
+          nome: formData.nomeSocial || formData.nome,
+          cpf: formData.cpf,
+          curso: formData.curso === 'Outro' ? formData.cursoOutro : formData.curso,
+          instituicao: formData.instituicao === 'Outra' ? formData.instituicaoOutra : formData.instituicao,
+          campus: formData.campus,
+          categoriasDisplay: getCategoriaDisplay(),
+          precoAtual: precoAtual,
+          atividades: formData.atividadesExtras.length > 0 ? formData.atividadesExtras.join(', ') : 'Nenhuma',
+        });
+      } catch (e) {
+        console.error(e);
+        return; // não avança a etapa se der erro
+      }
     }
+
+    setStep(3);
 
     if (formData.categorias.includes('com_submissao') && trabalhoFile) {
       let arquivoUrl = '';
@@ -339,7 +344,15 @@ export function RegistrationForm({ events, user, userProfile, onSubmitWork, onRe
               </div>
               
               <div className="mt-8">
-                {pixData ? (
+                {precoAtual === 0 ? (
+                  <div className="card text-center" style={{ padding: '3rem', backgroundColor: 'var(--bg-primary)' }}>
+                    <h3 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', color: '#10b981' }}>Inscrição Gratuita</h3>
+                    <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>Esta categoria não possui custo. Clique abaixo para concluir sua inscrição e gerar sua credencial.</p>
+                    <button onClick={handleCheckout} className="btn btn-primary" style={{ width: '100%', padding: '1rem' }}>
+                      Concluir Inscrição
+                    </button>
+                  </div>
+                ) : pixData ? (
                   <div className="card text-center" style={{ padding: '3rem', backgroundColor: 'var(--bg-primary)' }}>
                     <h3 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', color: '#10b981' }}>Escaneie o QR Code para pagar</h3>
                     <img 
