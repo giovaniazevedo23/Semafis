@@ -208,6 +208,9 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
         <button onClick={() => setActiveTab('relatorios')} className={`btn ${activeTab === 'relatorios' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none' }}>
           Relatórios / Impressão
         </button>
+        <button onClick={() => setActiveTab('ranking')} className={`btn ${activeTab === 'ranking' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none' }}>
+          Ranking de Apresentações
+        </button>
       </div>
 
       {/* Aba de Submissões */}
@@ -286,6 +289,21 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
                               })}
                             </div>
                           </div>
+                          {sub.status === 'aprovado' && (
+                            <div style={{ backgroundColor: '#fffbeb', padding: '0.5rem', borderRadius: '4px', border: '1px solid #fde68a', fontSize: '0.75rem', marginTop: '0.25rem' }}>
+                              <strong style={{ display: 'block', marginBottom: '0.25rem', color: '#b45309' }}>Avaliadores da Apresentação (In-Loco):</strong>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', maxHeight: '80px', overflowY: 'auto' }}>
+                                {avaliadores.map(a => {
+                                  const isAssigned = (sub.avaliadoresApresentacaoEmails || []).includes(a.email);
+                                  return (
+                                    <label key={a.id} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', cursor: 'pointer' }}>
+                                      <input type="checkbox" checked={isAssigned} onChange={() => onUpdateSubmission(sub.id, { avaliadoresApresentacaoEmails: isAssigned ? (sub.avaliadoresApresentacaoEmails || []).filter(e => e !== a.email) : [...(sub.avaliadoresApresentacaoEmails || []), a.email] })} /> {a.nome}
+                                    </label>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -650,6 +668,92 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Lista com todos os trabalhos aprovados, seus códigos, autores e local de apresentação.</p>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Aba de Ranking */}
+      {activeTab === 'ranking' && (
+        <div>
+          <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <GraduationCap size={24} /> Ranking de Apresentações
+          </h2>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>Acompanhe os melhores trabalhos avaliados in-loco pela comissão científica.</p>
+          
+          {(() => {
+            // Filtrar trabalhos que possuem avaliação de apresentação
+            const evaluatedWorks = submissions.filter(sub => sub.avaliacoesApresentacao && sub.avaliacoesApresentacao.length > 0);
+            
+            if (evaluatedWorks.length === 0) {
+              return (
+                <div className="card text-center" style={{ padding: '3rem', color: 'var(--text-secondary)' }}>
+                  <p>Nenhuma apresentação foi avaliada ainda.</p>
+                </div>
+              );
+            }
+
+            // Calcular médias e agrupar por categoria
+            const rankedWorks = evaluatedWorks.map(sub => {
+              const avaliacoes = sub.avaliacoesApresentacao || [];
+              const media = avaliacoes.reduce((acc, curr) => acc + (curr.total || 0), 0) / avaliacoes.length;
+              
+              // Descobrir a área através do ingresso do usuário
+              const ingresso = ingressos.find(ing => ing.userEmail === sub.userEmail && ing.eventId === sub.eventId);
+              const curso = ingresso ? (ingresso.curso || 'Outro') : 'Outro';
+              
+              let categoria = 'Geral';
+              if (curso.toLowerCase().includes('física') || curso.toLowerCase().includes('fisica')) categoria = 'Física';
+              if (curso.toLowerCase().includes('matemática') || curso.toLowerCase().includes('matematica')) categoria = 'Matemática';
+
+              return { ...sub, mediaFinal: media, categoriaAutor: categoria, qtdAvaliadores: avaliacoes.length };
+            }).sort((a, b) => b.mediaFinal - a.mediaFinal);
+
+            const fisicaTop = rankedWorks.filter(w => w.categoriaAutor === 'Física').slice(0, 3);
+            const matTop = rankedWorks.filter(w => w.categoriaAutor === 'Matemática').slice(0, 3);
+            const geralTop = [...rankedWorks].slice(0, 3);
+
+            const renderPodium = (title, works, color) => (
+              <div className="card mb-6" style={{ padding: '1.5rem', borderTop: `4px solid ${color}` }}>
+                <h3 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', color: color }}>{title}</h3>
+                {works.length === 0 ? (
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Nenhum trabalho avaliado nesta categoria.</p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    {works.map((w, i) => (
+                      <div key={w.id} style={{ display: 'flex', alignItems: 'center', gap: '1rem', backgroundColor: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                        <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: i === 0 ? '#fbbf24' : i === 1 ? '#94a3b8' : '#cd7f32', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1.25rem', flexShrink: 0 }}>
+                          {i + 1}º
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <h4 style={{ margin: 0, fontSize: '1.1rem' }}>{w.trabalho}</h4>
+                          <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Autor(a): {w.usuario} | Código: {w.detalhesApresentacao?.numeroPoster || w.id.slice(-4)}</p>
+                          <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: '#64748b' }}>
+                            <strong>Avaliadores:</strong> {w.avaliacoesApresentacao.map(av => {
+                              const avr = avaliadores.find(a => a.email === av.avaliadorEmail);
+                              return `${avr ? avr.nome : av.avaliadorEmail} (${av.total})`;
+                            }).join(', ')}
+                          </div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#0f172a' }}>{w.mediaFinal.toFixed(1)}</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Média</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+
+            return (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {renderPodium('Melhores Trabalhos - Física', fisicaTop, '#3b82f6')}
+                {renderPodium('Melhores Trabalhos - Matemática', matTop, '#ef4444')}
+                <div className="lg:col-span-2">
+                  {renderPodium('Top 3 Geral (Misto)', geralTop, '#10b981')}
+                </div>
+              </div>
+            );
+          })()}
         </div>
       )}
 

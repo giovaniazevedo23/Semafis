@@ -3,8 +3,36 @@ import { FileText, CheckCircle, AlertCircle, Edit3 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export function EvaluatorDashboard({ user, avaliadores, submissions, events, onUpdateSubmission, onSendNotification }) {
+  const [activeTab, setActiveTab] = useState('trabalhos'); // 'trabalhos', 'apresentacoes'
   const [evaluatingSubId, setEvaluatingSubId] = useState(null);
   const [evaluationData, setEvaluationData] = useState({ nota: '', comentario: '' });
+  const [evaluatingPresSubId, setEvaluatingPresSubId] = useState(null);
+  const [presEvaluationData, setPresEvaluationData] = useState({ instituicao: 'IFPI - Campus Teresina Central', notas: {} });
+
+  const criteriaPorModalidade = {
+    oral: [
+      { key: 'introducao', label: 'Introdução' },
+      { key: 'desenvolvimento', label: 'Desenvolvimento' },
+      { key: 'conclusao', label: 'Conclusão' },
+      { key: 'estruturacao', label: 'Estruturação metodológica do discurso' },
+      { key: 'rigor', label: 'Rigor conceitual' },
+      { key: 'sustentacao', label: 'Sustentação teórica' },
+    ],
+    material_didatico: [
+      { key: 'introducao', label: 'Introdução' },
+      { key: 'desenvolvimento', label: 'Desenvolvimento' },
+      { key: 'conclusao', label: 'Conclusão' },
+      { key: 'transposicao', label: 'Transposição didática' },
+      { key: 'validacao', label: 'Validação científica e fonte' },
+    ],
+    default: [
+      { key: 'introducao', label: 'Introdução' },
+      { key: 'desenvolvimento', label: 'Desenvolvimento' },
+      { key: 'conclusao', label: 'Conclusão' },
+      { key: 'organizacao', label: 'Organização visual e textual do layout' },
+      { key: 'referencial', label: 'Densidade epistemológica / Referencial teórico' },
+    ]
+  };
 
   if (!user) {
     return (
@@ -31,9 +59,51 @@ export function EvaluatorDashboard({ user, avaliadores, submissions, events, onU
     sub.avaliadoresEmails && sub.avaliadoresEmails.includes(user.email)
   );
 
+  const myPresentations = submissions.filter(sub => 
+    sub.avaliadoresApresentacaoEmails && sub.avaliadoresApresentacaoEmails.includes(user.email)
+  );
+
   const handleEvaluateClick = (subId) => {
     setEvaluatingSubId(subId);
     setEvaluationData({ nota: '', comentario: '' });
+  };
+
+  const handleEvaluatePresClick = (subId) => {
+    setEvaluatingPresSubId(subId);
+    setPresEvaluationData({ instituicao: 'IFPI - Campus Teresina Central', notas: {} });
+  };
+
+  const submitPresEvaluation = (e, sub) => {
+    e.preventDefault();
+    const criteria = criteriaPorModalidade[sub.modalidade] || criteriaPorModalidade.default;
+    
+    // Validar se todas as notas foram dadas
+    let sum = 0;
+    for (let c of criteria) {
+      const val = Number(presEvaluationData.notas[c.key]);
+      if (isNaN(val) || val < 0 || val > 10) {
+        alert(`Por favor, insira uma nota válida de 0 a 10 para: ${c.label}`);
+        return;
+      }
+      sum += val;
+    }
+
+    const total = sum / criteria.length; // Média normalizada de 0 a 10
+
+    const newAvaliacao = {
+      avaliadorEmail: user.email,
+      instituicao: presEvaluationData.instituicao,
+      notas: presEvaluationData.notas,
+      total,
+      data: new Date().toISOString()
+    };
+
+    const updatedAvaliacoes = (sub.avaliacoesApresentacao || []).filter(a => a.avaliadorEmail !== user.email);
+    updatedAvaliacoes.push(newAvaliacao);
+
+    onUpdateSubmission(sub.id, { avaliacoesApresentacao: updatedAvaliacoes });
+    setEvaluatingPresSubId(null);
+    alert("Avaliação da apresentação registrada com sucesso!");
   };
 
   const submitEvaluation = (e, sub) => {
@@ -141,13 +211,33 @@ Comissão Científica - SEMAFIS`;
             <FileText size={32} color="#16a34a" />
             <div>
               <h3 style={{ margin: 0, fontSize: '1.5rem', color: '#14532d' }}>{mySubmissions.length}</h3>
-              <span style={{ color: '#15803d', fontSize: '0.875rem' }}>Trabalhos Atribuídos</span>
+              <span style={{ color: '#15803d', fontSize: '0.875rem' }}>Trabalhos Escritos Atribuídos</span>
+            </div>
+          </div>
+        </div>
+        <div className="card" style={{ padding: '1.5rem', backgroundColor: '#eff6ff', border: '1px solid #bfdbfe' }}>
+          <div className="flex items-center gap-4">
+            <CheckCircle size={32} color="#3b82f6" />
+            <div>
+              <h3 style={{ margin: 0, fontSize: '1.5rem', color: '#1e3a8a' }}>{myPresentations.length}</h3>
+              <span style={{ color: '#1d4ed8', fontSize: '0.875rem' }}>Apresentações In-Loco</span>
             </div>
           </div>
         </div>
       </div>
 
-      <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem' }}>Trabalhos para Avaliar</h2>
+      <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', borderBottom: '2px solid var(--border-color)', paddingBottom: '0.5rem' }}>
+        <button onClick={() => setActiveTab('trabalhos')} className={`btn ${activeTab === 'trabalhos' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none' }}>
+          Avaliação Escrita (PDF)
+        </button>
+        <button onClick={() => setActiveTab('apresentacoes')} className={`btn ${activeTab === 'apresentacoes' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none', backgroundColor: activeTab === 'apresentacoes' ? '#3b82f6' : 'transparent', color: activeTab === 'apresentacoes' ? 'white' : 'var(--text-primary)' }}>
+          Avaliação de Apresentações In-Loco
+        </button>
+      </div>
+
+      {activeTab === 'trabalhos' && (
+        <div>
+          <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem' }}>Trabalhos Escritos para Avaliar</h2>
       
       {mySubmissions.length === 0 ? (
         <div className="card text-center mb-8" style={{ padding: '4rem 2rem', color: 'var(--text-secondary)' }}>
@@ -265,6 +355,137 @@ Comissão Científica - SEMAFIS`;
               </div>
             );
           })}
+        </div>
+      )}
+        </div>
+      )}
+
+      {activeTab === 'apresentacoes' && (
+        <div>
+          <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem' }}>Apresentações In-Loco para Avaliar</h2>
+          
+          {myPresentations.length === 0 ? (
+            <div className="card text-center mb-8" style={{ padding: '4rem 2rem', color: 'var(--text-secondary)' }}>
+              <CheckCircle size={48} style={{ margin: '0 auto', marginBottom: '1rem', color: '#3b82f6', opacity: 0.5 }} />
+              <p>Você ainda não foi designado para avaliar nenhuma apresentação.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-6 mb-8">
+              {myPresentations.map(sub => {
+                const event = events.find(e => e.id === sub.eventId);
+                const myEvaluation = (sub.avaliacoesApresentacao || []).find(a => a.avaliadorEmail === user.email);
+                const isEvaluating = evaluatingPresSubId === sub.id;
+                const criteria = criteriaPorModalidade[sub.modalidade] || criteriaPorModalidade.default;
+
+                return (
+                  <div key={sub.id} className="card" style={{ padding: '2rem', borderLeft: '4px solid #3b82f6' }}>
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem', color: 'var(--text-primary)' }}>{sub.trabalho}</h3>
+                        <p style={{ color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Autor(a): <strong>{sub.usuario}</strong></p>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '0.25rem' }}>Código do Trabalho: {sub.detalhesApresentacao?.numeroPoster || sub.id.slice(-4)}</p>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Evento: {event ? event.title : 'Desconhecido'}</p>
+                      </div>
+                      <span style={{ backgroundColor: '#eff6ff', color: '#3b82f6', padding: '0.5rem 1rem', borderRadius: '50px', fontSize: '0.875rem', fontWeight: 'bold' }}>
+                        {sub.modalidade.toUpperCase()}
+                      </span>
+                    </div>
+
+                    <hr style={{ margin: '1.5rem 0', borderColor: 'var(--border-color)' }} />
+
+                    {myEvaluation ? (
+                      <div style={{ backgroundColor: '#f8fafc', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                        <div className="flex justify-between items-center mb-4">
+                          <h4 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0, color: '#0f172a' }}>
+                            <CheckCircle size={18} color="#3b82f6" /> Avaliação da Apresentação Realizada
+                          </h4>
+                          <div style={{ backgroundColor: '#3b82f6', color: 'white', padding: '0.25rem 0.75rem', borderRadius: '50px', fontWeight: 'bold' }}>
+                            Nota: {myEvaluation.total.toFixed(1)} / 10
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4 mt-4">
+                          {criteria.map(c => (
+                            <div key={c.key} style={{ backgroundColor: 'white', padding: '0.5rem', borderRadius: '4px', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between' }}>
+                              <span style={{ fontSize: '0.875rem' }}>{c.label}</span>
+                              <strong style={{ color: '#3b82f6' }}>{myEvaluation.notas[c.key]}</strong>
+                            </div>
+                          ))}
+                        </div>
+
+                        <button onClick={() => {
+                            setEvaluatingPresSubId(sub.id);
+                            setPresEvaluationData({ instituicao: myEvaluation.instituicao, notas: myEvaluation.notas });
+                          }} 
+                          className="btn mt-4" style={{ backgroundColor: 'white', border: '1px solid #cbd5e1', color: '#475569', fontSize: '0.875rem' }}
+                        >
+                          Editar Avaliação
+                        </button>
+                      </div>
+                    ) : isEvaluating ? (
+                      <form onSubmit={(e) => submitPresEvaluation(e, sub)} style={{ backgroundColor: '#eff6ff', padding: '1.5rem', borderRadius: '8px', border: '1px solid #3b82f6' }}>
+                        <h4 style={{ marginBottom: '1rem', color: '#1e3a8a', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <Edit3 size={18} /> Ficha de Avaliação da Apresentação
+                        </h4>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                          <div className="form-group">
+                            <label className="form-label" style={{ color: '#1e3a8a' }}>Avaliador(a)</label>
+                            <input type="text" className="form-input" value={user.displayName || user.email} disabled style={{ backgroundColor: '#e0f2fe' }} />
+                          </div>
+                          <div className="form-group">
+                            <label className="form-label" style={{ color: '#1e3a8a' }}>Instituição / Campus</label>
+                            <input type="text" className="form-input" value={presEvaluationData.instituicao} onChange={e => setPresEvaluationData({...presEvaluationData, instituicao: e.target.value})} required />
+                          </div>
+                        </div>
+
+                        <div className="form-group mb-6">
+                          <label className="form-label" style={{ color: '#1e3a8a' }}>Critérios de Avaliação (Notas de 0 a 10)</label>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                            {criteria.map(c => (
+                              <div key={c.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'white', padding: '0.75rem', borderRadius: '4px', border: '1px solid #bfdbfe' }}>
+                                <span style={{ flex: 1, fontSize: '0.875rem', fontWeight: '500' }}>{c.label}</span>
+                                <input 
+                                  type="number" 
+                                  min="0" max="10" step="0.5"
+                                  className="form-input" 
+                                  style={{ width: '80px', padding: '0.25rem' }}
+                                  value={presEvaluationData.notas[c.key] || ''}
+                                  onChange={e => setPresEvaluationData({
+                                    ...presEvaluationData,
+                                    notas: { ...presEvaluationData.notas, [c.key]: e.target.value }
+                                  })}
+                                  placeholder="0 - 10"
+                                  required
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="flex gap-4">
+                          <button type="button" onClick={() => setEvaluatingPresSubId(null)} className="btn btn-outline" style={{ flex: 1, borderColor: '#3b82f6', color: '#3b82f6' }}>Cancelar</button>
+                          <button type="submit" className="btn btn-primary" style={{ flex: 2, backgroundColor: '#3b82f6', border: 'none' }}>Salvar Ficha de Avaliação</button>
+                        </div>
+                      </form>
+                    ) : (
+                      <div style={{ backgroundColor: '#fffbeb', padding: '1.5rem', borderRadius: '8px', border: '1px solid #fde68a' }}>
+                        <div className="flex justify-between items-center">
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#d97706' }}>
+                            <AlertCircle size={20} />
+                            <strong>Apresentação Pendente de Avaliação</strong>
+                          </div>
+                          <button onClick={() => handleEvaluatePresClick(sub.id)} className="btn btn-primary" style={{ backgroundColor: '#d97706', border: 'none' }}>
+                            Preencher Ficha
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
     </div>
