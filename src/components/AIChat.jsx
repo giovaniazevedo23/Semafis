@@ -99,7 +99,7 @@ export function AIChat({ events }) {
             padding: 0
           }}
         >
-          <img src="/ai_avatar.png" alt="Chat" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+          <img src="/avatar.png" alt="Chat" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
           <div style={{ position: 'absolute', top: 0, right: 0, width: '15px', height: '15px', backgroundColor: '#ef4444', borderRadius: '50%', border: '2px solid white' }}></div>
         </button>
       )}
@@ -130,7 +130,7 @@ export function AIChat({ events }) {
             alignItems: 'center'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <img src="/ai_avatar.png" alt="IA Avatar" style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', border: '2px solid white' }} />
+              <img src="/avatar.png" alt="IA Avatar" style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', border: '2px solid white' }} />
               <div>
                 <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: '600' }}>Ajuda por IA</h3>
                 <span style={{ fontSize: '0.75rem', color: '#cbd5e1', display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -154,7 +154,7 @@ export function AIChat({ events }) {
                 maxWidth: '85%'
               }}>
                 {msg.sender === 'ai' && (
-                  <img src="/ai_avatar.png" alt="IA" style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover' }} />
+                  <img src="/avatar.png" alt="IA" style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover' }} />
                 )}
                 <div style={{ 
                   backgroundColor: msg.sender === 'user' ? '#3b82f6' : 'white',
@@ -173,7 +173,7 @@ export function AIChat({ events }) {
             
             {isTyping && (
               <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.5rem', alignSelf: 'flex-start', maxWidth: '85%' }}>
-                <img src="/ai_avatar.png" alt="IA" style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover' }} />
+                <img src="/avatar.png" alt="IA" style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover' }} />
                 <div style={{ 
                   backgroundColor: 'white',
                   padding: '0.75rem 1rem',
