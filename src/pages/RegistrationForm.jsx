@@ -243,10 +243,13 @@ export function RegistrationForm({ events, user, userProfile, onSubmitWork, onRe
               </div>
 
               {formData.categorias.includes('com_submissao') && (
-                <div className="card text-center" style={{ backgroundColor: '#f0f9ff', padding: '1.5rem', borderRadius: '8px', border: '1px dashed var(--accent-primary)', marginBottom: '2rem' }}>
-                  <h4 style={{ color: 'var(--accent-primary)', marginBottom: '0.5rem' }}>Submissão de Trabalho</h4>
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0 }}>
-                    Para facilitar, o envio do arquivo do seu trabalho será feito <strong>após a confirmação do pagamento</strong>, diretamente no seu Painel do Participante (Aba "Meus Trabalhos").
+                <div className="card text-center" style={{ backgroundColor: '#fffbeb', padding: '1.5rem', borderRadius: '8px', border: '1px dashed #d97706', marginBottom: '2rem' }}>
+                  <h4 style={{ color: '#b45309', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                    Atenção: Submissão de Trabalhos
+                  </h4>
+                  <p style={{ color: '#92400e', fontSize: '0.9rem', margin: 0, lineHeight: '1.5' }}>
+                    Adquira a categoria <strong>Apresentador</strong> apenas se o seu trabalho <strong>já foi aprovado</strong> no seu Painel de Participante.<br/>
+                    Se você deseja enviar um trabalho novo para avaliação (sem compromisso de pagamento prévio), não compre este ingresso agora. Vá no seu perfil em <strong>"Meus Trabalhos"</strong> e submeta gratuitamente.
                   </p>
                 </div>
               )}

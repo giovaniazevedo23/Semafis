@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { FileText, CheckCircle, AlertCircle, Edit3 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-export function EvaluatorDashboard({ user, avaliadores, submissions, events, onUpdateSubmission }) {
+export function EvaluatorDashboard({ user, avaliadores, submissions, events, onUpdateSubmission, onSendNotification }) {
   const [evaluatingSubId, setEvaluatingSubId] = useState(null);
   const [evaluationData, setEvaluationData] = useState({ nota: '', comentario: '' });
 
@@ -21,21 +21,22 @@ export function EvaluatorDashboard({ user, avaliadores, submissions, events, onU
   if (!isAvaliador) {
     return (
       <div className="container text-center" style={{ paddingTop: '5rem' }}>
-        <h2>Acesso Restrito</h2>
-        <p>Esta página é exclusiva para Avaliadores cadastrados pela organização.</p>
-        <Link to="/" className="btn btn-primary mt-4" style={{ textDecoration: 'none' }}>Voltar ao Início</Link>
+        <h2>Acesso Negado</h2>
+        <p>Apenas membros da comissão científica podem acessar este painel.</p>
       </div>
     );
   }
 
-  const mySubmissions = submissions.filter(sub => (sub.avaliadoresEmails || []).includes(user.email));
+  const mySubmissions = submissions.filter(sub => 
+    sub.avaliadoresEmails && sub.avaliadoresEmails.includes(user.email)
+  );
 
   const handleEvaluateClick = (subId) => {
     setEvaluatingSubId(subId);
     setEvaluationData({ nota: '', comentario: '' });
   };
 
-  const handleSubmitEvaluation = (e, sub) => {
+  const submitEvaluation = (e, sub) => {
     e.preventDefault();
     const nota = Number(evaluationData.nota);
     
@@ -44,9 +45,15 @@ export function EvaluatorDashboard({ user, avaliadores, submissions, events, onU
       return;
     }
 
-    const newAvaliacao = { avaliadorEmail: user.email, nota, comentario: evaluationData.comentario, data: new Date().toISOString() };
-    const currentAvaliacoes = sub.avaliacoes || [];
-    const updatedAvaliacoes = [...currentAvaliacoes.filter(a => a.avaliadorEmail !== user.email), newAvaliacao];
+    const newAvaliacao = {
+      avaliadorEmail: user.email,
+      nota,
+      comentario: evaluationData.comentario,
+      data: new Date().toISOString()
+    };
+
+    const updatedAvaliacoes = (sub.avaliacoes || []).filter(a => a.avaliadorEmail !== user.email);
+    updatedAvaliacoes.push(newAvaliacao);
     
     const updates = { avaliacoes: updatedAvaliacoes };
 
@@ -55,7 +62,63 @@ export function EvaluatorDashboard({ user, avaliadores, submissions, events, onU
     if (updatedAvaliacoes.length >= sub.avaliadoresEmails.length) {
       const soma = updatedAvaliacoes.reduce((acc, curr) => acc + curr.nota, 0);
       const media = soma / updatedAvaliacoes.length;
-      updates.status = media >= 80 ? 'aprovado' : 'rejeitado';
+      const novoStatus = media >= 80 ? 'aprovado' : 'rejeitado';
+      updates.status = novoStatus;
+
+      // Gerar a notificação para o usuário (Carta de Aceite ou Rejeição)
+      if (onSendNotification) {
+        let title = '';
+        let content = '';
+
+        if (novoStatus === 'aprovado') {
+          title = `Resultado da Submissão: Trabalho APROVADO - SEMAFIS`;
+          content = `Prezado(a) ${sub.usuario.toUpperCase()},
+
+É com grande satisfação que a comissão científica da Semana da Física do Instituto Federal do Piauí (IFPI) - Campus Teresina Central informa que o seu trabalho intitulado "${sub.trabalho.toUpperCase()}" foi APROVADO para apresentação em nosso evento!
+
+Parabenizamos pela qualidade da pesquisa e pela contribuição para o debate acadêmico em nossa área.
+
+Detalhes da Apresentação:
+Data: A definir pela organização
+Horário: A definir pela organização
+Local/Sala: A definir pela organização
+Modalidade: ${sub.modalidade === 'poster' ? 'Pôster (PO)' : 'Comunicação Oral'}
+
+Solicitamos que acesse a aba "Meus Ingressos" ou a tela inicial do site para adquirir o seu ingresso da categoria "Apresentador" e confirmar a sua participação oficial no evento. Lembre-se de que o dia e o horário informados podem sofrer pequenos ajustes até a divulgação da programação final.
+
+Nos vemos no evento!
+
+Atenciosamente,
+Comissão Científica - SEMAFIS`;
+        } else {
+          title = `Resultado da Submissão - SEMAFIS`;
+          const notasCriterios = updatedAvaliacoes.map(av => `Nota: ${av.nota}/100 - Parecer: ${av.comentario || 'Sem observações'}`).join('\n\n');
+          
+          content = `Prezado(a) ${sub.usuario.toUpperCase()},
+
+Agradecemos o envio do seu trabalho intitulado "${sub.trabalho.toUpperCase()}" para a Semana da Física do Instituto Federal do Piauí (IFPI) - Campus Teresina Central.
+
+Informamos que, após uma análise cuidadosa da nossa comissão científica, o seu projeto não foi selecionado para apresentação nesta edição do evento. A avaliação levou em consideração a média das notas (Média final alcançada: ${media.toFixed(1)}/100, sendo necessário no mínimo 80/100 para aprovação).
+
+Os pareceres detalhados dos avaliadores, contendo sugestões e observações construtivas, seguem abaixo:
+
+${notasCriterios}
+
+Esperamos que esse feedback seja valioso para o aperfeiçoamento da sua pesquisa. Valorizamos muito o seu interesse e esforço, e o encorajamos fortemente a continuar desenvolvendo seus estudos e a submeter novos trabalhos em nossas futuras edições.
+
+Você continua sendo nosso(a) convidado(a) especial para participar de todas as palestras, minicursos e debates da SEMAFIS.
+
+Atenciosamente,
+Comissão Científica - SEMAFIS`;
+        }
+
+        onSendNotification({
+          userEmail: sub.userEmail,
+          type: novoStatus,
+          title,
+          content
+        });
+      }
     }
 
     onUpdateSubmission(sub.id, updates);
@@ -146,7 +209,7 @@ export function EvaluatorDashboard({ user, avaliadores, submissions, events, onU
                     </button>
                   </div>
                 ) : isEvaluating ? (
-                  <form onSubmit={(e) => handleSubmitEvaluation(e, sub)} style={{ backgroundColor: '#f8fafc', padding: '1.5rem', borderRadius: '8px', border: '1px solid #16a34a' }}>
+                  <form onSubmit={(e) => submitEvaluation(e, sub)} style={{ backgroundColor: '#f8fafc', padding: '1.5rem', borderRadius: '8px', border: '1px solid #16a34a' }}>
                     <h4 style={{ marginBottom: '1rem', color: '#16a34a', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Edit3 size={18} /> Dar Nota e Parecer</h4>
                     
                     <div className="form-group mb-4">

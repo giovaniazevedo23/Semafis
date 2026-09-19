@@ -41,6 +41,7 @@ function App() {
   const [ingressos, setIngressos] = useState([]);
   const [monitors, setMonitors] = useState([]);
   const [avaliadores, setAvaliadores] = useState([]);
+  const [notifications, setNotifications] = useState([]);
   const [user, setUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
 
@@ -52,6 +53,7 @@ function App() {
     const unsubIngressos = listenCollection('ingressos', setIngressos);
     const unsubMonitors = listenCollection('monitors', setMonitors);
     const unsubAvaliadores = listenCollection('avaliadores', setAvaliadores);
+    const unsubNotifications = listenCollection('notifications', setNotifications);
 
     return () => {
       unsubEvents();
@@ -59,6 +61,7 @@ function App() {
       unsubIngressos();
       unsubMonitors();
       unsubAvaliadores();
+      unsubNotifications();
     };
   }, []);
 
@@ -129,6 +132,24 @@ function App() {
     await addDocument('avaliadores', avaliadorData);
   };
 
+  const handleSendNotification = async (notificationData) => {
+    const id = 'NOTIF-' + Date.now().toString().slice(-6);
+    const cleanData = Object.fromEntries(
+      Object.entries(notificationData).map(([k, v]) => [k, v === undefined ? '' : v])
+    );
+    const notifFinal = { id, timestamp: new Date().toISOString(), ...cleanData };
+
+    try {
+      await setDocument('notifications', id, notifFinal);
+    } catch (e) {
+      console.error('Falha ao salvar notificacao no Firestore. Usando plano B', e);
+      const localNotif = JSON.parse(localStorage.getItem('fallback_notifications') || '[]');
+      localNotif.push(notifFinal);
+      localStorage.setItem('fallback_notifications', JSON.stringify(localNotif));
+      setNotifications(prev => [...prev, notifFinal]);
+    }
+  };
+
   const handleRegister = async (ingressoData) => {
     const id = 'ING-' + Date.now().toString().slice(-6);
     
@@ -176,9 +197,9 @@ function App() {
             <Route path="/evento/:id" element={<EventDetails events={events} />} />
             <Route path="/evento/:id/inscricao" element={<RegistrationForm events={events} user={user} userProfile={userProfile} onSubmitWork={handleSubmitWork} onRegister={handleRegister} monitors={monitors} />} />
             <Route path="/organizador" element={<OrganizerDashboard events={events} onAddEvent={handleAddEvent} onUpdateEvent={handleUpdateEvent} submissions={allSubmissions} onUpdateSubmission={handleUpdateSubmission} monitors={monitors} onAddMonitor={handleAddMonitor} avaliadores={avaliadores} onAddAvaliador={handleAddAvaliador} />} />
-            <Route path="/painel-usuario" element={<UserDashboard submissions={allSubmissions.filter(s => !user || s.userEmail === user.email)} ingressos={allIngressos.filter(i => !user || i.userEmail === user.email)} events={events} user={user} onSubmitWork={handleSubmitWork} />} />
+            <Route path="/painel-usuario" element={<UserDashboard submissions={allSubmissions.filter(s => !user || s.userEmail === user.email)} ingressos={allIngressos.filter(i => !user || i.userEmail === user.email)} events={events} user={user} onSubmitWork={handleSubmitWork} notifications={notifications.filter(n => !user || n.userEmail === user.email)} />} />
             <Route path="/painel-monitor" element={<MonitorDashboard user={user} monitors={monitors} submissions={submissions} avaliadores={avaliadores} events={events} ingressos={ingressos} />} />
-            <Route path="/painel-avaliador" element={<EvaluatorDashboard user={user} avaliadores={avaliadores} submissions={submissions} events={events} onUpdateSubmission={handleUpdateSubmission} />} />
+            <Route path="/painel-avaliador" element={<EvaluatorDashboard user={user} avaliadores={avaliadores} submissions={submissions} events={events} onUpdateSubmission={handleUpdateSubmission} onSendNotification={handleSendNotification} />} />
             <Route path="/validar" element={<ValidarCredencial />} />
           </Routes>
         </main>

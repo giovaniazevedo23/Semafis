@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, Clock, MonitorPlay, Presentation, FileText, Printer, Ticket, Award, FileUp } from 'lucide-react';
+import { Calendar, Clock, MonitorPlay, Presentation, FileText, Printer, Ticket, Award, FileUp, Mail, AlertCircle } from 'lucide-react';
 
 import { CredentialTicket } from '../components/CredentialTicket';
 import { Badge } from '../components/Badge';
 import { uploadFile } from '../services/db';
 
-export function UserDashboard({ submissions, events, ingressos = [], user, onSubmitWork }) {
+export function UserDashboard({ submissions, events, ingressos = [], user, onSubmitWork, notifications = [] }) {
   const [activeTab, setActiveTab] = useState('trabalhos');
   const [viewingEvaluation, setViewingEvaluation] = useState(null);
   const [viewingCertificate, setViewingCertificate] = useState(null);
@@ -21,8 +21,37 @@ export function UserDashboard({ submissions, events, ingressos = [], user, onSub
   });
   const [trabalhoFile, setTrabalhoFile] = useState(null);
 
-  const ingressosApresentador = ingressos.filter(i => i.categoriasDisplay && i.categoriasDisplay.includes('Apresentador'));
-  const canSubmit = ingressosApresentador.length > submissions.length;
+  const canSubmit = true; 
+  
+  const temTrabalhoAprovado = submissions.some(s => s.status === 'aprovado');
+  const temIngressoApresentador = ingressos.some(i => i.categoriasDisplay && i.categoriasDisplay.includes('Apresentador'));
+  const precisaComprarIngresso = temTrabalhoAprovado && !temIngressoApresentador;
+
+  const welcomeMessage = {
+    id: 'welcome_msg',
+    type: 'welcome',
+    title: 'Bem-vindo(a) à SEMAFIS - Semana da Física do IFPI!',
+    date: new Date().toISOString(),
+    content: `Olá, ${user?.displayName || (user?.email ? user.email.split('@')[0] : 'Participante')}!
+
+Seja muito bem-vindo(a) à plataforma oficial da SEMAFIS - Semana da Física do Instituto Federal do Piauí (IFPI) - Campus Teresina Central.
+
+Este sistema foi desenvolvido para facilitar a sua jornada durante o nosso evento, centralizando as informações sobre palestras, minicursos, submissões de trabalhos e certificados. A SEMAFIS é um espaço dedicado à troca de conhecimentos, divulgação científica e fortalecimento da nossa comunidade acadêmica.
+
+Próximos passos:
+• Complete o seu perfil na plataforma.
+• Acompanhe o cronograma atualizado e inscreva-se nas atividades do seu interesse.
+• Fique atento à aba de "Submissões" caso deseje apresentar sua pesquisa.
+
+O evento ocorrerá em breve. Caso haja qualquer alteração de datas ou horários, você será notificado diretamente por aqui.
+
+Em caso de dúvidas, nossa comissão organizadora está à disposição através do e-mail de contato.
+
+Saudações científicas,
+Comissão Organizadora - SEMAFIS`
+  };
+
+  const displayNotifications = [welcomeMessage, ...notifications].sort((a, b) => new Date(b.date) - new Date(a.date));
 
   const handleSubmitAction = async (e) => {
     e.preventDefault();
@@ -63,6 +92,11 @@ export function UserDashboard({ submissions, events, ingressos = [], user, onSub
     window.print();
   };
 
+  // Mock de Certificados (Para visualização)
+  const mockCertificados = events.length > 0 ? [
+    { id: 'CERT-001', eventId: events[0].id, type: 'Participação no Evento', ch: '40h' }
+  ] : [];
+
   // Visão de Certificado (Impressão)
   if (viewingCertificate) {
     const cert = viewingCertificate;
@@ -75,24 +109,29 @@ export function UserDashboard({ submissions, events, ingressos = [], user, onSub
           <Printer size={16} /> Imprimir / Salvar PDF
         </button>
 
-        <div className="card print-area" style={{ padding: '4rem', maxWidth: '1000px', margin: '0 auto', border: '10px solid var(--accent-primary)', backgroundColor: 'white', color: 'black', textAlign: 'center' }}>
-          {evento?.logoUrl && <img src={evento.logoUrl} alt="Logo" style={{ height: '80px', marginBottom: '2rem', objectFit: 'contain' }} />}
+        <div className="card print-area" style={{ padding: '4rem', maxWidth: '800px', margin: '0 auto', border: '10px solid var(--accent-primary)', backgroundColor: 'white', color: 'black', position: 'relative' }}>
+          <div style={{ position: 'absolute', top: '2rem', right: '2rem', width: '100px', height: '100px', opacity: 0.1, backgroundImage: 'url("https://images.unsplash.com/photo-1507413245164-6160d8298b31?auto=format&fit=crop&q=80")', backgroundSize: 'cover' }}></div>
           
-          <h1 style={{ fontSize: '3rem', color: 'var(--accent-primary)', marginBottom: '3rem', fontFamily: 'serif' }}>CERTIFICADO</h1>
-          
-          <p style={{ fontSize: '1.25rem', lineHeight: '2', marginBottom: '4rem' }}>
-            Certificamos para os devidos fins que <strong>Usuário Demo</strong> participou do evento<br/>
-            <strong style={{ fontSize: '1.5rem' }}>{evento?.title}</strong><br/>
-            na condição de <strong>{cert.type}</strong>, com carga horária total de <strong>{cert.ch}</strong>.
+          <h1 style={{ textAlign: 'center', fontSize: '3rem', marginBottom: '1rem', color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '2px' }}>Certificado</h1>
+          <h2 style={{ textAlign: 'center', fontSize: '1.5rem', marginBottom: '3rem', color: 'black', fontWeight: 'normal' }}>de {cert.type}</h2>
+
+          <p style={{ fontSize: '1.25rem', lineHeight: '2', textAlign: 'justify', marginBottom: '3rem' }}>
+            Certificamos que <strong>{user?.displayName?.toUpperCase() || 'PARTICIPANTE'}</strong> participou do evento <strong>{evento?.title.toUpperCase()}</strong>, na modalidade presencial, cumprindo carga horária total de <strong>{cert.ch}</strong>.
           </p>
 
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '4rem', marginTop: '6rem' }}>
-            <div style={{ borderTop: '1px solid black', width: '250px', paddingTop: '0.5rem' }}>
-              <strong>Coordenação do Evento</strong>
+          <div style={{ display: 'flex', justifyContent: 'space-around', marginTop: '4rem' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ width: '200px', borderBottom: '1px solid black', marginBottom: '0.5rem' }}></div>
+              <p style={{ fontSize: '0.875rem' }}>Coordenação do Evento</p>
             </div>
-            <div style={{ borderTop: '1px solid black', width: '250px', paddingTop: '0.5rem' }}>
-              <strong>Comissão Científica</strong>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ width: '200px', borderBottom: '1px solid black', marginBottom: '0.5rem' }}></div>
+              <p style={{ fontSize: '0.875rem' }}>Direção Geral</p>
             </div>
+          </div>
+
+          <div style={{ marginTop: '4rem', fontSize: '0.75rem', color: '#666', textAlign: 'center' }}>
+            Código de Autenticação: {cert.id}-{user?.uid?.slice(0,6) || 'XXXXXX'}-{new Date().getFullYear()}
           </div>
         </div>
 
@@ -170,18 +209,62 @@ export function UserDashboard({ submissions, events, ingressos = [], user, onSub
       <h1 style={{ fontSize: '2.25rem', fontWeight: '700', marginBottom: '0.5rem' }}>Área do Participante</h1>
       <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>Gerencie seus ingressos, submissões e certificados de participação.</p>
 
+      {precisaComprarIngresso && (
+        <div className="card" style={{ backgroundColor: '#f0fdf4', borderColor: '#bbf7d0', marginBottom: '2rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <AlertCircle size={32} style={{ color: '#16a34a', flexShrink: 0 }} />
+          <div>
+            <h3 style={{ color: '#166534', margin: 0, marginBottom: '0.25rem' }}>Parabéns! Seu trabalho foi aprovado.</h3>
+            <p style={{ color: '#15803d', margin: 0 }}>Para confirmar sua apresentação no evento, você precisa adquirir o ingresso da categoria <strong>Apresentador</strong>.</p>
+            <Link to="/" className="btn btn-primary" style={{ marginTop: '1rem', display: 'inline-block', backgroundColor: '#16a34a' }}>Comprar Ingresso de Apresentador</Link>
+          </div>
+        </div>
+      )}
+
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', borderBottom: '2px solid var(--border-color)', paddingBottom: '0.5rem' }}>
+      <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', borderBottom: '2px solid var(--border-color)', paddingBottom: '0.5rem', overflowX: 'auto' }}>
         <button onClick={() => setActiveTab('trabalhos')} className={`btn ${activeTab === 'trabalhos' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          <FileText size={18} /> Meus Trabalhos
+          <FileText size={18} /> Trabalhos
         </button>
         <button onClick={() => setActiveTab('ingressos')} className={`btn ${activeTab === 'ingressos' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          <Ticket size={18} /> Meus Ingressos
+          <Ticket size={18} /> Ingressos
         </button>
         <button onClick={() => setActiveTab('certificados')} className={`btn ${activeTab === 'certificados' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          <Award size={18} /> Meus Certificados
+          <Award size={18} /> Certificados
+        </button>
+        <button onClick={() => setActiveTab('mensagens')} className={`btn ${activeTab === 'mensagens' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none', display: 'flex', gap: '0.5rem', alignItems: 'center', position: 'relative' }}>
+          <Mail size={18} /> Mensagens
+          {displayNotifications.length > 0 && (
+            <span style={{ position: 'absolute', top: '-5px', right: '-5px', backgroundColor: '#ef4444', color: 'white', fontSize: '0.7rem', borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {displayNotifications.length}
+            </span>
+          )}
         </button>
       </div>
+
+      {/* Mensagens Tab */}
+      {activeTab === 'mensagens' && (
+        <div className="grid grid-cols-1 gap-6">
+          {displayNotifications.length === 0 ? (
+            <div className="card text-center" style={{ padding: '3rem 2rem' }}>
+              <h2>Nenhuma mensagem no momento.</h2>
+            </div>
+          ) : (
+            displayNotifications.map((notif) => (
+              <div key={notif.id} className="card" style={{ padding: '2rem', borderLeft: '4px solid var(--accent-primary)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <h3 style={{ fontSize: '1.25rem', color: 'var(--accent-primary)', margin: 0 }}>{notif.title}</h3>
+                  <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                    {new Date(notif.date).toLocaleDateString()} {new Date(notif.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+                <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6', color: 'var(--text-primary)' }}>
+                  {notif.content}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      )}
 
       {/* Trabalhos Tab */}
       {activeTab === 'trabalhos' && (
