@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Users, FileText, CheckCircle, Calendar, Camera, QrCode } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { Scanner } from '@yudiel/react-qr-scanner';
 import { Badge } from '../components/Badge';
 
 export function MonitorDashboard({ user, monitors, submissions, avaliadores, events, ingressos = [] }) {
@@ -167,25 +166,26 @@ export function MonitorDashboard({ user, monitors, submissions, avaliadores, eve
 
           {isScanning && (
             <div className="card mb-8" style={{ padding: '1.5rem', backgroundColor: '#0f172a', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <div style={{ width: '100%', maxWidth: '400px', borderRadius: '8px', overflow: 'hidden' }}>
-                <Scanner 
-                  onScan={(result) => {
-                    if (result && result.length > 0) {
-                      try {
-                        const data = JSON.parse(result[0].rawValue);
-                        if (data.userId) {
-                          setScannedUserId(data.userId);
-                          alert(`Usuário ${data.userId} lido com sucesso!`);
-                          setIsScanning(false);
-                        }
-                      } catch (e) {
-                        console.error('QR Code inválido', e);
-                      }
+              <div style={{ width: '100%', maxWidth: '400px', borderRadius: '8px', overflow: 'hidden', backgroundColor: 'white', padding: '1.5rem' }}>
+                <h4 style={{ color: '#0f172a', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <QrCode size={20} /> Leitura Manual
+                </h4>
+                <p style={{ color: '#64748b', fontSize: '0.875rem', marginBottom: '1rem' }}>A câmera foi desativada temporariamente para evitar travamentos no seu dispositivo.</p>
+                <input 
+                  type="text" 
+                  placeholder="Digite o ID ou Email do Participante" 
+                  className="form-input"
+                  style={{ borderColor: '#cbd5e1' }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && e.target.value) {
+                      setScannedUserId(e.target.value);
+                      alert(`Usuário ${e.target.value} lido com sucesso!`);
+                      setIsScanning(false);
                     }
                   }} 
                 />
               </div>
-              <p style={{ color: 'white', marginTop: '1rem' }}>Aponte a câmera para o QR Code do Crachá ou Ingresso do participante.</p>
+              <p style={{ color: 'white', marginTop: '1rem' }}>Digite o identificador e pressione ENTER para confirmar.</p>
             </div>
           )}
 

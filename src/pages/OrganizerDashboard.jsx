@@ -337,9 +337,19 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
                           <tr key={i} style={{ borderBottom: '1px solid #cbd5e1' }}>
                             <td style={{ padding: '0.75rem' }}>{sub.usuario}</td>
                             <td style={{ padding: '0.75rem', textAlign: 'right' }}>
-                              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'flex-end', cursor: 'pointer', fontWeight: 'bold', color: '#16a34a' }}>
-                                <input type="checkbox" style={{ width: '1.25rem', height: '1.25rem' }} />
-                                Presente
+                              <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                                <div style={{ position: 'relative' }}>
+                                  <input type="checkbox" className="sr-only" style={{ display: 'none' }} />
+                                  <div style={{ width: '48px', height: '24px', backgroundColor: '#cbd5e1', borderRadius: '9999px', transition: 'background-color 0.3s', display: 'flex', alignItems: 'center', padding: '2px' }} onMouseDown={(e) => {
+                                    const parent = e.currentTarget;
+                                    const isChecked = parent.style.backgroundColor === 'rgb(16, 185, 129)' || parent.style.backgroundColor === '#10b981';
+                                    parent.style.backgroundColor = isChecked ? '#cbd5e1' : '#10b981';
+                                    parent.firstChild.style.transform = isChecked ? 'translateX(0)' : 'translateX(24px)';
+                                  }}>
+                                    <div style={{ width: '20px', height: '20px', backgroundColor: 'white', borderRadius: '50%', transform: 'translateX(0)', transition: 'transform 0.3s', boxShadow: '0 1px 3px rgba(0,0,0,0.3)' }}></div>
+                                  </div>
+                                </div>
+                                <span style={{ marginLeft: '0.5rem', fontWeight: 'bold', color: '#64748b' }}>Presente</span>
                               </label>
                             </td>
                           </tr>

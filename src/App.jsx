@@ -139,6 +139,18 @@ function App() {
     );
     const notifFinal = { id, timestamp: new Date().toISOString(), ...cleanData };
 
+    // Disparar o e-mail real via EmailJS (não bloqueia o fluxo principal)
+    if (notifFinal.userEmail) {
+      import('./services/email.js').then(({ sendEmailNotification }) => {
+        sendEmailNotification(
+          notifFinal.userEmail, 
+          notifFinal.userEmail.split('@')[0], // Nome provisório
+          notifFinal.title, 
+          notifFinal.content
+        );
+      });
+    }
+
     try {
       await setDocument('notifications', id, notifFinal);
     } catch (e) {
