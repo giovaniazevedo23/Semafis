@@ -5,7 +5,7 @@ import { signOut } from 'firebase/auth';
 import { auth } from '../firebase';
 import logoImg from '../assets/logo.png';
 
-export function Navbar({ user, userProfile, monitors = [], avaliadores = [] }) {
+export function Navbar({ user, userProfile, monitors = [], avaliadores = [], events = [] }) {
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
@@ -34,11 +34,32 @@ export function Navbar({ user, userProfile, monitors = [], avaliadores = [] }) {
     }
   };
 
+  const eventMatch = location.pathname.match(/\/evento\/([^/]+)/);
+  const currentEventId = eventMatch ? eventMatch[1] : null;
+  const currentEvent = events?.find(e => e.id === currentEventId) || (events && events.length > 0 ? events[0] : null);
+
+  let edition = "I";
+  if (currentEvent && currentEvent.title) {
+    // Tenta encontrar um número romano ou decimal no início do título
+    const match = currentEvent.title.match(/^([XIVMCDL]+|\d+)\b/i);
+    if (match) {
+      edition = match[1].toUpperCase();
+    }
+  }
+
   return (
     <nav className="navbar" style={{ position: 'relative', zIndex: 1000 }}>
       <div className="container navbar-content" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Link to="/" className="flex items-center" style={{ textDecoration: 'none' }}>
-          <img src={logoImg} alt="Semafis Logo" style={{ height: '140px', objectFit: 'contain', margin: '-30px 0', marginLeft: '-10px' }} />
+        <Link to="/" className="flex items-center" style={{ textDecoration: 'none', gap: '1rem' }}>
+          <img src={logoImg} alt="Semafis Logo" style={{ height: '50px', objectFit: 'contain' }} />
+          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+             <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: 'var(--accent-primary)', lineHeight: 1, letterSpacing: '2px' }}>
+                {edition} EDIÇÃO
+             </span>
+             <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--text-primary)', lineHeight: 1, letterSpacing: '1px' }}>
+                SEMAFIS
+             </span>
+          </div>
         </Link>
         
         <div style={{ position: 'relative' }} ref={menuRef}>

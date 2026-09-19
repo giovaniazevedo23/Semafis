@@ -208,7 +208,7 @@ function App() {
   return (
     <Router>
       <div className="page-wrapper">
-        <Navbar user={user} userProfile={userProfile} monitors={monitors} avaliadores={avaliadores} />
+        <Navbar user={user} userProfile={userProfile} monitors={monitors} avaliadores={avaliadores} events={events} />
         <main className="main-content">
           <Routes>
             <Route path="/" element={<ClientPortal events={events} />} />
