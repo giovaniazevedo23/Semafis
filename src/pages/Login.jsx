@@ -15,6 +15,22 @@ export function Login({ setUser, monitors, avaliadores }) {
       const result = await signInWithPopup(auth, googleProvider);
       const userEmail = result.user.email;
 
+      // Verificação de Email Falso ou Suspeito
+      const isSuspicious = (email) => {
+        if (!email) return true;
+        const domain = email.split('@')[1];
+        if (!domain) return true;
+        const suspiciousDomains = ['matadordeporco', 'desconhecido', 'temp', 'fake', 'test'];
+        return suspiciousDomains.some(d => domain.includes(d));
+      };
+
+      if (isSuspicious(userEmail)) {
+        alert(`Acesso Negado: O e-mail (${userEmail}) foi detectado como temporário ou inválido pelo sistema de segurança.`);
+        await auth.signOut();
+        setIsLoading(false);
+        return;
+      }
+
       // Verificação de Restrição
       if (role === 'avaliador') {
         const isAvaliador = avaliadores.some(a => a.email === userEmail);
