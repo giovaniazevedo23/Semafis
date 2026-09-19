@@ -60,10 +60,9 @@ export const uploadFile = async (path, file) => {
   if (!file) return null;
   try {
     const storageRef = ref(storage, path);
-    
-    // Define um timeout de 8 segundos para evitar travamento se o Storage não estiver configurado
+    // Define um timeout maior (30 segundos) para permitir o upload de PDFs pesados
     const uploadTask = uploadBytes(storageRef, file);
-    const timeoutTask = new Promise((_, reject) => setTimeout(() => reject(new Error("Upload timeout (Servidor demorou a responder)")), 8000));
+    const timeoutTask = new Promise((_, reject) => setTimeout(() => reject(new Error("Upload timeout (Servidor demorou a responder)")), 30000));
     
     await Promise.race([uploadTask, timeoutTask]);
     
