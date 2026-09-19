@@ -5,7 +5,7 @@ export function ClientPortal({ events }) {
   return (
     <div className="container">
       <div className="text-center mb-8" style={{ marginTop: '3rem' }}>
-        <h1 style={{ fontSize: '4rem', fontWeight: '900', color: 'var(--accent-primary)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '2px' }}>
+        <h1 style={{ fontSize: '4rem', fontWeight: '900', color: 'black', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '2px' }}>
           SEMAFIS
         </h1>
         <p style={{ fontSize: '1.25rem', maxWidth: '800px', margin: '0 auto', fontWeight: '500', color: 'var(--text-secondary)' }}>
@@ -13,10 +13,10 @@ export function ClientPortal({ events }) {
         </p>
       </div>
 
-      <div className="flex justify-between items-center mb-8">
-        <h2 style={{ fontSize: '1.875rem' }}>Próximos Eventos</h2>
+      <div className="flex justify-between items-center mb-8" style={{ gap: '2rem' }}>
+        <h2 style={{ fontSize: '1.875rem', whiteSpace: 'nowrap' }}>Próximos Eventos</h2>
         
-        <div style={{ position: 'relative', width: '450px', maxWidth: '100%' }}>
+        <div style={{ position: 'relative', flex: 1, maxWidth: '800px' }}>
           <input 
             type="text" 
             placeholder="Buscar eventos..." 

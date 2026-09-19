@@ -299,8 +299,7 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
                 <input type="text" placeholder="Nome Completo" value={avaliadorData.nome} onChange={e => setAvaliadorData({...avaliadorData, nome: e.target.value})} className="form-input mb-2" required />
                 <input type="email" placeholder="E-mail" value={avaliadorData.email} onChange={e => setAvaliadorData({...avaliadorData, email: e.target.value})} className="form-input mb-2" required />
                 <input type="text" placeholder="Matrícula" value={avaliadorData.matricula} onChange={e => setAvaliadorData({...avaliadorData, matricula: e.target.value})} className="form-input mb-2" required />
-                <input type="tel" placeholder="Telefone" value={avaliadorData.telefone} onChange={e => setAvaliadorData({...avaliadorData, telefone: e.target.value})} className="form-input mb-2" required />
-                <input type="url" placeholder="Link da Foto" value={avaliadorData.fotoUrl} onChange={e => setAvaliadorData({...avaliadorData, fotoUrl: e.target.value})} className="form-input mb-4" />
+                <input type="tel" placeholder="Telefone" value={avaliadorData.telefone} onChange={e => setAvaliadorData({...avaliadorData, telefone: e.target.value})} className="form-input mb-4" required />
                 <button type="submit" className="btn btn-primary" style={{ width: '100%', backgroundColor: '#16a34a', border: 'none' }}>Cadastrar Avaliador</button>
               </form>
               <h3 style={{ fontSize: '1rem', marginBottom: '0.5rem' }}>Lista</h3>

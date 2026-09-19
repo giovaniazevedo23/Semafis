@@ -73,7 +73,7 @@ export function EventForm({ onSubmit }) {
       <div className="form-group">
         <label className="form-label">
           <div className="flex items-center gap-2 mb-2">
-            <Type size={16} /> Título do Evento
+            Título do Evento
           </div>
         </label>
         <input type="text" name="title" value={formData.title} onChange={handleChange} className="form-input" placeholder="Ex: Simpósio Nacional 2026" required />
@@ -82,14 +82,14 @@ export function EventForm({ onSubmit }) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="form-group">
           <label className="form-label">
-            <div className="flex items-center gap-2 mb-2"><Calendar size={16} /> Data Principal (Início do Evento)</div>
+            <div className="flex items-center gap-2 mb-2">Data Principal (Início do Evento)</div>
           </label>
           <input type="date" name="date" value={formData.date} onChange={handleChange} className="form-input" required />
         </div>
 
         <div className="form-group">
           <label className="form-label">
-            <div className="flex items-center gap-2 mb-2"><MapPin size={16} /> Local Principal</div>
+            <div className="flex items-center gap-2 mb-2">Local Principal</div>
           </label>
           <input type="text" name="location" value={formData.location} onChange={handleChange} className="form-input" placeholder="Ex: Universidade Federal" required />
         </div>
@@ -98,14 +98,14 @@ export function EventForm({ onSubmit }) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4" style={{ backgroundColor: '#fdf4ff', padding: '1rem', borderRadius: '8px', border: '1px solid #f5d0fe', marginBottom: '1.5rem' }}>
         <div className="form-group" style={{ marginBottom: 0 }}>
           <label className="form-label">
-            <div className="flex items-center gap-2 mb-2" style={{ color: '#86198f' }}><CalendarClock size={16} /> Início das Inscrições</div>
+            <div className="flex items-center gap-2 mb-2" style={{ color: '#86198f' }}>Início das Inscrições</div>
           </label>
           <input type="date" name="dataInicioInscricao" value={formData.dataInicioInscricao} onChange={handleChange} className="form-input" required />
         </div>
 
         <div className="form-group" style={{ marginBottom: 0 }}>
           <label className="form-label">
-            <div className="flex items-center gap-2 mb-2" style={{ color: '#86198f' }}><CalendarClock size={16} /> Término das Inscrições</div>
+            <div className="flex items-center gap-2 mb-2" style={{ color: '#86198f' }}>Término das Inscrições</div>
           </label>
           <input type="date" name="dataFimInscricao" value={formData.dataFimInscricao} onChange={handleChange} className="form-input" required />
         </div>
@@ -114,14 +114,14 @@ export function EventForm({ onSubmit }) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="form-group">
           <label className="form-label">
-            <div className="flex items-center gap-2 mb-2"><DollarSign size={16} /> Inscrição COM Submissão (R$)</div>
+            <div className="flex items-center gap-2 mb-2">Inscrição COM Submissão (R$)</div>
           </label>
           <input type="number" name="priceWithSubmission" value={formData.priceWithSubmission} onChange={handleChange} className="form-input" placeholder="Ex: 100.00" step="0.01" min="0" />
         </div>
 
         <div className="form-group">
           <label className="form-label">
-            <div className="flex items-center gap-2 mb-2"><DollarSign size={16} /> Inscrição SEM Submissão (R$)</div>
+            <div className="flex items-center gap-2 mb-2">Inscrição SEM Submissão (R$)</div>
           </label>
           <input type="number" name="priceWithoutSubmission" value={formData.priceWithoutSubmission} onChange={handleChange} className="form-input" placeholder="Ex: 50.00" step="0.01" min="0" />
         </div>
@@ -130,7 +130,7 @@ export function EventForm({ onSubmit }) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="form-group">
           <label className="form-label">
-            <div className="flex items-center gap-2 mb-2"><ImageIcon size={16} /> Imagem de Capa</div>
+            <div className="flex items-center gap-2 mb-2">Imagem de Capa</div>
           </label>
           <input type="file" accept="image/*" onChange={(e) => handleImageChange(e, 'cover')} className="form-input" style={{ padding: '0.5rem 1rem' }} />
           {imagePreview && (
@@ -142,7 +142,7 @@ export function EventForm({ onSubmit }) {
 
         <div className="form-group">
           <label className="form-label">
-            <div className="flex items-center gap-2 mb-2"><ImageIcon size={16} /> Logo do Evento (Usada no Ingresso)</div>
+            <div className="flex items-center gap-2 mb-2">Logo do Evento (Usada no Ingresso)</div>
           </label>
           <input type="file" accept="image/*" onChange={(e) => handleImageChange(e, 'logo')} className="form-input" style={{ padding: '0.5rem 1rem' }} />
           {logoPreview && (
@@ -155,7 +155,7 @@ export function EventForm({ onSubmit }) {
 
       <div className="form-group">
         <label className="form-label">
-          <div className="flex items-center gap-2 mb-2"><Clock size={16} /> Cronograma Geral (Visual)</div>
+          <div className="flex items-center gap-2 mb-2">Cronograma Geral (Visual)</div>
         </label>
         <textarea name="schedule" value={formData.schedule} onChange={handleChange} className="form-input" rows="3" placeholder="Ex:&#10;08:00 - Credenciamento&#10;09:00 - Abertura"></textarea>
       </div>
@@ -222,7 +222,7 @@ export function EventForm({ onSubmit }) {
 
       <div className="form-group">
         <label className="form-label">
-          <div className="flex items-center gap-2 mb-2"><FileText size={16} /> Descrição Longa</div>
+          <div className="flex items-center gap-2 mb-2">Descrição Longa</div>
         </label>
         <textarea name="description" value={formData.description} onChange={handleChange} className="form-input" rows="4" required></textarea>
       </div>
