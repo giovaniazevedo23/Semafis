@@ -23,6 +23,11 @@ const DUMMY_EVENTS = [
     description: 'Junte-se aos pesquisadores e líderes da indústria para explorar o futuro da inteligência artificial.',
     imageUrl: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
     logoUrl: '',
+    packages: [
+      { id: '1', name: 'Ouvinte', price: '50.00', description: 'Acesso a todas as palestras\nCertificado de 40h', requireSubmission: false, highlight: false },
+      { id: '2', name: 'Apresentador', price: '100.00', description: 'Acesso completo\nApresentação de trabalho\nCertificado de Apresentador', requireSubmission: true, highlight: true },
+      { id: '3', name: 'VIP', price: '150.00', description: 'Acesso a minicursos\nKit do Evento\nLugar reservado', requireSubmission: false, highlight: false }
+    ],
     activities: [
       { name: 'Minicurso de React Avançado', minister: 'João Silva', time: '14:00 - 16:00', room: 'Sala 101' },
       { name: 'Oficina de Design Systems', minister: 'Maria Santos', time: '16:00 - 18:00', room: 'Laboratório 2' }

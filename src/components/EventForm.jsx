@@ -14,6 +14,7 @@ export function EventForm({ onSubmit }) {
     schedule: '',
     imageUrl: '',
     logoUrl: '',
+    packages: [], // { id, name, price, description, requireSubmission, highlight }
     activities: [] // { type, name, minister, startTime, endTime, room }
   });
   
@@ -57,10 +58,28 @@ export function EventForm({ onSubmit }) {
     setFormData(prev => ({ ...prev, activities: newActivities }));
   };
 
+  const addPackage = () => {
+    setFormData(prev => ({
+      ...prev,
+      packages: [...prev.packages, { id: Date.now().toString(), name: '', price: '', description: '', requireSubmission: false, highlight: false }]
+    }));
+  };
+
+  const updatePackage = (index, field, value) => {
+    const newPackages = [...formData.packages];
+    newPackages[index][field] = value;
+    setFormData(prev => ({ ...prev, packages: newPackages }));
+  };
+
+  const removePackage = (index) => {
+    const newPackages = formData.packages.filter((_, i) => i !== index);
+    setFormData(prev => ({ ...prev, packages: newPackages }));
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     onSubmit({ ...formData, id: Date.now().toString() });
-    setFormData({ title: '', date: '', location: '', description: '', priceWithSubmission: '', priceWithoutSubmission: '', dataInicioInscricao: '', dataFimInscricao: '', schedule: '', imageUrl: '', logoUrl: '', activities: [] });
+    setFormData({ title: '', date: '', location: '', description: '', dataInicioInscricao: '', dataFimInscricao: '', schedule: '', imageUrl: '', logoUrl: '', packages: [], activities: [] });
     setImagePreview(null);
     setLogoPreview(null);
     alert('Evento criado com sucesso!');
@@ -111,20 +130,58 @@ export function EventForm({ onSubmit }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="form-group">
-          <label className="form-label">
-            <div className="flex items-center gap-2 mb-2">Inscrição COM Submissão (R$)</div>
-          </label>
-          <input type="number" name="priceWithSubmission" value={formData.priceWithSubmission} onChange={handleChange} className="form-input" placeholder="Ex: 100.00" step="0.01" min="0" />
+      {/* Gerenciador de Pacotes de Inscrição */}
+      <div className="form-group" style={{ padding: '1.5rem', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid var(--border-color)', marginBottom: '1.5rem' }}>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <label className="form-label" style={{ margin: 0, fontSize: '1.1rem' }}>
+              Pacotes de Inscrição
+            </label>
+            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>Crie os diferentes tipos de ingressos (ex: Ouvinte, Apresentador, VIP).</p>
+          </div>
+          <button type="button" onClick={addPackage} className="btn btn-primary" style={{ padding: '0.5rem', fontSize: '0.875rem' }}>
+            <PlusCircle size={16} /> Adicionar Pacote
+          </button>
         </div>
+        
+        {(!formData.packages || formData.packages.length === 0) && (
+          <p style={{ color: '#ef4444', fontSize: '0.875rem', fontWeight: 'bold' }}>Adicione pelo menos um pacote de inscrição para que os participantes possam se inscrever.</p>
+        )}
 
-        <div className="form-group">
-          <label className="form-label">
-            <div className="flex items-center gap-2 mb-2">Inscrição SEM Submissão (R$)</div>
-          </label>
-          <input type="number" name="priceWithoutSubmission" value={formData.priceWithoutSubmission} onChange={handleChange} className="form-input" placeholder="Ex: 50.00" step="0.01" min="0" />
-        </div>
+        {formData.packages && formData.packages.map((pkg, index) => (
+          <div key={pkg.id || index} className="grid grid-cols-1 gap-4 mb-4" style={{ padding: '1.5rem', backgroundColor: 'white', borderRadius: '8px', border: pkg.highlight ? '2px solid var(--accent-primary)' : '1px solid #cbd5e1', position: 'relative' }}>
+            <button type="button" onClick={() => removePackage(index)} style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}>
+              <Trash2 size={16} />
+            </button>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--text-secondary)' }}>Nome do Pacote</label>
+                <input type="text" placeholder="Ex: Inscrição Padrão" value={pkg.name} onChange={(e) => updatePackage(index, 'name', e.target.value)} className="form-input" required />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--text-secondary)' }}>Preço (R$)</label>
+                <input type="number" placeholder="Ex: 50.00" value={pkg.price} onChange={(e) => updatePackage(index, 'price', e.target.value)} className="form-input" step="0.01" min="0" required />
+              </div>
+            </div>
+
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--text-secondary)' }}>Benefícios / Descrição (Um por linha)</label>
+              <textarea rows="3" placeholder="Ex:&#10;Acesso a todas as palestras&#10;Certificado de 40h" value={pkg.description} onChange={(e) => updatePackage(index, 'description', e.target.value)} className="form-input" required></textarea>
+            </div>
+
+            <div className="flex gap-4 mt-2">
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', cursor: 'pointer' }}>
+                <input type="checkbox" checked={pkg.requireSubmission} onChange={(e) => updatePackage(index, 'requireSubmission', e.target.checked)} style={{ width: '16px', height: '16px' }} />
+                Exclusivo para quem vai <strong>apresentar trabalho</strong>?
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', cursor: 'pointer', color: 'var(--accent-primary)', fontWeight: 'bold' }}>
+                <input type="checkbox" checked={pkg.highlight} onChange={(e) => updatePackage(index, 'highlight', e.target.checked)} style={{ width: '16px', height: '16px' }} />
+                Destacar este pacote (Recomendado/VIP)?
+              </label>
+            </div>
+          </div>
+        ))}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

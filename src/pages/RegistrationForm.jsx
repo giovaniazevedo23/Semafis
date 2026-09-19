@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { User, CreditCard, FileUp, ArrowLeft, CheckCircle } from 'lucide-react';
+import { User, CreditCard, FileUp, ArrowLeft, CheckCircle, Check } from 'lucide-react';
 import { initMercadoPago, Payment } from '@mercadopago/sdk-react';
 import instituicoesData from '../data_instituicoes.json';
 import { CredentialTicket } from '../components/CredentialTicket';
@@ -28,7 +28,8 @@ export function RegistrationForm({ events, user, userProfile, onSubmitWork, onRe
     instituicao: userProfile?.instituicao || '',
     instituicaoOutra: userProfile?.instituicaoOutra || '',
     campus: userProfile?.campus || '',
-    categorias: ['sem_submissao'],
+    campus: userProfile?.campus || '',
+    selectedPackageId: '', // Radio selection
     tipoApresentacao: 'poster', // poster, oral
     coAutores: '',
     atividadesExtras: []
@@ -60,28 +61,24 @@ export function RegistrationForm({ events, user, userProfile, onSubmitWork, onRe
     });
   };
 
-  const handleCategoriaChange = (catName) => {
-    setFormData(prev => {
-      const selected = prev.categorias.includes(catName)
-        ? prev.categorias.filter(n => n !== catName)
-        : [...prev.categorias, catName];
-      return { ...prev, categorias: selected };
-    });
-  };
+  const eventPackages = event.packages && event.packages.length > 0 ? event.packages : [
+    { id: 'legacy-sem', name: 'Ouvinte / Presencial', price: event.priceWithoutSubmission || 0, description: 'Acesso às palestras', requireSubmission: false, highlight: false },
+    { id: 'legacy-com', name: 'Apresentador', price: event.priceWithSubmission || 0, description: 'Acesso às palestras\nApresentação de Trabalho', requireSubmission: true, highlight: true }
+  ];
+
+  const isMonitor = monitors.some(m => m.email === user?.email);
+  const availablePackages = isMonitor 
+    ? [...eventPackages, { id: 'monitor', name: 'Monitor (Equipe)', price: 0, description: 'Acesso gratuito e restrito para membros da organização.', requireSubmission: false, highlight: false }]
+    : eventPackages;
 
   const precoAtual = (() => {
-    let total = 0;
-    if (formData.categorias.includes('com_submissao')) total += Number(event.priceWithSubmission || 0);
-    if (formData.categorias.includes('sem_submissao')) total += Number(event.priceWithoutSubmission || 0);
-    return total;
+    const pkg = availablePackages.find(p => p.id === formData.selectedPackageId);
+    return pkg ? Number(pkg.price || 0) : 0;
   })();
 
   const getCategoriaDisplay = () => {
-    const cats = [];
-    if (formData.categorias.includes('sem_submissao')) cats.push('Ouvinte');
-    if (formData.categorias.includes('com_submissao')) cats.push('Apresentador');
-    if (formData.categorias.includes('monitor')) cats.push('Monitor');
-    return cats.join(' + ') || 'Nenhuma';
+    const pkg = availablePackages.find(p => p.id === formData.selectedPackageId);
+    return pkg ? pkg.name : 'Nenhuma';
   };
 
   const handleNext = (e) => {
@@ -204,52 +201,85 @@ export function RegistrationForm({ events, user, userProfile, onSubmitWork, onRe
 
               <hr style={{ margin: '2rem 0', borderColor: 'var(--border-color)' }} />
 
-              <h3 style={{ marginBottom: '1rem' }}>Categoria de Inscrição (Pode marcar mais de uma)</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                <label 
-                  className={`card ${formData.categorias.includes('sem_submissao') ? 'active-border' : ''}`} 
-                  style={{ padding: '1.5rem', cursor: 'pointer', border: formData.categorias.includes('sem_submissao') ? '2px solid var(--accent-primary)' : '1px solid var(--border-color)', display: 'block' }}
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <input type="checkbox" checked={formData.categorias.includes('sem_submissao')} onChange={() => handleCategoriaChange('sem_submissao')} style={{ width: '18px', height: '18px' }} />
-                    <h4 style={{ margin: 0, fontSize: '1rem' }}>Ouvinte / Presencial</h4>
-                  </div>
-                  <p style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>R$ {Number(event.priceWithoutSubmission || 0).toFixed(2).replace('.', ',')}</p>
-                </label>
-
-                <label 
-                  className={`card ${formData.categorias.includes('com_submissao') ? 'active-border' : ''}`} 
-                  style={{ padding: '1.5rem', cursor: 'pointer', border: formData.categorias.includes('com_submissao') ? '2px solid var(--accent-primary)' : '1px solid var(--border-color)', display: 'block' }}
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <input type="checkbox" checked={formData.categorias.includes('com_submissao')} onChange={() => handleCategoriaChange('com_submissao')} style={{ width: '18px', height: '18px' }} />
-                    <h4 style={{ margin: 0, fontSize: '1rem' }}>Apresentador</h4>
-                  </div>
-                  <p style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>R$ {Number(event.priceWithSubmission || 0).toFixed(2).replace('.', ',')}</p>
-                </label>
-
-                {monitors.some(m => m.email === user?.email) && (
-                  <label 
-                    className={`card ${formData.categorias.includes('monitor') ? 'active-border' : ''}`} 
-                    style={{ padding: '1.5rem', cursor: 'pointer', border: formData.categorias.includes('monitor') ? '2px solid var(--accent-primary)' : '1px solid var(--border-color)', display: 'block' }}
-                  >
-                    <div className="flex items-center gap-2 mb-2">
-                      <input type="checkbox" checked={formData.categorias.includes('monitor')} onChange={() => handleCategoriaChange('monitor')} style={{ width: '18px', height: '18px' }} />
-                      <h4 style={{ margin: 0, fontSize: '1rem' }}>Monitor</h4>
-                    </div>
-                    <p style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>Gratuito</p>
-                  </label>
-                )}
+              <div className="mb-8 text-center">
+                <h3 style={{ fontSize: '1.75rem', marginBottom: '0.5rem' }}>Escolha seu Pacote</h3>
+                <p style={{ color: 'var(--text-secondary)' }}>Selecione a modalidade de inscrição que melhor se adapta a você.</p>
               </div>
 
-              {formData.categorias.includes('com_submissao') && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8" style={{ alignItems: 'stretch' }}>
+                {availablePackages.map(pkg => {
+                  const isSelected = formData.selectedPackageId === pkg.id;
+                  
+                  return (
+                    <label 
+                      key={pkg.id}
+                      className={`card ${isSelected ? 'active-border' : ''}`} 
+                      style={{ 
+                        padding: '2rem 1.5rem', 
+                        cursor: 'pointer', 
+                        border: isSelected ? '2px solid var(--accent-primary)' : '1px solid var(--border-color)', 
+                        display: 'flex',
+                        flexDirection: 'column',
+                        position: 'relative',
+                        boxShadow: isSelected ? '0 10px 25px -5px rgba(59, 130, 246, 0.2)' : 'none',
+                        transition: 'all 0.3s ease',
+                        transform: isSelected ? 'translateY(-4px)' : 'none',
+                        backgroundColor: isSelected ? '#f8fafc' : 'white'
+                      }}
+                    >
+                      {pkg.highlight && (
+                        <div style={{ position: 'absolute', top: '-12px', left: '50%', transform: 'translateX(-50%)', backgroundColor: 'var(--accent-primary)', color: 'white', padding: '0.25rem 1rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                          Recomendado
+                        </div>
+                      )}
+                      
+                      <div className="flex items-center gap-3 mb-4 justify-center">
+                        <input 
+                          type="radio" 
+                          name="selectedPackageId"
+                          value={pkg.id}
+                          checked={isSelected} 
+                          onChange={handleChange} 
+                          style={{ width: '20px', height: '20px', accentColor: 'var(--accent-primary)', position: 'absolute', opacity: 0 }} 
+                          required
+                        />
+                        {isSelected ? (
+                          <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <div style={{ width: '10px', height: '10px', backgroundColor: 'white', borderRadius: '50%' }}></div>
+                          </div>
+                        ) : (
+                          <div style={{ width: '24px', height: '24px', borderRadius: '50%', border: '2px solid #cbd5e1' }}></div>
+                        )}
+                        <h4 style={{ margin: 0, fontSize: '1.25rem', textAlign: 'center' }}>{pkg.name}</h4>
+                      </div>
+                      
+                      <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+                        <span style={{ fontSize: '2.5rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+                          {Number(pkg.price) === 0 ? 'Grátis' : `R$ ${Number(pkg.price).toFixed(2).replace('.', ',')}`}
+                        </span>
+                      </div>
+
+                      <div style={{ flexGrow: 1 }}>
+                        {pkg.description && pkg.description.split('\n').map((line, i) => (
+                          <div key={i} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem', fontSize: '0.9rem', color: 'var(--text-secondary)', alignItems: 'flex-start' }}>
+                            <Check size={16} style={{ color: '#10b981', flexShrink: 0, marginTop: '2px' }} />
+                            <span>{line}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </label>
+                  );
+                })}
+              </div>
+
+              {availablePackages.find(p => p.id === formData.selectedPackageId)?.requireSubmission && (
                 <div className="card text-center" style={{ backgroundColor: '#fffbeb', padding: '1.5rem', borderRadius: '8px', border: '1px dashed #d97706', marginBottom: '2rem' }}>
                   <h4 style={{ color: '#b45309', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                    Atenção: Submissão de Trabalhos
+                    Atenção: Pacote Exclusivo para Apresentadores
                   </h4>
                   <p style={{ color: '#92400e', fontSize: '0.9rem', margin: 0, lineHeight: '1.5' }}>
-                    Adquira a categoria <strong>Apresentador</strong> apenas se o seu trabalho <strong>já foi aprovado</strong> no seu Painel de Participante.<br/>
-                    Se você deseja enviar um trabalho novo para avaliação (sem compromisso de pagamento prévio), não compre este ingresso agora. Vá no seu perfil em <strong>"Meus Trabalhos"</strong> e submeta gratuitamente.
+                    Adquira este pacote apenas se o seu trabalho <strong>já foi aprovado</strong> no seu Painel de Participante.<br/>
+                    Se você deseja enviar um trabalho novo para avaliação, vá no seu perfil em <strong>"Meus Trabalhos"</strong> e submeta gratuitamente antes de pagar.
                   </p>
                 </div>
               )}
