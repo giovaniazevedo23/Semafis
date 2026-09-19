@@ -55,13 +55,43 @@ export function EventDetails({ events }) {
             </p>
 
             {event.schedule && (
-              <div style={{ backgroundColor: '#f8fafc', padding: '1.5rem', borderRadius: '8px', borderLeft: '4px solid var(--accent-primary)' }}>
-                <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Clock size={20} /> Cronograma de Atividades
+              <div style={{ backgroundColor: '#f8fafc', padding: '1.5rem', borderRadius: '12px', borderLeft: '4px solid var(--accent-primary)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+                <h3 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '8px', color: '#1e293b' }}>
+                  <Clock size={20} color="var(--accent-primary)" /> Cronograma de Atividades
                 </h3>
-                <p style={{ whiteSpace: 'pre-line', lineHeight: '1.6', fontFamily: 'monospace', fontSize: '1rem' }}>
-                  {event.schedule}
-                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {event.schedule.split('\n').filter(line => line.trim() !== '').map((line, idx) => {
+                    const parts = line.split('-');
+                    const time = parts[0]?.trim();
+                    const title = parts.slice(1).join('-')?.trim() || line.trim();
+                    return (
+                      <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
+                        <div style={{ 
+                          backgroundColor: 'white', 
+                          padding: '0.5rem 1rem', 
+                          borderRadius: '8px', 
+                          fontWeight: 'bold', 
+                          color: 'var(--accent-primary)', 
+                          minWidth: '80px', 
+                          textAlign: 'center',
+                          border: '1px solid #e2e8f0',
+                          boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                        }}>
+                          {time || '--:--'}
+                        </div>
+                        <div style={{ 
+                          padding: '0.5rem 0', 
+                          color: '#334155', 
+                          fontSize: '1rem',
+                          flex: 1,
+                          borderBottom: idx !== event.schedule.split('\n').filter(l => l.trim() !== '').length - 1 ? '1px dashed #cbd5e1' : 'none'
+                        }}>
+                          {parts.length > 1 ? title : time}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </div>
