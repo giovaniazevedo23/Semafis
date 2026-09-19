@@ -51,8 +51,6 @@ export function MonitorDashboard({ user, monitors, submissions, avaliadores, eve
             </div>
           </div>
         </div>
-      </div>
-
         <div className="card" style={{ padding: '1.5rem', backgroundColor: '#eef2ff', border: '1px solid #c7d2fe' }}>
           <div className="flex items-center gap-4">
             <Users size={32} color="#4f46e5" />
