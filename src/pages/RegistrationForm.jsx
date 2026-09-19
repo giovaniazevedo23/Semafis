@@ -180,8 +180,8 @@ export function RegistrationForm({ events, user, userProfile, onSubmitWork, onRe
                     onChange={(newValue) => handleChange({ target: { name: 'instituicao', value: newValue ? newValue.value : '' } })}
                     formatCreateLabel={(inputValue) => `Adicionar "${inputValue}"`}
                     styles={{
-                      control: (base) => ({ ...base, borderRadius: '8px', borderColor: '#e2e8f0', padding: '2px', minHeight: '42px' }),
-                      option: (base, state) => ({ ...base, backgroundColor: state.isSelected ? '#3b82f6' : state.isFocused ? '#eff6ff' : 'white', color: state.isSelected ? 'white' : '#0f172a', cursor: 'pointer' })
+                      control: (base) => ({ ...base, borderRadius: '8px', borderColor: '#e2e8f0', padding: '2px', minHeight: '42px', fontSize: '1rem' }),
+                      option: (base, state) => ({ ...base, backgroundColor: state.isSelected ? '#3b82f6' : state.isFocused ? '#eff6ff' : 'white', color: state.isSelected ? 'white' : '#0f172a', cursor: 'pointer', fontSize: '1rem' })
                     }}
                   />
                 </div>
@@ -197,8 +197,8 @@ export function RegistrationForm({ events, user, userProfile, onSubmitWork, onRe
                     formatCreateLabel={(inputValue) => `Adicionar "${inputValue}"`}
                     isDisabled={!formData.instituicao}
                     styles={{
-                      control: (base) => ({ ...base, borderRadius: '8px', borderColor: '#e2e8f0', padding: '2px', minHeight: '42px' }),
-                      option: (base, state) => ({ ...base, backgroundColor: state.isSelected ? '#3b82f6' : state.isFocused ? '#eff6ff' : 'white', color: state.isSelected ? 'white' : '#0f172a', cursor: 'pointer' })
+                      control: (base) => ({ ...base, borderRadius: '8px', borderColor: '#e2e8f0', padding: '2px', minHeight: '42px', fontSize: '1rem' }),
+                      option: (base, state) => ({ ...base, backgroundColor: state.isSelected ? '#3b82f6' : state.isFocused ? '#eff6ff' : 'white', color: state.isSelected ? 'white' : '#0f172a', cursor: 'pointer', fontSize: '1rem' })
                     }}
                   />
                 </div>

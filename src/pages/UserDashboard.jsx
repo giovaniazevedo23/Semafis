@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Calendar, Clock, MonitorPlay, Presentation, FileText, Printer, Ticket, Award, MapPin } from 'lucide-react';
 
 import { CredentialTicket } from '../components/CredentialTicket';
+import { Badge } from '../components/Badge';
 
 export function UserDashboard({ submissions, events, ingressos = [] }) {
   const [activeTab, setActiveTab] = useState('trabalhos'); // 'trabalhos', 'ingressos', 'certificados'
@@ -212,23 +213,43 @@ export function UserDashboard({ submissions, events, ingressos = [] }) {
             ingressos.map(ing => {
               const evento = events.find(e => e.id === ing.eventId);
               return (
-                <CredentialTicket 
-                  key={ing.id}
-                  event={evento}
-                  userEmail={ing.userEmail}
-                  nome={ing.nome}
-                  cpf={ing.cpf}
-                  curso={ing.curso}
-                  instituicao={ing.instituicao}
-                  campus={ing.campus}
-                  categoriasDisplay={ing.categoriasDisplay}
-                  precoAtual={ing.precoAtual}
-                  atividades={ing.atividades}
-                  id={ing.id}
-                  timestamp={ing.timestamp}
-                  showSuccessHeader={false}
-                  variant="compact"
-                />
+                <div key={ing.id} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 align-items-start">
+                    <div className="md:col-span-2">
+                      <CredentialTicket 
+                        event={evento}
+                        userEmail={ing.userEmail}
+                        nome={ing.nome}
+                        cpf={ing.cpf}
+                        curso={ing.curso}
+                        instituicao={ing.instituicao}
+                        campus={ing.campus}
+                        categoriasDisplay={ing.categoriasDisplay}
+                        precoAtual={ing.precoAtual}
+                        atividades={ing.atividades}
+                        id={ing.id}
+                        timestamp={ing.timestamp}
+                        showSuccessHeader={false}
+                        variant="compact"
+                      />
+                    </div>
+                    
+                    <div className="md:col-span-1" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: '#f1f5f9', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                      <h3 style={{ fontSize: '1.1rem', marginBottom: '1.5rem', textAlign: 'center', color: '#64748b' }}>Seu Crachá Digital</h3>
+                      <Badge 
+                        type="participante"
+                        name={ing.nome}
+                        institution={ing.instituicao}
+                        logoUrl={evento?.logoUrl}
+                        qrCodeValue={JSON.stringify({ userId: ing.userEmail, eventId: ing.eventId, type: 'participante' })}
+                      />
+                      <p style={{ fontSize: '0.875rem', color: '#64748b', marginTop: '1rem', textAlign: 'center' }}>
+                        Salve ou imprima este crachá para facilitar seu credenciamento.
+                      </p>
+                    </div>
+                  </div>
+                  <hr style={{ border: 'none', borderBottom: '1px dashed var(--border-color)', margin: '1rem 0' }} />
+                </div>
               );
             })
           )}

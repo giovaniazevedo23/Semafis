@@ -3,15 +3,16 @@ import { EventForm } from '../components/EventForm';
 import { EventCard } from '../components/EventCard';
 import { FileDown, Users, Check, X, ArrowLeft, ClipboardList, GraduationCap, MonitorPlay } from 'lucide-react';
 
-export function OrganizerDashboard({ events, onAddEvent, submissions, onUpdateSubmission, monitors = [], onAddMonitor, avaliadores = [], onAddAvaliador }) {
+export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissions, onUpdateSubmission, monitors = [], onAddMonitor, avaliadores = [], onAddAvaliador }) {
   const [selectedEventId, setSelectedEventId] = useState(null);
   const [isCreatingEvent, setIsCreatingEvent] = useState(false);
-  const [activeTab, setActiveTab] = useState('submissoes'); // 'submissoes', 'equipe', 'credenciamento'
+  const [activeTab, setActiveTab] = useState('submissoes'); // 'submissoes', 'equipe', 'credenciamento', 'atividades'
   
   const [approvingSubId, setApprovingSubId] = useState(null);
   const [approvalData, setApprovalData] = useState({ dataApresentacao: '', horaApresentacao: '', localApresentacao: '', numeroPoster: '' });
   const [monitorData, setMonitorData] = useState({ nome: '', email: '', matricula: '', ira: '', telefone: '' });
   const [avaliadorData, setAvaliadorData] = useState({ nome: '', email: '', matricula: '', telefone: '', fotoUrl: '' });
+  const [activityData, setActivityData] = useState({ name: '', minister: '', time: '', room: '', type: 'Minicurso' });
 
   const selectedEvent = events.find(e => e.id === selectedEventId);
 
@@ -32,6 +33,15 @@ export function OrganizerDashboard({ events, onAddEvent, submissions, onUpdateSu
     onAddAvaliador(avaliadorData);
     setAvaliadorData({ nome: '', email: '', matricula: '', telefone: '', fotoUrl: '' });
     alert("Avaliador cadastrado com sucesso!");
+  };
+
+  const handleAddActivity = (e) => {
+    e.preventDefault();
+    if (!selectedEvent) return;
+    const currentActivities = selectedEvent.activities || [];
+    onUpdateEvent(selectedEvent.id, { activities: [...currentActivities, activityData] });
+    setActivityData({ name: '', minister: '', time: '', room: '', type: 'Minicurso' });
+    alert("Atividade cadastrada com sucesso!");
   };
 
   const handleApproveClick = (subId) => setApprovingSubId(subId);
@@ -115,6 +125,9 @@ export function OrganizerDashboard({ events, onAddEvent, submissions, onUpdateSu
         </button>
         <button onClick={() => setActiveTab('equipe')} className={`btn ${activeTab === 'equipe' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none' }}>
           Equipe (Avaliadores/Monitores)
+        </button>
+        <button onClick={() => setActiveTab('atividades')} className={`btn ${activeTab === 'atividades' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none' }}>
+          Atividades (Minicursos/Oficinas)
         </button>
         <button onClick={() => setActiveTab('credenciamento')} className={`btn ${activeTab === 'credenciamento' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none' }}>
           Credenciamento (Presença)
@@ -235,6 +248,55 @@ export function OrganizerDashboard({ events, onAddEvent, submissions, onUpdateSu
                   <strong>{a.nome}</strong> ({a.email})
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Aba de Atividades */}
+      {activeTab === 'atividades' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>Cadastrar Atividade</h2>
+            <div className="card" style={{ padding: '1.5rem' }}>
+              <form onSubmit={handleAddActivity} className="mb-6">
+                <select value={activityData.type} onChange={e => setActivityData({...activityData, type: e.target.value})} className="form-input mb-2" required>
+                  <option value="Minicurso">Minicurso</option>
+                  <option value="Oficina">Oficina</option>
+                  <option value="Palestra">Palestra</option>
+                  <option value="Mesa Redonda">Mesa Redonda</option>
+                </select>
+                <input type="text" placeholder="Nome da Atividade" value={activityData.name} onChange={e => setActivityData({...activityData, name: e.target.value})} className="form-input mb-2" required />
+                <input type="text" placeholder="Ministrante / Palestrante" value={activityData.minister} onChange={e => setActivityData({...activityData, minister: e.target.value})} className="form-input mb-2" required />
+                <input type="text" placeholder="Horário (Ex: 14:00 - 16:00)" value={activityData.time} onChange={e => setActivityData({...activityData, time: e.target.value})} className="form-input mb-2" required />
+                <input type="text" placeholder="Local / Sala" value={activityData.room} onChange={e => setActivityData({...activityData, room: e.target.value})} className="form-input mb-4" required />
+                <button type="submit" className="btn btn-primary" style={{ width: '100%', backgroundColor: '#8b5cf6', border: 'none' }}>Cadastrar Atividade</button>
+              </form>
+            </div>
+          </div>
+
+          <div>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>Atividades Cadastradas</h2>
+            <div className="card" style={{ padding: '1.5rem' }}>
+              {(!selectedEvent?.activities || selectedEvent.activities.length === 0) ? (
+                <p style={{ color: 'var(--text-secondary)' }}>Nenhuma atividade cadastrada ainda.</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {selectedEvent.activities.map((act, idx) => (
+                    <div key={idx} style={{ padding: '1rem', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                      <div style={{ fontSize: '0.75rem', backgroundColor: '#e2e8f0', padding: '0.25rem 0.5rem', borderRadius: '4px', textTransform: 'uppercase', fontWeight: 'bold', display: 'inline-block', marginBottom: '0.5rem' }}>
+                        {act.type || 'Minicurso'}
+                      </div>
+                      <h3 style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>{act.name}</h3>
+                      <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                        <strong>Ministrante:</strong> {act.minister} <br/>
+                        <strong>Horário:</strong> {act.time} <br/>
+                        <strong>Local:</strong> {act.room}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

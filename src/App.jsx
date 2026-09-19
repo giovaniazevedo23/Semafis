@@ -88,6 +88,10 @@ function App() {
     await addDocument('events', newEvent);
   };
 
+  const handleUpdateEvent = async (eventId, updates) => {
+    await updateDocument('events', eventId, updates);
+  };
+
   const handleSubmitWork = async (eventId, submissionData) => {
     await addDocument('submissions', { eventId, ...submissionData });
   };
@@ -120,9 +124,9 @@ function App() {
             <Route path="/perfil" element={<UserProfile user={user} userProfile={userProfile} setUserProfile={setUserProfile} />} />
             <Route path="/evento/:id" element={<EventDetails events={events} />} />
             <Route path="/evento/:id/inscricao" element={<RegistrationForm events={events} user={user} userProfile={userProfile} onSubmitWork={handleSubmitWork} onRegister={handleRegister} monitors={monitors} />} />
-            <Route path="/organizador" element={<OrganizerDashboard events={events} onAddEvent={handleAddEvent} submissions={submissions} onUpdateSubmission={handleUpdateSubmission} monitors={monitors} onAddMonitor={handleAddMonitor} avaliadores={avaliadores} onAddAvaliador={handleAddAvaliador} />} />
+            <Route path="/organizador" element={<OrganizerDashboard events={events} onAddEvent={handleAddEvent} onUpdateEvent={handleUpdateEvent} submissions={submissions} onUpdateSubmission={handleUpdateSubmission} monitors={monitors} onAddMonitor={handleAddMonitor} avaliadores={avaliadores} onAddAvaliador={handleAddAvaliador} />} />
             <Route path="/painel-usuario" element={<UserDashboard submissions={submissions.filter(s => !user || s.usuario === user.displayName)} ingressos={ingressos.filter(i => !user || i.userEmail === user.email)} events={events} />} />
-            <Route path="/painel-monitor" element={<MonitorDashboard user={user} monitors={monitors} submissions={submissions} avaliadores={avaliadores} events={events} />} />
+            <Route path="/painel-monitor" element={<MonitorDashboard user={user} monitors={monitors} submissions={submissions} avaliadores={avaliadores} events={events} ingressos={ingressos} />} />
             <Route path="/painel-avaliador" element={<EvaluatorDashboard user={user} avaliadores={avaliadores} submissions={submissions} events={events} onUpdateSubmission={handleUpdateSubmission} />} />
             <Route path="/validar" element={<ValidarCredencial />} />
           </Routes>
