@@ -3,6 +3,7 @@ import { User, Mail, CreditCard, GraduationCap, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import instituicoesData from '../data_instituicoes.json';
 import { setDocument, uploadFile } from '../services/db';
+import CreatableSelect from 'react-select/creatable';
 
 export function UserProfile({ user, userProfile, setUserProfile }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -170,38 +171,35 @@ export function UserProfile({ user, userProfile, setUserProfile }) {
             </div>
             <div className="form-group">
               <label className="form-label">Instituição</label>
-              <input 
-                type="text" 
-                name="instituicao" 
-                list="instituicoes-list" 
-                value={formData.instituicao} 
-                onChange={handleChange} 
-                className="form-input" 
+              <CreatableSelect
+                isClearable
                 placeholder="Busque sua instituição ou digite uma nova..."
+                options={Object.keys(instituicoesData).map(inst => ({ value: inst, label: inst }))}
+                value={formData.instituicao ? { value: formData.instituicao, label: formData.instituicao } : null}
+                onChange={(newValue) => handleChange({ target: { name: 'instituicao', value: newValue ? newValue.value : '' } })}
+                formatCreateLabel={(inputValue) => `Adicionar "${inputValue}"`}
+                styles={{
+                  control: (base) => ({ ...base, borderRadius: '8px', borderColor: '#e2e8f0', padding: '2px', minHeight: '42px' }),
+                  option: (base, state) => ({ ...base, backgroundColor: state.isSelected ? '#3b82f6' : state.isFocused ? '#eff6ff' : 'white', color: state.isSelected ? 'white' : '#0f172a', cursor: 'pointer' })
+                }}
               />
-              <datalist id="instituicoes-list">
-                {Object.keys(instituicoesData).map(inst => (
-                  <option key={inst} value={inst} />
-                ))}
-              </datalist>
             </div>
             
             <div className="form-group">
               <label className="form-label">Campus / Cidade</label>
-              <input 
-                type="text" 
-                name="campus" 
-                list="campus-list" 
-                value={formData.campus} 
-                onChange={handleChange} 
-                className="form-input" 
-                placeholder="Busque o campus ou digite um novo..." 
+              <CreatableSelect
+                isClearable
+                placeholder="Busque o campus ou digite um novo..."
+                options={(instituicoesData[formData.instituicao] || []).map(campus => ({ value: campus, label: campus }))}
+                value={formData.campus ? { value: formData.campus, label: formData.campus } : null}
+                onChange={(newValue) => handleChange({ target: { name: 'campus', value: newValue ? newValue.value : '' } })}
+                formatCreateLabel={(inputValue) => `Adicionar "${inputValue}"`}
+                isDisabled={!formData.instituicao}
+                styles={{
+                  control: (base) => ({ ...base, borderRadius: '8px', borderColor: '#e2e8f0', padding: '2px', minHeight: '42px' }),
+                  option: (base, state) => ({ ...base, backgroundColor: state.isSelected ? '#3b82f6' : state.isFocused ? '#eff6ff' : 'white', color: state.isSelected ? 'white' : '#0f172a', cursor: 'pointer' })
+                }}
               />
-              <datalist id="campus-list">
-                {(instituicoesData[formData.instituicao] || []).map(campus => (
-                  <option key={campus} value={campus} />
-                ))}
-              </datalist>
             </div>
 
             <div className="form-group">
