@@ -6,7 +6,7 @@ import { CredentialTicket } from '../components/CredentialTicket';
 import { Badge } from '../components/Badge';
 import { uploadFile } from '../services/db';
 
-export function UserDashboard({ submissions, events, ingressos = [], user, onSubmitWork, notifications = [] }) {
+export function UserDashboard({ submissions, events, ingressos = [], user, onSubmitWork, onUpdateSubmission, notifications = [] }) {
   const [activeTab, setActiveTab] = useState('trabalhos');
   const [viewingEvaluation, setViewingEvaluation] = useState(null);
   const [viewingCertificate, setViewingCertificate] = useState(null);
@@ -20,6 +20,23 @@ export function UserDashboard({ submissions, events, ingressos = [], user, onSub
     coAutores: '',
   });
   const [trabalhoFile, setTrabalhoFile] = useState(null);
+  const [chatInputs, setChatInputs] = useState({});
+
+  const handleSendChatMessage = (subId) => {
+    if (!chatInputs[subId]?.trim()) return;
+    const sub = submissions.find(s => s.id === subId);
+    if (!sub) return;
+
+    const newMessage = {
+      id: Date.now().toString(),
+      sender: 'participante',
+      text: chatInputs[subId],
+      date: new Date().toISOString()
+    };
+
+    onUpdateSubmission(subId, { mensagens: [...(sub.mensagens || []), newMessage] });
+    setChatInputs(prev => ({ ...prev, [subId]: '' }));
+  };
 
   const canSubmit = true; 
   
@@ -392,6 +409,40 @@ Comissão Organizadora - SEMAFIS`
                           <button onClick={() => setViewingEvaluation(sub)} className="btn" style={{ backgroundColor: '#3b82f6', color: 'white', display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', justifyContent: 'center', padding: '1rem' }}>
                             <FileText size={18} /> Verificar Avaliação
                           </button>
+                        </div>
+                      )}
+
+                      {sub.status === 'aprovado' && (
+                        <div style={{ marginTop: '2rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
+                          <h4 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}><Mail size={18} /> Comunicação com a Organização</h4>
+                          <div style={{ backgroundColor: '#f1f5f9', borderRadius: '8px', padding: '1rem', maxHeight: '250px', overflowY: 'auto', marginBottom: '1rem' }}>
+                            {(!sub.mensagens || sub.mensagens.length === 0) ? (
+                              <p style={{ textAlign: 'center', color: '#64748b', fontSize: '0.875rem' }}>Nenhuma mensagem enviada.</p>
+                            ) : (
+                              sub.mensagens.map(msg => (
+                                <div key={msg.id} style={{ marginBottom: '1rem', display: 'flex', flexDirection: 'column', alignItems: msg.sender === 'participante' ? 'flex-end' : 'flex-start' }}>
+                                  <div style={{ backgroundColor: msg.sender === 'participante' ? '#3b82f6' : '#e2e8f0', color: msg.sender === 'participante' ? 'white' : '#0f172a', padding: '0.75rem 1rem', borderRadius: '12px', maxWidth: '80%' }}>
+                                    <p style={{ margin: 0, fontSize: '0.9rem' }}>{msg.text}</p>
+                                  </div>
+                                  <span style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '0.25rem' }}>
+                                    {msg.sender === 'participante' ? 'Você' : 'Organização'} • {new Date(msg.date).toLocaleDateString()} {new Date(msg.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  </span>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <input 
+                              type="text" 
+                              value={chatInputs[sub.id] || ''} 
+                              onChange={(e) => setChatInputs({...chatInputs, [sub.id]: e.target.value})} 
+                              onKeyDown={(e) => { if (e.key === 'Enter') handleSendChatMessage(sub.id); }}
+                              placeholder="Digite sua mensagem para a organização..." 
+                              className="form-input" 
+                              style={{ flex: 1 }}
+                            />
+                            <button onClick={() => handleSendChatMessage(sub.id)} className="btn btn-primary">Enviar</button>
+                          </div>
                         </div>
                       )}
                     </div>

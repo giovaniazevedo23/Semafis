@@ -9,6 +9,8 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
   const [activeTab, setActiveTab] = useState('submissoes'); // 'submissoes', 'equipe', 'credenciamento', 'atividades'
   
   const [approvingSubId, setApprovingSubId] = useState(null);
+  const [chatSubId, setChatSubId] = useState(null);
+  const [chatInputs, setChatInputs] = useState({});
   const [approvalData, setApprovalData] = useState({ dataApresentacao: '', horaApresentacao: '', localApresentacao: '', numeroPoster: '' });
   const [monitorData, setMonitorData] = useState({ nome: '', email: '', matricula: '', ira: '', telefone: '' });
   const [avaliadorData, setAvaliadorData] = useState({ nome: '', email: '', matricula: '', telefone: '', fotoUrl: '' });
@@ -52,6 +54,44 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
   };
   const handleReject = (subId) => {
     if (window.confirm("Deseja rejeitar este trabalho?")) onUpdateSubmission(subId, { status: 'rejeitado' });
+  };
+
+  const handleSendChatMessage = (subId) => {
+    if (!chatInputs[subId]?.trim()) return;
+    const sub = submissions.find(s => s.id === subId);
+    if (!sub) return;
+
+    const newMessage = {
+      id: Date.now().toString(),
+      sender: 'organizador',
+      text: chatInputs[subId],
+      date: new Date().toISOString()
+    };
+
+    onUpdateSubmission(subId, { mensagens: [...(sub.mensagens || []), newMessage] });
+    setChatInputs(prev => ({ ...prev, [subId]: '' }));
+  };
+
+  const handleGeneratePosters = () => {
+    // Pegar trabalhos aprovados e modalidade poster
+    const posterSubmissions = submissions.filter(s => s.status === 'aprovado' && s.modalidade === 'poster');
+    
+    // Ordenar pelo primeiro avaliador associado
+    posterSubmissions.sort((a, b) => {
+      const avaliadorA = (a.avaliadoresEmails && a.avaliadoresEmails[0]) || '';
+      const avaliadorB = (b.avaliadoresEmails && b.avaliadoresEmails[0]) || '';
+      return avaliadorA.localeCompare(avaliadorB);
+    });
+
+    let currentNumber = 1;
+    posterSubmissions.forEach(sub => {
+      const formattedNumber = `PO-${currentNumber.toString().padStart(3, '0')}`;
+      const newDetails = { ...(sub.detalhesApresentacao || {}), numeroPoster: formattedNumber };
+      onUpdateSubmission(sub.id, { detalhesApresentacao: newDetails });
+      currentNumber++;
+    });
+
+    alert(`Numeração automática gerada para ${posterSubmissions.length} pôsteres!`);
   };
 
   // Se não tem evento selecionado E não está criando, mostra a lista de eventos
@@ -137,7 +177,12 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
       {/* Aba de Submissões */}
       {activeTab === 'submissoes' && (
         <div>
-          <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem' }}>Trabalhos Submetidos para Avaliação</h2>
+          <div className="flex justify-between items-center mb-6">
+            <h2 style={{ fontSize: '1.5rem', margin: 0 }}>Trabalhos Submetidos para Avaliação</h2>
+            <button onClick={handleGeneratePosters} className="btn btn-primary" style={{ backgroundColor: '#8b5cf6', border: 'none', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              Gerar Numeração Automática de Pôsteres
+            </button>
+          </div>
           {submissions.length === 0 ? (
             <div className="card text-center mb-8" style={{ padding: '3rem 2rem', color: 'var(--text-secondary)' }}>
               <Users size={48} style={{ margin: '0 auto', marginBottom: '1rem', opacity: 0.5 }} />
@@ -179,6 +224,14 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
                             <button onClick={() => handleReject(sub.id)} className="btn" style={{ backgroundColor: '#ef4444', color: 'white', padding: '0.5rem' }}>Rejeitar</button>
                           </div>
                         )}
+                        <button onClick={() => setChatSubId(sub.id)} className="btn btn-outline" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', width: '100%', marginBottom: '0.5rem', position: 'relative' }}>
+                          Ver Chat do Participante
+                          {sub.mensagens?.length > 0 && (
+                            <span style={{ position: 'absolute', top: '-5px', right: '-5px', backgroundColor: '#ef4444', color: 'white', fontSize: '0.6rem', borderRadius: '50%', width: '14px', height: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              {sub.mensagens.length}
+                            </span>
+                          )}
+                        </button>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
                           <select className="form-input" style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }} value={sub.monitorEmail || ''} onChange={(e) => onUpdateSubmission(sub.id, { monitorEmail: e.target.value })}>
                             <option value="">Atribuir Monitor...</option>
@@ -384,6 +437,49 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
             <div className="flex gap-4">
               <button onClick={() => setApprovingSubId(null)} className="btn btn-outline" style={{ flex: 1, padding: '0.75rem' }}>Cancelar</button>
               <button onClick={handleConfirmApproval} className="btn btn-primary" style={{ flex: 1, padding: '0.75rem' }}>Confirmar Aprovação</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {chatSubId && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+          <div style={{ backgroundColor: 'white', padding: '2.5rem', borderRadius: '12px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', minWidth: '500px', maxWidth: '90%' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h4 style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: 0 }}>Chat com o Participante</h4>
+              <button onClick={() => setChatSubId(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}><X size={24} /></button>
+            </div>
+            
+            <div style={{ backgroundColor: '#f1f5f9', borderRadius: '8px', padding: '1rem', height: '300px', overflowY: 'auto', marginBottom: '1rem' }}>
+              {(() => {
+                const sub = submissions.find(s => s.id === chatSubId);
+                if (!sub?.mensagens || sub.mensagens.length === 0) {
+                  return <p style={{ textAlign: 'center', color: '#64748b', fontSize: '0.875rem' }}>Nenhuma mensagem enviada.</p>;
+                }
+                return sub.mensagens.map(msg => (
+                  <div key={msg.id} style={{ marginBottom: '1rem', display: 'flex', flexDirection: 'column', alignItems: msg.sender === 'organizador' ? 'flex-end' : 'flex-start' }}>
+                    <div style={{ backgroundColor: msg.sender === 'organizador' ? '#10b981' : '#e2e8f0', color: msg.sender === 'organizador' ? 'white' : '#0f172a', padding: '0.75rem 1rem', borderRadius: '12px', maxWidth: '80%' }}>
+                      <p style={{ margin: 0, fontSize: '0.9rem' }}>{msg.text}</p>
+                    </div>
+                    <span style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '0.25rem' }}>
+                      {msg.sender === 'organizador' ? 'Você (Organização)' : 'Participante'} • {new Date(msg.date).toLocaleDateString()} {new Date(msg.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                ));
+              })()}
+            </div>
+            
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <input 
+                type="text" 
+                value={chatInputs[chatSubId] || ''} 
+                onChange={(e) => setChatInputs({...chatInputs, [chatSubId]: e.target.value})} 
+                onKeyDown={(e) => { if (e.key === 'Enter') handleSendChatMessage(chatSubId); }}
+                placeholder="Digite sua resposta..." 
+                className="form-input" 
+                style={{ flex: 1 }}
+              />
+              <button onClick={() => handleSendChatMessage(chatSubId)} className="btn btn-primary" style={{ backgroundColor: '#10b981', border: 'none' }}>Responder</button>
             </div>
           </div>
         </div>

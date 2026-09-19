@@ -5,11 +5,11 @@ export function ClientPortal({ events }) {
   return (
     <div className="container">
       <div className="text-center mb-8" style={{ marginTop: '3rem' }}>
-        <h1 style={{ fontSize: '3rem', fontWeight: '800', color: 'var(--accent-primary)', marginBottom: '1rem' }}>
-          Descubra Eventos Incríveis
+        <h1 style={{ fontSize: '4rem', fontWeight: '900', color: 'var(--accent-primary)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '2px' }}>
+          SEMAFIS
         </h1>
-        <p style={{ fontSize: '1.25rem', maxWidth: '600px', margin: '0 auto' }}>
-          Encontre e garanta seu ingresso para os melhores eventos. De conferências de tecnologia a festivais de música.
+        <p style={{ fontSize: '1.25rem', maxWidth: '800px', margin: '0 auto', fontWeight: '500', color: 'var(--text-secondary)' }}>
+          Semana da Matemática e da Física do Instituto Federal do Piauí
         </p>
       </div>
 
