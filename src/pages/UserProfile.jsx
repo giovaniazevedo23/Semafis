@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { User, Mail, CreditCard, GraduationCap, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import instituicoesData from '../data_instituicoes.json';
+import { setDocument, uploadFile } from '../services/db';
+
 export function UserProfile({ user, userProfile, setUserProfile }) {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
@@ -41,20 +43,35 @@ export function UserProfile({ user, userProfile, setUserProfile }) {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSave = () => {
-    setUserProfile(formData);
-    setIsEditing(false);
-    alert('Perfil atualizado com sucesso!');
+  const [uploading, setUploading] = useState(false);
+
+  const handleSave = async () => {
+    try {
+      setUploading(true);
+      await setDocument('userProfiles', user.email, formData);
+      setIsEditing(false);
+      alert('Perfil atualizado e salvo na nuvem com sucesso!');
+    } catch (e) {
+      alert('Erro ao salvar no banco de dados.');
+    } finally {
+      setUploading(false);
+    }
   };
 
-  const handlePhotoUpload = (e) => {
+  const handlePhotoUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({ ...prev, photoUrl: reader.result }));
-      };
-      reader.readAsDataURL(file);
+      try {
+        setUploading(true);
+        const path = `profiles/${user.email}/${file.name}`;
+        const url = await uploadFile(path, file);
+        setFormData(prev => ({ ...prev, photoUrl: url }));
+        alert('Foto enviada com sucesso!');
+      } catch (e) {
+        alert('Erro ao enviar foto para o Storage.');
+      } finally {
+        setUploading(false);
+      }
     }
   };
 

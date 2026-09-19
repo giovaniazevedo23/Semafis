@@ -33,72 +33,80 @@ const DUMMY_EVENTS = [
 import { MonitorDashboard } from './pages/MonitorDashboard';
 import { EvaluatorDashboard } from './pages/EvaluatorDashboard';
 import { ValidarCredencial } from './pages/ValidarCredencial';
-
-const getInitialState = (key, defaultValue) => {
-  const saved = localStorage.getItem(key);
-  if (saved !== null) {
-    try {
-      return JSON.parse(saved);
-    } catch (e) {
-      console.error("Erro ao ler localStorage para", key);
-    }
-  }
-  return defaultValue;
-};
+import { listenCollection, listenDocument, addDocument, setDocument, updateDocument } from './services/db';
 
 function App() {
-  const [events, setEvents] = useState(() => getInitialState('events', DUMMY_EVENTS));
-  const [submissions, setSubmissions] = useState(() => getInitialState('submissions', []));
-  const [ingressos, setIngressos] = useState(() => getInitialState('ingressos', []));
-  const [monitors, setMonitors] = useState(() => getInitialState('monitors', []));
-  const [avaliadores, setAvaliadores] = useState(() => getInitialState('avaliadores', []));
+  const [events, setEvents] = useState(DUMMY_EVENTS);
+  const [submissions, setSubmissions] = useState([]);
+  const [ingressos, setIngressos] = useState([]);
+  const [monitors, setMonitors] = useState([]);
+  const [avaliadores, setAvaliadores] = useState([]);
   const [user, setUser] = useState(null);
-  const [userProfile, setUserProfile] = useState(() => getInitialState('userProfile', null));
-
-  useEffect(() => { localStorage.setItem('events', JSON.stringify(events)); }, [events]);
-  useEffect(() => { localStorage.setItem('submissions', JSON.stringify(submissions)); }, [submissions]);
-  useEffect(() => { localStorage.setItem('ingressos', JSON.stringify(ingressos)); }, [ingressos]);
-  useEffect(() => { localStorage.setItem('monitors', JSON.stringify(monitors)); }, [monitors]);
-  useEffect(() => { localStorage.setItem('avaliadores', JSON.stringify(avaliadores)); }, [avaliadores]);
-  useEffect(() => { if (userProfile) localStorage.setItem('userProfile', JSON.stringify(userProfile)); }, [userProfile]);
+  const [userProfile, setUserProfile] = useState(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubEvents = listenCollection('events', (data) => {
+      if (data && data.length > 0) setEvents(data);
+    });
+    const unsubSubmissions = listenCollection('submissions', setSubmissions);
+    const unsubIngressos = listenCollection('ingressos', setIngressos);
+    const unsubMonitors = listenCollection('monitors', setMonitors);
+    const unsubAvaliadores = listenCollection('avaliadores', setAvaliadores);
+
+    return () => {
+      unsubEvents();
+      unsubSubmissions();
+      unsubIngressos();
+      unsubMonitors();
+      unsubAvaliadores();
+    };
+  }, []);
+
+  useEffect(() => {
+    let unsubProfile = null;
+    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
         setUser({
           uid: currentUser.uid,
           email: currentUser.email,
           displayName: currentUser.displayName
         });
+        unsubProfile = listenDocument('userProfiles', currentUser.email, setUserProfile);
       } else {
         setUser(null);
+        setUserProfile(null);
+        if (unsubProfile) unsubProfile();
       }
     });
-    return () => unsubscribe();
+    return () => {
+      unsubscribeAuth();
+      if (unsubProfile) unsubProfile();
+    };
   }, []);
 
-  const handleAddEvent = (newEvent) => {
-    setEvents(prev => [newEvent, ...prev]);
+  const handleAddEvent = async (newEvent) => {
+    await addDocument('events', newEvent);
   };
 
-  const handleSubmitWork = (eventId, submissionData) => {
-    setSubmissions(prev => [...prev, { id: Date.now().toString(), eventId, ...submissionData }]);
+  const handleSubmitWork = async (eventId, submissionData) => {
+    await addDocument('submissions', { eventId, ...submissionData });
   };
 
-  const handleUpdateSubmission = (subId, updates) => {
-    setSubmissions(prev => prev.map(sub => sub.id === subId ? { ...sub, ...updates } : sub));
+  const handleUpdateSubmission = async (subId, updates) => {
+    await updateDocument('submissions', subId, updates);
   };
 
-  const handleAddMonitor = (monitorData) => {
-    setMonitors(prev => [...prev, { id: Date.now().toString(), ...monitorData }]);
+  const handleAddMonitor = async (monitorData) => {
+    await addDocument('monitors', monitorData);
   };
 
-  const handleAddAvaliador = (avaliadorData) => {
-    setAvaliadores(prev => [...prev, { id: Date.now().toString(), ...avaliadorData }]);
+  const handleAddAvaliador = async (avaliadorData) => {
+    await addDocument('avaliadores', avaliadorData);
   };
 
-  const handleRegister = (ingressoData) => {
-    setIngressos(prev => [...prev, { id: 'ING-' + Date.now().toString().slice(-6), timestamp: new Date().toISOString(), ...ingressoData }]);
+  const handleRegister = async (ingressoData) => {
+    const id = 'ING-' + Date.now().toString().slice(-6);
+    await setDocument('ingressos', id, { timestamp: new Date().toISOString(), ...ingressoData });
   };
 
   return (

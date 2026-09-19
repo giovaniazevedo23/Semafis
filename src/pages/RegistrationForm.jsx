@@ -4,6 +4,7 @@ import { User, CreditCard, FileUp, ArrowLeft, CheckCircle } from 'lucide-react';
 import { initMercadoPago, Payment } from '@mercadopago/sdk-react';
 import instituicoesData from '../data_instituicoes.json';
 import { CredentialTicket } from '../components/CredentialTicket';
+import { uploadFile } from '../services/db';
 
 // Inicializa com a chave pública fornecida pelo usuário
 initMercadoPago('APP_USR-b36f802e-840f-45c2-b81f-6249a435a48f');
@@ -87,11 +88,10 @@ export function RegistrationForm({ events, user, userProfile, onSubmitWork, onRe
     setStep(2);
   };
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     setStep(3);
 
     if (onRegister) {
-      alert("Salvando ingresso...");
       onRegister({
         eventId: event.id,
         userEmail: user.email,
@@ -104,16 +104,22 @@ export function RegistrationForm({ events, user, userProfile, onSubmitWork, onRe
         precoAtual: precoAtual,
         atividades: formData.atividadesExtras.length > 0 ? formData.atividadesExtras.join(', ') : 'Nenhuma',
       });
-      alert("Ingresso salvo na memória!");
-    } else {
-      alert("Erro: onRegister não está definido!");
     }
 
     if (formData.categorias.includes('com_submissao') && trabalhoFile) {
+      let arquivoUrl = '';
+      try {
+        const path = `trabalhos/${event.id}/${user.email}_${trabalhoFile.name}`;
+        arquivoUrl = await uploadFile(path, trabalhoFile);
+      } catch (e) {
+        console.error("Erro no upload do trabalho:", e);
+      }
+
       onSubmitWork(event.id, {
         usuario: formData.nome || user.displayName,
         coAutores: formData.coAutores,
         trabalho: trabalhoFile.name,
+        arquivoUrl: arquivoUrl,
         modalidade: formData.tipoApresentacao,
         status: 'em_analise',
         data: new Date().toISOString(),
