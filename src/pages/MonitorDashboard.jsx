@@ -4,7 +4,8 @@ import { Link } from 'react-router-dom';
 import { Badge } from '../components/Badge';
 
 export function MonitorDashboard({ user, monitors, submissions, avaliadores, events, ingressos = [] }) {
-  const [activeTab, setActiveTab] = useState('escala'); // 'escala', 'trabalhos', 'credenciamento'
+  const [activeTab, setActiveTab] = useState('escala'); // 'escala', 'trabalhos', 'credenciamento', 'relatorios'
+  const [viewingReport, setViewingReport] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
   const [scannedUserId, setScannedUserId] = useState(null);
   if (!user) {
@@ -61,7 +62,7 @@ export function MonitorDashboard({ user, monitors, submissions, avaliadores, eve
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', borderBottom: '2px solid var(--border-color)', paddingBottom: '0.5rem' }}>
+      <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', borderBottom: '2px solid var(--border-color)', paddingBottom: '0.5rem', flexWrap: 'wrap' }}>
         <button onClick={() => setActiveTab('escala')} className={`btn ${activeTab === 'escala' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none' }}>
           Sua Escala de Trabalho
         </button>
@@ -70,6 +71,9 @@ export function MonitorDashboard({ user, monitors, submissions, avaliadores, eve
         </button>
         <button onClick={() => setActiveTab('credenciamento')} className={`btn ${activeTab === 'credenciamento' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none' }}>
           Credenciamento e Check-in
+        </button>
+        <button onClick={() => setActiveTab('relatorios')} className={`btn ${activeTab === 'relatorios' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none' }}>
+          Relatórios Compartilhados
         </button>
       </div>
       
@@ -298,6 +302,228 @@ export function MonitorDashboard({ user, monitors, submissions, avaliadores, eve
           </div>
         </div>
       )}
+
+      {activeTab === 'relatorios' && (
+        <div>
+          <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem' }}>Relatórios Compartilhados com Você</h2>
+          {(!monitors.find(m => m.email === user.email)?.relatoriosPermitidos || monitors.find(m => m.email === user.email).relatoriosPermitidos.length === 0) ? (
+            <div className="card text-center mb-8" style={{ padding: '4rem 2rem', color: 'var(--text-secondary)' }}>
+              <FileText size={48} style={{ margin: '0 auto', marginBottom: '1rem', color: '#64748b', opacity: 0.5 }} />
+              <p>A organização ainda não compartilhou nenhum relatório com você.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              {monitors.find(m => m.email === user.email).relatoriosPermitidos.map((reportType, idx) => (
+                <div key={idx} className="card text-center" style={{ padding: '2rem', cursor: 'pointer', border: '1px solid var(--border-color)', transition: 'transform 0.2s' }} onClick={() => setViewingReport(reportType)} onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-4px)'} onMouseOut={(e) => e.currentTarget.style.transform = 'none'}>
+                  <FileText size={32} style={{ margin: '0 auto 1rem', color: 'var(--accent-primary)' }} />
+                  <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem', textTransform: 'capitalize' }}>
+                    {reportType === 'credenciamento' && 'Ficha de Credenciamento'}
+                    {reportType === 'oficinas' && 'Fichas de Oficinas'}
+                    {reportType === 'monitores' && 'Escala de Monitores'}
+                    {reportType === 'trabalhos' && 'Trabalhos Aceitos'}
+                  </h3>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Clique para visualizar e imprimir este relatório.</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* MODAL DE IMPRESSÃO (TELA CHEIA) */}
+      {viewingReport && (
+        <div className="print-modal" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'white', zIndex: 99999, overflowY: 'auto' }}>
+          <div className="no-print" style={{ position: 'sticky', top: 0, backgroundColor: '#f1f5f9', padding: '1rem', borderBottom: '1px solid #cbd5e1', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 10 }}>
+            <button onClick={() => setViewingReport(null)} className="btn btn-outline flex items-center gap-2">
+              Voltar
+            </button>
+            <button onClick={() => window.print()} className="btn btn-primary" style={{ backgroundColor: '#16a34a', border: 'none' }}>
+              Imprimir Relatório
+            </button>
+          </div>
+
+          <div className="print-area" style={{ padding: '2rem 4rem', color: 'black', fontFamily: 'Arial, sans-serif' }}>
+            {events.map(selectedEvent => (
+              <div key={selectedEvent.id} style={{ marginBottom: '4rem' }}>
+                <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                  <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: 0, textTransform: 'uppercase' }}>{selectedEvent?.title}</h1>
+                  <h2 style={{ fontSize: '1.25rem', margin: '0.5rem 0 0 0', color: '#333' }}>
+                    {viewingReport === 'credenciamento' && 'FICHA DE CREDENCIAMENTO / PRESENÇA'}
+                    {viewingReport === 'oficinas' && 'FICHAS DE FREQUÊNCIA - ATIVIDADES'}
+                    {viewingReport === 'monitores' && 'ESCALA E CONTROLE DE MONITORES'}
+                    {viewingReport === 'trabalhos' && 'LISTAGEM OFICIAL DE TRABALHOS APROVADOS'}
+                  </h2>
+                </div>
+
+                {/* REPORT: CREDENCIAMENTO */}
+                {viewingReport === 'credenciamento' && (
+                  <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000' }}>
+                    <thead>
+                      <tr>
+                        <th style={{ border: '1px solid #000', padding: '0.5rem', width: '5%', backgroundColor: '#f0f0f0' }}>Nº</th>
+                        <th style={{ border: '1px solid #000', padding: '0.5rem', width: '45%', backgroundColor: '#f0f0f0', textAlign: 'left' }}>Nome do Participante</th>
+                        <th style={{ border: '1px solid #000', padding: '0.5rem', width: '50%', backgroundColor: '#f0f0f0', textAlign: 'left' }}>Assinatura</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {ingressos.filter(i => i.eventId === selectedEvent.id).map((ing, idx) => (
+                        <tr key={idx}>
+                          <td style={{ border: '1px solid #000', padding: '0.5rem', textAlign: 'center' }}>{idx + 1}</td>
+                          <td style={{ border: '1px solid #000', padding: '0.5rem', textTransform: 'uppercase' }}>{ing.nome}</td>
+                          <td style={{ border: '1px solid #000', padding: '0.5rem', textAlign: 'center', fontWeight: 'bold', fontSize: '1.25rem' }}>
+                            {(ing.presenca && ing.presenca['GERAL']) ? 'ASSINADO' : ''}
+                          </td>
+                        </tr>
+                      ))}
+                      {ingressos.filter(i => i.eventId === selectedEvent.id).length === 0 && (
+                        <tr><td colSpan="3" style={{ border: '1px solid #000', padding: '1rem', textAlign: 'center' }}>Nenhum participante inscrito.</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                )}
+
+                {/* REPORT: OFICINAS */}
+                {viewingReport === 'oficinas' && (
+                  <div>
+                    {(!selectedEvent?.activities || selectedEvent.activities.length === 0) ? (
+                      <p style={{ textAlign: 'center' }}>Nenhuma atividade cadastrada neste evento.</p>
+                    ) : (
+                      selectedEvent.activities.map((act, idx) => {
+                        const inscritos = ingressos.filter(ing => ing.eventId === selectedEvent.id && (ing.atividades || '').includes(act.name));
+                        return (
+                          <div key={idx} style={{ marginBottom: '3rem', pageBreakInside: 'avoid' }}>
+                            <div style={{ backgroundColor: '#f0f0f0', border: '1px solid #000', padding: '0.5rem', fontWeight: 'bold' }}>
+                              ATIVIDADE: {act.name.toUpperCase()} <br/>
+                              <span style={{ fontSize: '0.875rem', fontWeight: 'normal' }}>Local: {act.room} | Ministrante: {act.minister} | Horário: {act.time}</span>
+                            </div>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000', borderTop: 'none' }}>
+                              <thead>
+                                <tr>
+                                  <th style={{ border: '1px solid #000', padding: '0.5rem', width: '5%' }}>Nº</th>
+                                  <th style={{ border: '1px solid #000', padding: '0.5rem', width: '45%', textAlign: 'left' }}>Nome do Matriculado</th>
+                                  <th style={{ border: '1px solid #000', padding: '0.5rem', width: '50%', textAlign: 'left' }}>Assinatura</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {inscritos.map((ing, i) => (
+                                  <tr key={i}>
+                                    <td style={{ border: '1px solid #000', padding: '0.5rem', textAlign: 'center' }}>{i + 1}</td>
+                                    <td style={{ border: '1px solid #000', padding: '0.5rem', textTransform: 'uppercase' }}>{ing.nome}</td>
+                                    <td style={{ border: '1px solid #000', padding: '0.5rem', textAlign: 'center', fontWeight: 'bold', fontSize: '1.25rem' }}>
+                                      {(ing.presenca && ing.presenca[act.name]) ? 'ASSINADO' : ''}
+                                    </td>
+                                  </tr>
+                                ))}
+                                {inscritos.length === 0 && (
+                                  <tr><td colSpan="3" style={{ border: '1px solid #000', padding: '1rem', textAlign: 'center' }}>Nenhum participante matriculado.</td></tr>
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                )}
+
+                {/* REPORT: MONITORES */}
+                {viewingReport === 'monitores' && (
+                  <div>
+                    {(!selectedEvent?.monitorAssignments || selectedEvent.monitorAssignments.length === 0) ? (
+                      <p style={{ textAlign: 'center' }}>Nenhuma função delegada aos monitores neste evento.</p>
+                    ) : (
+                      Array.from(new Set(selectedEvent.monitorAssignments.map(a => a.dia))).map((dia, dIdx) => (
+                        <div key={dIdx} style={{ marginBottom: '3rem', pageBreakInside: 'avoid' }}>
+                          <div style={{ backgroundColor: '#f0f0f0', border: '1px solid #000', padding: '0.5rem', fontWeight: 'bold' }}>
+                            DATA / DIA: {dia.toUpperCase()}
+                          </div>
+                          <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000', borderTop: 'none' }}>
+                            <thead>
+                              <tr>
+                                <th style={{ border: '1px solid #000', padding: '0.5rem', width: '25%', textAlign: 'left' }}>Nome do Monitor</th>
+                                <th style={{ border: '1px solid #000', padding: '0.5rem', width: '25%', textAlign: 'left' }}>Função / Tarefa</th>
+                                <th style={{ border: '1px solid #000', padding: '0.5rem', width: '25%', textAlign: 'left' }}>Local</th>
+                                <th style={{ border: '1px solid #000', padding: '0.5rem', width: '25%', textAlign: 'left' }}>Horário</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {selectedEvent.monitorAssignments.filter(a => a.dia === dia).map((assig, i) => {
+                                const monitorObj = monitors.find(m => m.email === assig.monitorEmail);
+                                const nome = monitorObj ? monitorObj.nome : assig.monitorEmail;
+                                return (
+                                  <tr key={i}>
+                                    <td style={{ border: '1px solid #000', padding: '0.5rem', textTransform: 'uppercase' }}>{nome}</td>
+                                    <td style={{ border: '1px solid #000', padding: '0.5rem' }}>{assig.funcao}</td>
+                                    <td style={{ border: '1px solid #000', padding: '0.5rem' }}>{assig.local}</td>
+                                    <td style={{ border: '1px solid #000', padding: '0.5rem' }}>{assig.horario}</td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+
+                {/* REPORT: TRABALHOS */}
+                {viewingReport === 'trabalhos' && (
+                  <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000', fontSize: '0.875rem' }}>
+                    <thead>
+                      <tr>
+                        <th style={{ border: '1px solid #000', padding: '0.5rem', width: '10%', backgroundColor: '#f0f0f0' }}>Código</th>
+                        <th style={{ border: '1px solid #000', padding: '0.5rem', width: '30%', backgroundColor: '#f0f0f0', textAlign: 'left' }}>Título do Trabalho</th>
+                        <th style={{ border: '1px solid #000', padding: '0.5rem', width: '20%', backgroundColor: '#f0f0f0', textAlign: 'left' }}>Autores</th>
+                        <th style={{ border: '1px solid #000', padding: '0.5rem', width: '15%', backgroundColor: '#f0f0f0', textAlign: 'left' }}>Sessão/Local</th>
+                        <th style={{ border: '1px solid #000', padding: '0.5rem', width: '15%', backgroundColor: '#f0f0f0', textAlign: 'left' }}>Monitor Responsável</th>
+                        <th style={{ border: '1px solid #000', padding: '0.5rem', width: '10%', backgroundColor: '#f0f0f0', textAlign: 'left' }}>Avaliadores</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {submissions.filter(s => s.status === 'aprovado' && s.eventId === selectedEvent.id).map((sub, idx) => {
+                        const autores = sub.coAutores ? `${sub.usuario}, ${sub.coAutores}` : sub.usuario;
+                        const monitorObj = monitors.find(m => m.email === sub.monitorEmail);
+                        const monitorNome = monitorObj ? monitorObj.nome : '';
+                        
+                        const avaliadoresNomes = (sub.avaliadoresEmails || []).map(email => {
+                          const av = avaliadores.find(a => a.email === email);
+                          return av ? av.nome : email;
+                        }).join(', ');
+
+                        return (
+                          <tr key={idx}>
+                            <td style={{ border: '1px solid #000', padding: '0.5rem', textAlign: 'center', fontWeight: 'bold' }}>{sub.detalhesApresentacao?.numeroPoster || 'N/A'}</td>
+                            <td style={{ border: '1px solid #000', padding: '0.5rem', textTransform: 'uppercase' }}>{sub.trabalho}</td>
+                            <td style={{ border: '1px solid #000', padding: '0.5rem' }}>{autores}</td>
+                            <td style={{ border: '1px solid #000', padding: '0.5rem' }}>{sub.detalhesApresentacao?.localApresentacao || ''}</td>
+                            <td style={{ border: '1px solid #000', padding: '0.5rem', textTransform: 'uppercase' }}>{monitorNome}</td>
+                            <td style={{ border: '1px solid #000', padding: '0.5rem', textTransform: 'uppercase', fontSize: '0.75rem' }}>{avaliadoresNomes}</td>
+                          </tr>
+                        );
+                      })}
+                      {submissions.filter(s => s.status === 'aprovado' && s.eventId === selectedEvent.id).length === 0 && (
+                        <tr><td colSpan="6" style={{ border: '1px solid #000', padding: '1rem', textAlign: 'center' }}>Nenhum trabalho aprovado.</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <style>{`
+            @media print {
+              body * { visibility: hidden !important; }
+              .print-modal { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; background: white !important; }
+              .print-area, .print-area * { visibility: visible !important; color: black !important; }
+              .print-area { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; padding: 0 !important; }
+              .no-print { display: none !important; }
+            }
+          `}</style>
+        </div>
+      )}
+
     </div>
   );
 }

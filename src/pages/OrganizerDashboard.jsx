@@ -4,11 +4,12 @@ import { EventCard } from '../components/EventCard';
 import { FileDown, Users, Check, X, ArrowLeft, ClipboardList, GraduationCap, MonitorPlay } from 'lucide-react';
 import { uploadFile } from '../services/db';
 
-export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissions, onUpdateSubmission, monitors = [], onAddMonitor, avaliadores = [], onAddAvaliador, ingressos = [], onUpdateIngresso }) {
+export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissions, onUpdateSubmission, monitors = [], onAddMonitor, onUpdateMonitor, avaliadores = [], onAddAvaliador, ingressos = [], onUpdateIngresso }) {
   const [selectedEventId, setSelectedEventId] = useState(null);
   const [isCreatingEvent, setIsCreatingEvent] = useState(false);
   const [activeTab, setActiveTab] = useState('submissoes'); // 'submissoes', 'equipe', 'atividades', 'credenciamento', 'relatorios'
   const [viewingReport, setViewingReport] = useState(null); // 'credenciamento', 'oficinas', 'monitores', 'trabalhos'
+  const [sharingMonitorId, setSharingMonitorId] = useState('');
   
   const [approvingSubId, setApprovingSubId] = useState(null);
   const [chatSubId, setChatSubId] = useState(null);
@@ -793,9 +794,41 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
             <button onClick={() => setViewingReport(null)} className="btn btn-outline flex items-center gap-2">
               <ArrowLeft size={16} /> Voltar
             </button>
-            <button onClick={handlePrint} className="btn btn-primary" style={{ backgroundColor: '#16a34a', border: 'none' }}>
-              Imprimir Relatório
-            </button>
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <select className="form-input" style={{ padding: '0.5rem', height: '100%' }} value={sharingMonitorId} onChange={(e) => setSharingMonitorId(e.target.value)}>
+                <option value="">Compartilhar com...</option>
+                <option value="ALL">Todos os Monitores</option>
+                {monitors.map(m => <option key={m.id} value={m.id}>{m.nome}</option>)}
+              </select>
+              <button 
+                onClick={() => {
+                   if(!sharingMonitorId) return alert('Selecione um monitor para compartilhar');
+                   if (sharingMonitorId === 'ALL') {
+                       monitors.forEach(m => {
+                           const relatoriosPermitidos = m.relatoriosPermitidos || [];
+                           if (!relatoriosPermitidos.includes(viewingReport)) {
+                               onUpdateMonitor(m.id, { relatoriosPermitidos: [...relatoriosPermitidos, viewingReport] });
+                           }
+                       });
+                   } else {
+                       const monitor = monitors.find(m => m.id === sharingMonitorId);
+                       if (monitor) {
+                           const relatoriosPermitidos = monitor.relatoriosPermitidos || [];
+                           if (!relatoriosPermitidos.includes(viewingReport)) {
+                               onUpdateMonitor(monitor.id, { relatoriosPermitidos: [...relatoriosPermitidos, viewingReport] });
+                           }
+                       }
+                   }
+                   alert('Relatório compartilhado com sucesso!');
+                   setSharingMonitorId('');
+                }} 
+                className="btn btn-outline" style={{ borderColor: '#3b82f6', color: '#3b82f6', height: '100%' }}>
+                Enviar Relatório
+              </button>
+              <button onClick={handlePrint} className="btn btn-primary" style={{ backgroundColor: '#16a34a', border: 'none', height: '100%' }}>
+                Imprimir Relatório
+              </button>
+            </div>
           </div>
 
           <div className="print-area" style={{ padding: '2rem 4rem', color: 'black', fontFamily: 'Arial, sans-serif' }}>
