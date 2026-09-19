@@ -4,7 +4,7 @@ import { EventCard } from '../components/EventCard';
 import { FileDown, Users, Check, X, ArrowLeft, ClipboardList, GraduationCap, MonitorPlay } from 'lucide-react';
 import { uploadFile } from '../services/db';
 
-export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissions, onUpdateSubmission, monitors = [], onAddMonitor, onUpdateMonitor, avaliadores = [], onAddAvaliador, ingressos = [], onUpdateIngresso }) {
+export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissions, onUpdateSubmission, monitors = [], onAddMonitor, onUpdateMonitor, avaliadores = [], onAddAvaliador, ingressos = [], onUpdateIngresso, news = [], onAddNews }) {
   const [selectedEventId, setSelectedEventId] = useState(null);
   const [isCreatingEvent, setIsCreatingEvent] = useState(false);
   const [activeTab, setActiveTab] = useState('submissoes'); // 'submissoes', 'equipe', 'atividades', 'credenciamento', 'relatorios'
@@ -22,6 +22,11 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
   const [speakerData, setSpeakerData] = useState({ nome: '', papel: 'Palestrante', bio: '', detalhesAtividade: '', fotoUrl: '' });
   const [speakerPhotoFile, setSpeakerPhotoFile] = useState(null);
   const [isUploadingSpeaker, setIsUploadingSpeaker] = useState(false);
+
+  const [newsData, setNewsData] = useState({ title: '', summary: '', content: '', imageUrl: '', date: new Date().toISOString().split('T')[0] });
+  const [newsImageFile, setNewsImageFile] = useState(null);
+  const [isUploadingNewsImage, setIsUploadingNewsImage] = useState(false);
+  const [isManagingNews, setIsManagingNews] = useState(false);
 
   const selectedEvent = events.find(e => e.id === selectedEventId);
 
@@ -94,6 +99,34 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
     alert("Ministrante cadastrado com sucesso!");
   };
 
+  const handleAddNewsSubmit = async (e) => {
+    e.preventDefault();
+    setIsUploadingNewsImage(true);
+    let finalImageUrl = newsData.imageUrl;
+    
+    if (newsImageFile) {
+      try {
+        const fileName = `news/${Date.now()}_${newsImageFile.name}`;
+        finalImageUrl = await uploadFile(fileName, newsImageFile);
+      } catch (error) {
+        console.error("Erro no upload da noticia para o Storage.", error);
+        finalImageUrl = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.readAsDataURL(newsImageFile);
+        });
+        alert("Atenção: A foto foi salva localmente no navegador.");
+      }
+    }
+
+    onAddNews({ ...newsData, imageUrl: finalImageUrl });
+    setNewsData({ title: '', summary: '', content: '', imageUrl: '', date: new Date().toISOString().split('T')[0] });
+    setNewsImageFile(null);
+    setIsUploadingNewsImage(false);
+    setIsManagingNews(false);
+    alert("Notícia publicada com sucesso!");
+  };
+
   const handleApproveClick = (subId) => setApprovingSubId(subId);
   const handleConfirmApproval = () => {
     onUpdateSubmission(approvingSubId, { status: 'aprovado', detalhesApresentacao: approvalData });
@@ -147,7 +180,7 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
   };
 
   // Se não tem evento selecionado E não está criando, mostra a lista de eventos
-  if (!selectedEventId && !isCreatingEvent) {
+  if (!selectedEventId && !isCreatingEvent && !isManagingNews) {
     return (
       <div className="container" style={{ marginTop: '2rem' }}>
         <div className="flex justify-between items-center mb-8">
@@ -155,9 +188,14 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
             <h1 style={{ fontSize: '2.25rem', fontWeight: '700' }}>Painel do Organizador</h1>
             <p style={{ color: 'var(--text-secondary)' }}>Selecione um evento para gerenciar ou crie um novo.</p>
           </div>
-          <button onClick={() => setIsCreatingEvent(true)} className="btn btn-primary">
-            + Criar Novo Evento
-          </button>
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <button onClick={() => setIsManagingNews(true)} className="btn btn-outline">
+              📰 Gerenciar Notícias
+            </button>
+            <button onClick={() => setIsCreatingEvent(true)} className="btn btn-primary">
+              + Criar Novo Evento
+            </button>
+          </div>
         </div>
 
         {events.length === 0 ? (
@@ -180,6 +218,66 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
             ))}
           </div>
         )}
+      </div>
+    );
+  }
+
+  // Tela de Gerenciamento de Notícias
+  if (isManagingNews) {
+    return (
+      <div className="container" style={{ marginTop: '2rem' }}>
+        <button onClick={() => setIsManagingNews(false)} className="btn btn-outline flex items-center gap-2 mb-4">
+          <ArrowLeft size={16} /> Voltar ao Painel
+        </button>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem' }}>Publicar Nova Notícia</h2>
+            <div className="card" style={{ padding: '1.5rem' }}>
+              <form onSubmit={handleAddNewsSubmit} className="mb-6">
+                <input type="text" placeholder="Título da Notícia" value={newsData.title} onChange={e => setNewsData({...newsData, title: e.target.value})} className="form-input mb-2" required />
+                <input type="date" value={newsData.date} onChange={e => setNewsData({...newsData, date: e.target.value})} className="form-input mb-2" required />
+                <textarea placeholder="Resumo (Aparece no card pequeno)" value={newsData.summary} onChange={e => setNewsData({...newsData, summary: e.target.value})} className="form-input mb-2" rows="2" required></textarea>
+                <textarea placeholder="Conteúdo Completo da Notícia" value={newsData.content} onChange={e => setNewsData({...newsData, content: e.target.value})} className="form-input mb-2" rows="6" required></textarea>
+                <div className="form-group mb-4">
+                  <label className="form-label" style={{ fontSize: '0.875rem' }}>Imagem de Capa (Ficará destacada)</label>
+                  <input type="file" accept="image/*" onChange={e => setNewsImageFile(e.target.files[0])} className="form-input" required={!newsData.imageUrl} />
+                </div>
+                <button type="submit" className="btn btn-primary" disabled={isUploadingNewsImage} style={{ width: '100%', backgroundColor: '#0284c7', border: 'none' }}>
+                  {isUploadingNewsImage ? 'Publicando...' : 'Publicar Notícia'}
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <div>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem' }}>Notícias Publicadas</h2>
+            <div className="card" style={{ padding: '1.5rem' }}>
+              {(!news || news.length === 0) ? (
+                <p style={{ color: 'var(--text-secondary)' }}>Nenhuma notícia publicada ainda.</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {news.map((item, idx) => (
+                    <div key={idx} style={{ padding: '1rem', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', gap: '1rem' }}>
+                      {item.imageUrl && (
+                        <img src={item.imageUrl} alt={item.title} style={{ width: '80px', height: '80px', borderRadius: '8px', objectFit: 'cover' }} />
+                      )}
+                      <div>
+                        <div style={{ fontSize: '0.75rem', color: '#0284c7', fontWeight: 'bold', marginBottom: '0.25rem' }}>
+                          {item.date}
+                        </div>
+                        <h3 style={{ fontSize: '1rem', marginBottom: '0.5rem', fontWeight: '600' }}>{item.title}</h3>
+                        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                          {item.summary}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     );
   }

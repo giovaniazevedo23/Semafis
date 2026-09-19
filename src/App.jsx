@@ -47,6 +47,7 @@ function App() {
   const [monitors, setMonitors] = useState([]);
   const [avaliadores, setAvaliadores] = useState([]);
   const [notifications, setNotifications] = useState([]);
+  const [news, setNews] = useState([]);
   const [user, setUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
 
@@ -59,6 +60,7 @@ function App() {
     const unsubMonitors = listenCollection('monitors', setMonitors);
     const unsubAvaliadores = listenCollection('avaliadores', setAvaliadores);
     const unsubNotifications = listenCollection('notifications', setNotifications);
+    const unsubNews = listenCollection('news', setNews);
 
     return () => {
       unsubEvents();
@@ -67,6 +69,7 @@ function App() {
       unsubMonitors();
       unsubAvaliadores();
       unsubNotifications();
+      unsubNews();
     };
   }, []);
 
@@ -141,6 +144,20 @@ function App() {
     await addDocument('avaliadores', avaliadorData);
   };
 
+  const handleAddNews = async (newsData) => {
+    const id = 'NEWS-' + Date.now().toString().slice(-6);
+    const finalData = { id, timestamp: new Date().toISOString(), ...newsData };
+    try {
+      await setDocument('news', id, finalData);
+    } catch (e) {
+      console.error('Falha ao salvar notícia no Firestore.', e);
+      const localNews = JSON.parse(localStorage.getItem('fallback_news') || '[]');
+      localNews.push(finalData);
+      localStorage.setItem('fallback_news', JSON.stringify(localNews));
+      setNews(prev => [finalData, ...prev]);
+    }
+  };
+
   const handleSendNotification = async (notificationData) => {
     const id = 'NOTIF-' + Date.now().toString().slice(-6);
     const cleanData = Object.fromEntries(
@@ -210,18 +227,23 @@ function App() {
     ...JSON.parse(localStorage.getItem('fallback_submissions') || '[]').filter(local => !submissions.find(fb => fb.id === local.id))
   ];
 
+  const allNews = [
+    ...news,
+    ...JSON.parse(localStorage.getItem('fallback_news') || '[]').filter(local => !news.find(fb => fb.id === local.id))
+  ].sort((a, b) => new Date(b.timestamp || b.date) - new Date(a.timestamp || a.date));
+
   return (
     <Router>
       <div className="page-wrapper">
         <Navbar user={user} userProfile={userProfile} monitors={monitors} avaliadores={avaliadores} events={events} />
         <main className="main-content">
           <Routes>
-            <Route path="/" element={<ClientPortal events={events} />} />
+            <Route path="/" element={<ClientPortal events={events} news={allNews} />} />
             <Route path="/login" element={<Login setUser={setUser} monitors={monitors} avaliadores={avaliadores} />} />
             <Route path="/perfil" element={<UserProfile user={user} userProfile={userProfile} setUserProfile={setUserProfile} />} />
             <Route path="/evento/:id" element={<EventDetails events={events} />} />
             <Route path="/evento/:id/inscricao" element={<RegistrationForm events={events} user={user} userProfile={userProfile} onSubmitWork={handleSubmitWork} onRegister={handleRegister} monitors={monitors} />} />
-            <Route path="/organizador" element={<OrganizerDashboard events={events} onAddEvent={handleAddEvent} onUpdateEvent={handleUpdateEvent} submissions={allSubmissions} onUpdateSubmission={handleUpdateSubmission} monitors={monitors} onAddMonitor={handleAddMonitor} onUpdateMonitor={handleUpdateMonitor} avaliadores={avaliadores} onAddAvaliador={handleAddAvaliador} ingressos={allIngressos} onUpdateIngresso={handleUpdateIngresso} />} />
+            <Route path="/organizador" element={<OrganizerDashboard events={events} onAddEvent={handleAddEvent} onUpdateEvent={handleUpdateEvent} submissions={allSubmissions} onUpdateSubmission={handleUpdateSubmission} monitors={monitors} onAddMonitor={handleAddMonitor} onUpdateMonitor={handleUpdateMonitor} avaliadores={avaliadores} onAddAvaliador={handleAddAvaliador} ingressos={allIngressos} onUpdateIngresso={handleUpdateIngresso} news={allNews} onAddNews={handleAddNews} />} />
             <Route path="/painel-usuario" element={<UserDashboard submissions={allSubmissions.filter(s => !user || s.userEmail === user.email)} ingressos={allIngressos.filter(i => !user || i.userEmail === user.email)} events={events} user={user} onSubmitWork={handleSubmitWork} onUpdateSubmission={handleUpdateSubmission} notifications={notifications.filter(n => !user || n.userEmail === user.email)} onUpdateIngresso={handleUpdateIngresso} />} />
             <Route path="/painel-monitor" element={<MonitorDashboard user={user} monitors={monitors} submissions={submissions} avaliadores={avaliadores} events={events} ingressos={ingressos} />} />
             <Route path="/painel-avaliador" element={<EvaluatorDashboard user={user} avaliadores={avaliadores} submissions={submissions} events={events} onUpdateSubmission={handleUpdateSubmission} onSendNotification={handleSendNotification} />} />
