@@ -10,6 +10,11 @@ export function AIChat({ events }) {
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
 
+  // States for dragging
+  const [pos, setPos] = useState({ right: 32, bottom: 32 });
+  const isDraggingRef = useRef(false);
+  const dragRef = useRef({ startX: 0, startY: 0, startRight: 0, startBottom: 0 });
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -80,11 +85,58 @@ export function AIChat({ events }) {
       {!isOpen && (
         <button 
           className="floating-avatar"
-          onClick={() => setIsOpen(true)}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            isDraggingRef.current = false;
+            dragRef.current = { startX: e.clientX, startY: e.clientY, startRight: pos.right, startBottom: pos.bottom };
+            
+            const onMouseMove = (moveEvent) => {
+              isDraggingRef.current = true;
+              setPos({
+                right: dragRef.current.startRight + (dragRef.current.startX - moveEvent.clientX),
+                bottom: dragRef.current.startBottom + (dragRef.current.startY - moveEvent.clientY)
+              });
+            };
+            
+            const onMouseUp = () => {
+              window.removeEventListener('mousemove', onMouseMove);
+              window.removeEventListener('mouseup', onMouseUp);
+            };
+            
+            window.addEventListener('mousemove', onMouseMove);
+            window.addEventListener('mouseup', onMouseUp);
+          }}
+          onTouchStart={(e) => {
+            const touch = e.touches[0];
+            isDraggingRef.current = false;
+            dragRef.current = { startX: touch.clientX, startY: touch.clientY, startRight: pos.right, startBottom: pos.bottom };
+            
+            const onTouchMove = (moveEvent) => {
+              isDraggingRef.current = true;
+              const touchMove = moveEvent.touches[0];
+              setPos({
+                right: dragRef.current.startRight + (dragRef.current.startX - touchMove.clientX),
+                bottom: dragRef.current.startBottom + (dragRef.current.startY - touchMove.clientY)
+              });
+            };
+            
+            const onTouchEnd = () => {
+              window.removeEventListener('touchmove', onTouchMove);
+              window.removeEventListener('touchend', onTouchEnd);
+            };
+            
+            window.addEventListener('touchmove', onTouchMove, { passive: false });
+            window.addEventListener('touchend', onTouchEnd);
+          }}
+          onClick={() => {
+            if (!isDraggingRef.current) {
+              setIsOpen(true);
+            }
+          }}
           style={{
             position: 'fixed',
-            bottom: '2rem',
-            right: '2rem',
+            bottom: `${pos.bottom}px`,
+            right: `${pos.right}px`,
             width: '60px',
             height: '60px',
             borderRadius: '50%',
@@ -96,12 +148,13 @@ export function AIChat({ events }) {
             justifyContent: 'center',
             alignItems: 'center',
             zIndex: 9999,
-            cursor: 'pointer',
-            padding: 0
+            cursor: 'grab',
+            padding: 0,
+            touchAction: 'none'
           }}
         >
-          <img src="/avatar_2_0.jpg" alt="Chat" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
-          <div style={{ position: 'absolute', top: 0, right: 0, width: '15px', height: '15px', backgroundColor: '#ef4444', borderRadius: '50%', border: '2px solid white' }}></div>
+          <img src="/avatar_2_0.jpg" alt="Chat" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover', pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', top: 0, right: 0, width: '15px', height: '15px', backgroundColor: '#ef4444', borderRadius: '50%', border: '2px solid white', pointerEvents: 'none' }}></div>
         </button>
       )}
 
