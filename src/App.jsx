@@ -138,7 +138,22 @@ function App() {
   };
 
   const handleUpdateSubmission = async (subId, updates) => {
-    await updateDocument('submissions', subId, updates);
+    try {
+      await updateDocument('submissions', subId, updates);
+    } catch (e) {
+      console.error('Falha ao atualizar no Firestore, atualizando localmente', e);
+    }
+    
+    // Sempre atualiza o estado local para garantir que a UI reflita a mudança
+    setSubmissions(prev => prev.map(s => s.id === subId ? { ...s, ...updates } : s));
+    
+    // Atualiza o fallback
+    const local = JSON.parse(localStorage.getItem('fallback_submissions') || '[]');
+    const index = local.findIndex(s => s.id === subId);
+    if (index >= 0) {
+      local[index] = { ...local[index], ...updates };
+      localStorage.setItem('fallback_submissions', JSON.stringify(local));
+    }
   };
 
   const handleAddMonitor = async (monitorData) => {
@@ -248,7 +263,20 @@ function App() {
   };
 
   const handleUpdateIngresso = async (id, updates) => {
-    await updateDocument('ingressos', id, updates);
+    try {
+      await updateDocument('ingressos', id, updates);
+    } catch (e) {
+      console.error('Falha ao atualizar no Firestore, atualizando localmente', e);
+    }
+    
+    setIngressos(prev => prev.map(i => i.id === id ? { ...i, ...updates } : i));
+    
+    const local = JSON.parse(localStorage.getItem('fallback_ingressos') || '[]');
+    const index = local.findIndex(i => i.id === id);
+    if (index >= 0) {
+      local[index] = { ...local[index], ...updates };
+      localStorage.setItem('fallback_ingressos', JSON.stringify(local));
+    }
   };
 
   const allIngressos = [
