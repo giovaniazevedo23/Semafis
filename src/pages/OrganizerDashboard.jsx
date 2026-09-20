@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { EventForm } from '../components/EventForm';
 import { EventCard } from '../components/EventCard';
-import { FileDown, Users, Check, X, ArrowLeft, ClipboardList, GraduationCap, MonitorPlay } from 'lucide-react';
+import { FileDown, Users, Check, X, ArrowLeft, ClipboardList, GraduationCap, MonitorPlay, ChevronRight, Calendar, Mic, QrCode, Settings, Medal, FileText, LayoutList } from 'lucide-react';
 import { uploadFile } from '../services/db';
 import { QRCodeCanvas } from 'qrcode.react';
 
 export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissions, onUpdateSubmission, monitors = [], onAddMonitor, onUpdateMonitor, avaliadores = [], onAddAvaliador, ingressos = [], onUpdateIngresso, news = [], onAddNews }) {
   const [selectedEventId, setSelectedEventId] = useState(null);
   const [isCreatingEvent, setIsCreatingEvent] = useState(false);
-  const [activeTab, setActiveTab] = useState('submissoes'); // 'submissoes', 'equipe', 'atividades', 'credenciamento', 'relatorios'
+  const [activeTab, setActiveTab] = useState('menu'); // 'menu', 'submissoes', 'equipe', ...
   const [viewingReport, setViewingReport] = useState(null); // 'credenciamento', 'oficinas', 'monitores', 'trabalhos'
   const [sharingMonitorId, setSharingMonitorId] = useState('');
   
@@ -322,39 +322,66 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
         <p style={{ color: 'var(--text-secondary)' }}>Gerencie as submissões, equipe e credenciamento deste evento.</p>
       </div>
 
-      {/* Tabs */}
-      <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '2rem', borderBottom: '2px solid var(--border-color)', paddingBottom: '0.5rem' }}>
-        <button onClick={() => setActiveTab('submissoes')} className={`btn ${activeTab === 'submissoes' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none' }}>
-          Submissões
+      {/* Menu Principal (Aparece se activeTab === 'menu') */}
+      {activeTab === 'menu' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+          <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem', color: 'var(--text-secondary)' }}>O que você deseja fazer?</h2>
+          
+          {[
+            { id: 'submissoes', title: 'Submissões', desc: 'Visualizar e gerenciar os trabalhos enviados', icon: <FileText size={20} /> },
+            { id: 'equipe', title: 'Equipe do Evento', desc: 'Cadastrar e gerenciar avaliadores e monitores', icon: <Users size={20} /> },
+            { id: 'atividades', title: 'Atividades', desc: 'Cadastrar e organizar minicursos e oficinas', icon: <LayoutList size={20} /> },
+            { id: 'ministrantes', title: 'Ministrantes e Palestrantes', desc: 'Gerenciar os convidados do evento', icon: <Mic size={20} /> },
+            { id: 'org-monitores', title: 'Organização de Monitores', desc: 'Delegar funções e organizar a equipe de apoio', icon: <Settings size={20} /> },
+            { id: 'credenciamento', title: 'Credenciamento', desc: 'Marcar presença e controlar a entrada', icon: <Check size={20} /> },
+            { id: 'credenciais-qr', title: 'Credenciais (QR Code)', desc: 'Gerar e baixar os crachás dos participantes', icon: <QrCode size={20} /> },
+            { id: 'relatorios', title: 'Relatórios e Impressão', desc: 'Gerar listas de presença e fichas de avaliação', icon: <ClipboardList size={20} /> },
+            { id: 'ranking', title: 'Ranking de Apresentações', desc: 'Ver as melhores notas das apresentações', icon: <Medal size={20} /> },
+            { id: 'cronograma', title: 'Cronograma', desc: 'Definir os horários e atividades do evento', icon: <Calendar size={20} /> },
+          ].map((item, idx) => (
+            <div 
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                padding: '1.25rem 0', 
+                borderBottom: '1px solid #e2e8f0', 
+                cursor: 'pointer',
+                transition: 'background-color 0.2s',
+              }}
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+            >
+              <div style={{ 
+                width: '48px', height: '48px', 
+                borderRadius: '50%', 
+                backgroundColor: '#e0f2fe', 
+                color: '#0284c7', 
+                display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                marginRight: '1rem',
+                flexShrink: 0
+              }}>
+                {item.icon}
+              </div>
+              <div style={{ flex: 1 }}>
+                <h3 style={{ fontSize: '1.1rem', margin: '0 0 0.25rem 0', fontWeight: '600' }}>{item.title}</h3>
+                <p style={{ margin: 0, fontSize: '0.875rem', color: '#64748b' }}>{item.desc}</p>
+              </div>
+              <div style={{ color: '#94a3b8' }}>
+                <ChevronRight size={24} />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Botão de Voltar ao Menu (Aparece se activeTab !== 'menu') */}
+      {activeTab !== 'menu' && (
+        <button onClick={() => setActiveTab('menu')} className="btn btn-outline flex items-center gap-2 mb-6" style={{ padding: '0.5rem 1rem' }}>
+          <ArrowLeft size={16} /> Voltar ao Menu do Evento
         </button>
-        <button onClick={() => setActiveTab('equipe')} className={`btn ${activeTab === 'equipe' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none' }}>
-          Equipe (Avaliadores/Monitores)
-        </button>
-        <button onClick={() => setActiveTab('atividades')} className={`btn ${activeTab === 'atividades' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none' }}>
-          Atividades (Minicursos/Oficinas)
-        </button>
-        <button onClick={() => setActiveTab('ministrantes')} className={`btn ${activeTab === 'ministrantes' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none' }}>
-          Ministrantes/Palestrantes
-        </button>
-        <button onClick={() => setActiveTab('org-monitores')} className={`btn ${activeTab === 'org-monitores' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none' }}>
-          Organização de Monitores
-        </button>
-        <button onClick={() => setActiveTab('credenciamento')} className={`btn ${activeTab === 'credenciamento' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none' }}>
-          Credenciamento (Presença)
-        </button>
-        <button onClick={() => setActiveTab('credenciais-qr')} className={`btn ${activeTab === 'credenciais-qr' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none' }}>
-          Credenciais (QR Code)
-        </button>
-        <button onClick={() => setActiveTab('relatorios')} className={`btn ${activeTab === 'relatorios' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none' }}>
-          Relatórios / Impressão
-        </button>
-        <button onClick={() => setActiveTab('ranking')} className={`btn ${activeTab === 'ranking' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none' }}>
-          Ranking de Apresentações
-        </button>
-        <button onClick={() => setActiveTab('cronograma')} className={`btn ${activeTab === 'cronograma' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none' }}>
-          Cronograma do Evento
-        </button>
-      </div>
+      )}
 
       {/* Aba de Cronograma */}
       {activeTab === 'cronograma' && (
