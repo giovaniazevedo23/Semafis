@@ -43,7 +43,7 @@ export function Navbar({ user, userProfile, monitors = [], avaliadores = [], eve
   const currentEventId = eventMatch ? eventMatch[1] : null;
   const currentEvent = events?.find(e => e.id === currentEventId) || (events && events.length > 0 ? events[0] : null);
 
-  let edition = "I";
+  let edition = "XIX";
   if (currentEvent && currentEvent.title) {
     // Tenta encontrar um número romano ou decimal no início do título
     const match = currentEvent.title.match(/^([XIVMCDL]+|\d+)\b/i);
