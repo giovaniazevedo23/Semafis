@@ -47,6 +47,7 @@ function App() {
   const [ingressos, setIngressos] = useState([]);
   const [monitors, setMonitors] = useState([]);
   const [avaliadores, setAvaliadores] = useState([]);
+  const [monitorApplications, setMonitorApplications] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [news, setNews] = useState([]);
   const [user, setUser] = useState(null);
@@ -60,6 +61,7 @@ function App() {
     const unsubIngressos = listenCollection('ingressos', setIngressos);
     const unsubMonitors = listenCollection('monitors', setMonitors);
     const unsubAvaliadores = listenCollection('avaliadores', setAvaliadores);
+    const unsubMonitorApplications = listenCollection('monitorApplications', setMonitorApplications);
     const unsubNotifications = listenCollection('notifications', setNotifications);
     const unsubNews = listenCollection('news', setNews);
 
@@ -69,6 +71,7 @@ function App() {
       unsubIngressos();
       unsubMonitors();
       unsubAvaliadores();
+      unsubMonitorApplications();
       unsubNotifications();
       unsubNews();
     };
@@ -166,6 +169,35 @@ function App() {
 
   const handleAddAvaliador = async (avaliadorData) => {
     await addDocument('avaliadores', avaliadorData);
+  };
+
+  const handleAddMonitorApplication = async (appData) => {
+    const id = 'MAPP-' + Date.now().toString().slice(-6);
+    const finalData = { id, timestamp: new Date().toISOString(), ...appData };
+    try {
+      await setDocument('monitorApplications', id, finalData);
+    } catch (e) {
+      console.error('Falha ao salvar candidatura no Firestore.', e);
+      const localApps = JSON.parse(localStorage.getItem('fallback_monitor_apps') || '[]');
+      localApps.push(finalData);
+      localStorage.setItem('fallback_monitor_apps', JSON.stringify(localApps));
+      setMonitorApplications(prev => [finalData, ...prev]);
+    }
+  };
+
+  const handleUpdateMonitorApplication = async (appId, updates) => {
+    try {
+      await updateDocument('monitorApplications', appId, updates);
+    } catch (e) {
+      console.error('Falha ao atualizar candidatura no Firestore.', e);
+    }
+    setMonitorApplications(prev => prev.map(a => a.id === appId ? { ...a, ...updates } : a));
+    const local = JSON.parse(localStorage.getItem('fallback_monitor_apps') || '[]');
+    const index = local.findIndex(a => a.id === appId);
+    if (index >= 0) {
+      local[index] = { ...local[index], ...updates };
+      localStorage.setItem('fallback_monitor_apps', JSON.stringify(local));
+    }
   };
 
   const handleAddNews = async (newsData) => {
@@ -294,6 +326,11 @@ function App() {
     ...JSON.parse(localStorage.getItem('fallback_news') || '[]').filter(local => !news.find(fb => fb.id === local.id))
   ].sort((a, b) => new Date(b.timestamp || b.date) - new Date(a.timestamp || a.date));
 
+  const allMonitorApplications = [
+    ...monitorApplications,
+    ...JSON.parse(localStorage.getItem('fallback_monitor_apps') || '[]').filter(local => !monitorApplications.find(fb => fb.id === local.id))
+  ].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
   return (
     <Router>
       <div className="page-wrapper">
@@ -314,8 +351,8 @@ function App() {
             <Route path="/perfil" element={<UserProfile user={user} userProfile={userProfile} setUserProfile={setUserProfile} />} />
             <Route path="/evento/:id" element={<EventDetails events={events} />} />
             <Route path="/evento/:id/inscricao" element={<RegistrationForm events={events} user={user} userProfile={userProfile} onSubmitWork={handleSubmitWork} onRegister={handleRegister} monitors={monitors} />} />
-            <Route path="/organizador" element={<OrganizerDashboard events={events} onAddEvent={handleAddEvent} onUpdateEvent={handleUpdateEvent} submissions={allSubmissions} onUpdateSubmission={handleUpdateSubmission} monitors={monitors} onAddMonitor={handleAddMonitor} onUpdateMonitor={handleUpdateMonitor} avaliadores={avaliadores} onAddAvaliador={handleAddAvaliador} ingressos={allIngressos} onUpdateIngresso={handleUpdateIngresso} news={allNews} onAddNews={handleAddNews} />} />
-            <Route path="/painel-usuario" element={<UserDashboard submissions={allSubmissions.filter(s => user && s.userEmail === user.email)} ingressos={allIngressos.filter(i => user && i.userEmail === user.email)} events={events} user={user} onSubmitWork={handleSubmitWork} onUpdateSubmission={handleUpdateSubmission} notifications={notifications.filter(n => user && n.userEmail === user.email)} onUpdateIngresso={handleUpdateIngresso} />} />
+            <Route path="/organizador" element={<OrganizerDashboard events={events} onAddEvent={handleAddEvent} onUpdateEvent={handleUpdateEvent} submissions={allSubmissions} onUpdateSubmission={handleUpdateSubmission} monitors={monitors} onAddMonitor={handleAddMonitor} onUpdateMonitor={handleUpdateMonitor} avaliadores={avaliadores} onAddAvaliador={handleAddAvaliador} ingressos={allIngressos} onUpdateIngresso={handleUpdateIngresso} news={allNews} onAddNews={handleAddNews} monitorApplications={allMonitorApplications} onUpdateMonitorApplication={handleUpdateMonitorApplication} />} />
+            <Route path="/painel-usuario" element={<UserDashboard submissions={allSubmissions.filter(s => user && s.userEmail === user.email)} ingressos={allIngressos.filter(i => user && i.userEmail === user.email)} events={events} user={user} onSubmitWork={handleSubmitWork} onUpdateSubmission={handleUpdateSubmission} notifications={notifications.filter(n => user && n.userEmail === user.email)} onUpdateIngresso={handleUpdateIngresso} monitorApplications={allMonitorApplications.filter(m => user && m.userEmail === user.email)} onAddMonitorApplication={handleAddMonitorApplication} />} />
             <Route path="/painel-monitor" element={<MonitorDashboard user={user} monitors={monitors} submissions={allSubmissions} avaliadores={avaliadores} events={events} ingressos={allIngressos} onUpdateIngresso={handleUpdateIngresso} />} />
             <Route path="/painel-avaliador" element={<EvaluatorDashboard user={user} avaliadores={avaliadores} submissions={allSubmissions} events={events} onUpdateSubmission={handleUpdateSubmission} onSendNotification={handleSendNotification} />} />
             <Route path="/validar" element={<ValidarCredencial />} />

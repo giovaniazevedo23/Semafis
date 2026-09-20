@@ -6,11 +6,20 @@ import { CredentialTicket } from '../components/CredentialTicket';
 import { Badge } from '../components/Badge';
 import { uploadFile } from '../services/db';
 
-export function UserDashboard({ submissions, events, ingressos = [], user, onSubmitWork, onUpdateSubmission, notifications = [], onUpdateIngresso }) {
+export function UserDashboard({ submissions, events, ingressos = [], user, onSubmitWork, onUpdateSubmission, notifications = [], onUpdateIngresso, monitorApplications = [], onAddMonitorApplication }) {
   const [activeTab, setActiveTab] = useState('trabalhos');
   const [viewingEvaluation, setViewingEvaluation] = useState(null);
   const [viewingCertificate, setViewingCertificate] = useState(null);
   const [expandedActivityInfo, setExpandedActivityInfo] = useState(null);
+
+  // Estados para Candidatura à Monitoria
+  const [showMonitoriaForm, setShowMonitoriaForm] = useState(false);
+  const [monitoriaData, setMonitoriaData] = useState({
+    curso: '',
+    matricula: '',
+    ira: '',
+    motivacao: ''
+  });
 
   // Estados para o formulário de submissão
   const [showSubmitForm, setShowSubmitForm] = useState(false);
@@ -280,6 +289,29 @@ Comissão Organizadora - SEMAFIS`
     );
   }
 
+  const handleApplyForMonitoria = async (e) => {
+    e.preventDefault();
+    if (!monitoriaData.curso || !monitoriaData.matricula || !monitoriaData.ira) {
+      alert("Preencha todos os campos obrigatórios.");
+      return;
+    }
+    
+    if (onAddMonitorApplication) {
+      await onAddMonitorApplication({
+        userEmail: user.email,
+        nome: user.displayName || user.email.split('@')[0],
+        curso: monitoriaData.curso,
+        matricula: monitoriaData.matricula,
+        ira: monitoriaData.ira,
+        motivacao: monitoriaData.motivacao,
+        status: 'pendente'
+      });
+    }
+    
+    alert("Sua candidatura à monitoria foi enviada com sucesso!");
+    setShowMonitoriaForm(false);
+  };
+
   return (
     <div className="container" style={{ paddingTop: '2rem', paddingBottom: '4rem' }}>
       <h1 style={{ fontSize: '2.25rem', fontWeight: '700', marginBottom: '0.5rem' }}>Área do Participante</h1>
@@ -310,13 +342,16 @@ Comissão Organizadora - SEMAFIS`
         <button onClick={() => setActiveTab('certificados')} className={`btn ${activeTab === 'certificados' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
           <Award size={18} /> Certificados
         </button>
-        <button onClick={() => setActiveTab('mensagens')} className={`btn ${activeTab === 'mensagens' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none', display: 'flex', gap: '0.5rem', alignItems: 'center', position: 'relative', marginRight: '5px' }}>
+        <button onClick={() => setActiveTab('mensagens')} className={`btn ${activeTab === 'mensagens' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none', display: 'flex', gap: '0.5rem', alignItems: 'center', position: 'relative' }}>
           <Mail size={18} /> Mensagens
           {displayNotifications.length > 0 && (
             <span style={{ position: 'absolute', top: '2px', right: '2px', backgroundColor: '#ef4444', color: 'white', fontSize: '0.7rem', borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               {displayNotifications.length}
             </span>
           )}
+        </button>
+        <button onClick={() => setActiveTab('monitoria')} className={`btn ${activeTab === 'monitoria' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <MonitorPlay size={18} /> Monitoria
         </button>
       </div>
 
@@ -776,6 +811,104 @@ Comissão Organizadora - SEMAFIS`
                 </div>
               );
             })
+          )}
+        </div>
+      )}
+
+      {/* Monitoria Tab */}
+      {activeTab === 'monitoria' && (
+        <div className="grid grid-cols-1 gap-6">
+          {!showMonitoriaForm ? (
+            <div className="card text-center" style={{ padding: '3rem 2rem' }}>
+              <h2>Candidatura a Monitor Voluntário</h2>
+              <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>Ajude na organização do evento e ganhe certificado de participação diferenciado. As vagas são concorridas e a seleção é feita por uma Inteligência Artificial com base no seu I.R.A. e Curso.</p>
+              
+              {monitorApplications.length > 0 ? (
+                <div style={{ marginBottom: '2rem', textAlign: 'left', backgroundColor: '#f8fafc', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                  <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Sua Candidatura Atual</h3>
+                  {monitorApplications.map(app => (
+                    <div key={app.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '0.5rem', borderBottom: '1px solid #e2e8f0' }}>
+                      <div>
+                        <strong>Status: </strong> 
+                        <span style={{ 
+                          color: app.status === 'pendente' ? '#d97706' : app.status === 'aprovado' ? '#16a34a' : '#dc2626',
+                          fontWeight: 'bold', textTransform: 'uppercase'
+                        }}>
+                          {app.status}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '0.875rem', color: '#64748b' }}>
+                        Enviada em {new Date(app.timestamp).toLocaleDateString()}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <button onClick={() => setShowMonitoriaForm(true)} className="btn btn-primary">
+                  Candidatar-se à Monitoria
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="card" style={{ padding: '2rem', maxWidth: '600px', margin: '0 auto' }}>
+              <h3 style={{ marginBottom: '1.5rem', color: 'var(--accent-primary)' }}>Formulário de Candidatura</h3>
+              <form onSubmit={handleApplyForMonitoria}>
+                <div className="mb-4">
+                  <label className="form-label">Seu Curso</label>
+                  <select 
+                    className="form-input" 
+                    value={monitoriaData.curso} 
+                    onChange={e => setMonitoriaData({...monitoriaData, curso: e.target.value})}
+                    required
+                  >
+                    <option value="">-- Selecione --</option>
+                    <option value="Licenciatura em Física">Licenciatura em Física</option>
+                    <option value="Licenciatura em Matemática">Licenciatura em Matemática</option>
+                    <option value="Engenharia">Engenharia (Qualquer)</option>
+                    <option value="Técnico Integrado">Técnico Integrado (Ensino Médio)</option>
+                    <option value="Outro">Outro Curso</option>
+                  </select>
+                </div>
+                <div className="mb-4">
+                  <label className="form-label">Sua Matrícula</label>
+                  <input 
+                    type="text" 
+                    className="form-input" 
+                    value={monitoriaData.matricula} 
+                    onChange={e => setMonitoriaData({...monitoriaData, matricula: e.target.value})}
+                    placeholder="Ex: 202312345"
+                    required
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="form-label">Seu I.R.A (Índice de Rendimento Acadêmico)</label>
+                  <input 
+                    type="number" 
+                    step="0.01"
+                    min="0"
+                    max="10"
+                    className="form-input" 
+                    value={monitoriaData.ira} 
+                    onChange={e => setMonitoriaData({...monitoriaData, ira: e.target.value})}
+                    placeholder="Ex: 8.5"
+                    required
+                  />
+                </div>
+                <div className="mb-6">
+                  <label className="form-label">Por que você quer ser monitor? (Opcional)</label>
+                  <textarea 
+                    className="form-input" 
+                    value={monitoriaData.motivacao} 
+                    onChange={e => setMonitoriaData({...monitoriaData, motivacao: e.target.value})}
+                    rows="3"
+                  ></textarea>
+                </div>
+                <div className="flex gap-4">
+                  <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>Enviar Candidatura</button>
+                  <button type="button" onClick={() => setShowMonitoriaForm(false)} className="btn btn-outline" style={{ flex: 1 }}>Cancelar</button>
+                </div>
+              </form>
+            </div>
           )}
         </div>
       )}

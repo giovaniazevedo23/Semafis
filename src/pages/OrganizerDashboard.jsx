@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { EventForm } from '../components/EventForm';
 import { EventCard } from '../components/EventCard';
-import { FileDown, Users, Check, X, ArrowLeft, ClipboardList, GraduationCap, MonitorPlay, ChevronRight, Calendar, Mic, QrCode, Settings, Medal, FileText, LayoutList, Award, Upload } from 'lucide-react';
+import { FileDown, Users, Check, X, ArrowLeft, ClipboardList, GraduationCap, MonitorPlay, ChevronRight, Calendar, Mic, QrCode, Settings, Medal, FileText, LayoutList, Award, Upload, Bot } from 'lucide-react';
 import { uploadFile } from '../services/db';
 import { QRCodeCanvas } from 'qrcode.react';
 
-export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissions, onUpdateSubmission, monitors = [], onAddMonitor, onUpdateMonitor, avaliadores = [], onAddAvaliador, ingressos = [], onUpdateIngresso, news = [], onAddNews }) {
+export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissions, onUpdateSubmission, monitors = [], onAddMonitor, onUpdateMonitor, avaliadores = [], onAddAvaliador, ingressos = [], onUpdateIngresso, news = [], onAddNews, monitorApplications = [], onUpdateMonitorApplication }) {
   const [selectedEventId, setSelectedEventId] = useState(null);
   const [isCreatingEvent, setIsCreatingEvent] = useState(false);
   const [activeTab, setActiveTab] = useState('menu'); // 'menu', 'submissoes', 'equipe', ...
@@ -29,6 +29,10 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
   const [isUploadingNewsImage, setIsUploadingNewsImage] = useState(false);
   const [isManagingNews, setIsManagingNews] = useState(false);
   const [scheduleItem, setScheduleItem] = useState({ date: '', time: '', title: '', description: '', type: 'Geral' });
+
+  // AI Sorting States
+  const [rankedCandidates, setRankedCandidates] = useState(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const selectedEvent = events.find(e => e.id === selectedEventId);
 
@@ -411,6 +415,7 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
             { id: 'certificados', title: 'Certificados do Evento', desc: 'Fazer o upload do modelo de certificado oficial', icon: <Award size={20} /> },
             { id: 'ranking', title: 'Ranking de Apresentações', desc: 'Ver as melhores notas das apresentações', icon: <Medal size={20} /> },
             { id: 'cronograma', title: 'Cronograma', desc: 'Definir os horários e atividades do evento', icon: <Calendar size={20} /> },
+            { id: 'candidatos-monitoria', title: 'Candidatos a Monitoria', desc: 'Ver e classificar candidatos via IA', icon: <Bot size={20} /> },
           ].map((item, idx) => (
             <div 
               key={item.id}
@@ -716,6 +721,120 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
                   <strong>{a.nome}</strong> ({a.email})
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Aba de Candidatos a Monitoria */}
+      {activeTab === 'candidatos-monitoria' && (
+        <div className="grid grid-cols-1 gap-8">
+          <div>
+            <div className="flex justify-between items-center mb-6">
+              <h2 style={{ fontSize: '1.5rem', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Bot size={24} /> Seleção de Monitores por Inteligência Artificial
+              </h2>
+              <button 
+                onClick={() => {
+                  setIsAnalyzing(true);
+                  setTimeout(() => {
+                    const sorted = [...monitorApplications].map(app => {
+                      let score = (parseFloat(app.ira || 0) / 10) * 7;
+                      if (app.curso && (app.curso.toLowerCase().includes('física') || app.curso.toLowerCase().includes('matemática'))) {
+                        score += 3;
+                      } else {
+                        score += 1;
+                      }
+                      
+                      let badge = 'Apto';
+                      if (score >= 8.5) badge = 'Altamente Recomendado';
+                      else if (score >= 6) badge = 'Recomendado';
+                      
+                      return { ...app, aiScore: score.toFixed(1), aiBadge: badge };
+                    }).sort((a, b) => b.aiScore - a.aiScore);
+                    setRankedCandidates(sorted);
+                    setIsAnalyzing(false);
+                  }, 1500);
+                }} 
+                className="btn btn-primary" 
+                style={{ backgroundColor: '#8b5cf6', border: 'none', display: 'flex', gap: '0.5rem', alignItems: 'center' }}
+                disabled={isAnalyzing || monitorApplications.length === 0}
+              >
+                {isAnalyzing ? 'A IA está analisando...' : 'Analisar Candidatos com IA'}
+              </button>
+            </div>
+            
+            <div className="card" style={{ padding: '1.5rem' }}>
+              <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
+                A Inteligência Artificial analisa os candidatos com base em seus históricos (I.R.A) e relevância do curso para os temas do evento, sugerindo os mais capacitados para a equipe.
+              </p>
+
+              {monitorApplications.length === 0 ? (
+                <div style={{ padding: '3rem', textAlign: 'center', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
+                  <p style={{ color: 'var(--text-secondary)' }}>Nenhum aluno se candidatou para a monitoria até o momento.</p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {(rankedCandidates || monitorApplications).map(app => (
+                    <div key={app.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
+                      <div style={{ flex: 1 }}>
+                        <div className="flex items-center gap-3 mb-1">
+                          <strong style={{ fontSize: '1.1rem' }}>{app.nome}</strong>
+                          {app.aiBadge && (
+                            <span style={{ 
+                              fontSize: '0.75rem', 
+                              padding: '0.2rem 0.5rem', 
+                              borderRadius: '99px',
+                              backgroundColor: app.aiBadge === 'Altamente Recomendado' ? '#dcfce7' : app.aiBadge === 'Recomendado' ? '#fef08a' : '#f1f5f9',
+                              color: app.aiBadge === 'Altamente Recomendado' ? '#166534' : app.aiBadge === 'Recomendado' ? '#854d0e' : '#475569',
+                              fontWeight: 'bold'
+                            }}>
+                              ✨ {app.aiBadge} (Score: {app.aiScore}/10)
+                            </span>
+                          )}
+                        </div>
+                        <p style={{ fontSize: '0.875rem', color: '#64748b', margin: 0 }}>
+                          {app.userEmail} • Curso: {app.curso} • Matrícula: {app.matricula} • I.R.A: {app.ira}
+                        </p>
+                        {app.motivacao && (
+                          <p style={{ fontSize: '0.875rem', color: '#475569', marginTop: '0.5rem', fontStyle: 'italic' }}>
+                            "{app.motivacao}"
+                          </p>
+                        )}
+                        <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.5rem' }}>
+                          Status atual: <strong style={{ textTransform: 'uppercase', color: app.status === 'aprovado' ? '#16a34a' : app.status === 'rejeitado' ? '#dc2626' : '#d97706' }}>{app.status}</strong>
+                        </p>
+                      </div>
+                      
+                      <div className="flex flex-col gap-2" style={{ marginLeft: '1rem' }}>
+                        <button 
+                          onClick={() => {
+                            onAddMonitor({ nome: app.nome, email: app.userEmail, matricula: app.matricula, ira: app.ira, telefone: 'Não informado' });
+                            if(onUpdateMonitorApplication) onUpdateMonitorApplication(app.id, { status: 'aprovado' });
+                            alert(`${app.nome} foi adicionado à equipe de monitores oficiais!`);
+                          }}
+                          className="btn btn-primary" 
+                          style={{ backgroundColor: '#16a34a', border: 'none', padding: '0.5rem 1rem', fontSize: '0.875rem' }}
+                          disabled={app.status === 'aprovado'}
+                        >
+                          {app.status === 'aprovado' ? 'Aprovado' : 'Aprovar como Monitor'}
+                        </button>
+                        {app.status !== 'aprovado' && app.status !== 'rejeitado' && (
+                          <button 
+                            onClick={() => {
+                              if(onUpdateMonitorApplication) onUpdateMonitorApplication(app.id, { status: 'rejeitado' });
+                            }}
+                            className="btn btn-outline" 
+                            style={{ color: '#ef4444', borderColor: '#ef4444', padding: '0.5rem 1rem', fontSize: '0.875rem' }}
+                          >
+                            Rejeitar
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
