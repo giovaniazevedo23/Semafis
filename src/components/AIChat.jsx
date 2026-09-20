@@ -79,6 +79,7 @@ export function AIChat({ events }) {
     <>
       {!isOpen && (
         <button 
+          className="floating-avatar"
           onClick={() => setIsOpen(true)}
           style={{
             position: 'fixed',
@@ -241,6 +242,18 @@ export function AIChat({ events }) {
         @keyframes typing {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-4px); }
+        }
+        @keyframes float {
+          0% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
+          100% { transform: translateY(0px); }
+        }
+        .floating-avatar {
+          animation: float 3s ease-in-out infinite;
+          transition: transform 0.2s;
+        }
+        .floating-avatar:hover {
+          transform: scale(1.1);
         }
       `}</style>
     </>
