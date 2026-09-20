@@ -3,6 +3,7 @@ import { EventForm } from '../components/EventForm';
 import { EventCard } from '../components/EventCard';
 import { FileDown, Users, Check, X, ArrowLeft, ClipboardList, GraduationCap, MonitorPlay } from 'lucide-react';
 import { uploadFile } from '../services/db';
+import { QRCodeCanvas } from 'qrcode.react';
 
 export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissions, onUpdateSubmission, monitors = [], onAddMonitor, onUpdateMonitor, avaliadores = [], onAddAvaliador, ingressos = [], onUpdateIngresso, news = [], onAddNews }) {
   const [selectedEventId, setSelectedEventId] = useState(null);
@@ -340,6 +341,9 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
         </button>
         <button onClick={() => setActiveTab('credenciamento')} className={`btn ${activeTab === 'credenciamento' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none' }}>
           Credenciamento (Presença)
+        </button>
+        <button onClick={() => setActiveTab('credenciais-qr')} className={`btn ${activeTab === 'credenciais-qr' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none' }}>
+          Credenciais (QR Code)
         </button>
         <button onClick={() => setActiveTab('relatorios')} className={`btn ${activeTab === 'relatorios' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none' }}>
           Relatórios / Impressão
@@ -825,6 +829,96 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
               </div>
             ))
           )}
+        </div>
+      )}
+
+      {/* Aba de Credenciais com QR Code */}
+      {activeTab === 'credenciais-qr' && (
+        <div>
+          <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <ClipboardList size={24} /> Credenciais dos Participantes
+          </h2>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>Visualize e baixe os crachás com QR Code de cada participante inscrito neste evento.</p>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {ingressos.filter(ing => ing.eventId === selectedEvent?.id).length === 0 ? (
+              <p style={{ color: 'var(--text-secondary)' }}>Nenhum participante inscrito ainda.</p>
+            ) : (
+              ingressos.filter(ing => ing.eventId === selectedEvent?.id).map((ing, i) => (
+                <div key={i} className="card" style={{ padding: '1.5rem', textAlign: 'center', border: '1px solid var(--border-color)', borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>{ing.nome}</h3>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '1rem' }}>{ing.userEmail}</p>
+                  
+                  <div style={{ padding: '1rem', background: 'white', borderRadius: '8px', marginBottom: '1rem', border: '1px solid #e2e8f0' }}>
+                    <QRCodeCanvas id={`qr-${ing.id}`} value={ing.id} size={120} level={"H"} includeMargin={true} />
+                  </div>
+                  
+                  <button 
+                    onClick={() => {
+                      const qrCanvas = document.getElementById(`qr-${ing.id}`);
+                      if (qrCanvas) {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = 300;
+                        canvas.height = 400;
+                        const ctx = canvas.getContext('2d');
+                        
+                        // Fundo branco
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        
+                        // Borda
+                        ctx.strokeStyle = '#e2e8f0';
+                        ctx.lineWidth = 4;
+                        ctx.strokeRect(2, 2, canvas.width - 4, canvas.height - 4);
+                        
+                        // Logo ou Header do Evento
+                        ctx.fillStyle = '#3b82f6';
+                        ctx.fillRect(2, 2, canvas.width - 4, 80);
+                        
+                        ctx.fillStyle = '#ffffff';
+                        ctx.font = 'bold 18px Arial';
+                        ctx.textAlign = 'center';
+                        // Quebra de linha simples para o título do evento se for muito longo
+                        let title = selectedEvent?.title || 'Evento';
+                        if(title.length > 25) title = title.substring(0, 22) + '...';
+                        ctx.fillText(title, canvas.width / 2, 40);
+                        ctx.font = '14px Arial';
+                        ctx.fillText('Credencial Oficial', canvas.width / 2, 65);
+                        
+                        // Nome do participante
+                        ctx.fillStyle = '#0f172a';
+                        ctx.font = 'bold 20px Arial';
+                        let nome = ing.nome;
+                        if(nome.length > 20) nome = nome.substring(0, 17) + '...';
+                        ctx.fillText(nome, canvas.width / 2, 120);
+                        
+                        // Email / Info
+                        ctx.fillStyle = '#64748b';
+                        ctx.font = '14px Arial';
+                        ctx.fillText(ing.userEmail, canvas.width / 2, 145);
+                        
+                        // QR Code
+                        ctx.drawImage(qrCanvas, 75, 170, 150, 150);
+                        
+                        // Instrução
+                        ctx.fillStyle = '#94a3b8';
+                        ctx.font = '12px Arial';
+                        ctx.fillText('Apresente no credenciamento', canvas.width / 2, 350);
+                        
+                        const url = canvas.toDataURL("image/png");
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = `credencial-${ing.nome.replace(/\\s+/g, '-')}.png`;
+                        a.click();
+                      }
+                    }}
+                    className="btn btn-outline" style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '0.5rem' }}>
+                    <FileDown size={16} /> Baixar Credencial
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       )}
 
