@@ -303,19 +303,19 @@ function App() {
           monitors={monitors} 
           avaliadores={avaliadores} 
           events={events} 
-          notifications={notifications.filter(n => !user || n.userEmail === user.email || !n.userEmail)}
+          notifications={notifications.filter(n => (user && n.userEmail === user.email) || !n.userEmail)}
           onMarkRead={handleMarkNotificationRead}
           onMarkUnread={handleMarkNotificationUnread}
         />
         <main className="main-content">
           <Routes>
-            <Route path="/" element={<ClientPortal events={events} news={allNews} user={user} notifications={notifications.filter(n => !user || n.userEmail === user.email || !n.userEmail)} onMarkRead={handleMarkNotificationRead} onMarkUnread={handleMarkNotificationUnread} />} />
+            <Route path="/" element={<ClientPortal events={events} news={allNews} user={user} notifications={notifications.filter(n => (user && n.userEmail === user.email) || !n.userEmail)} onMarkRead={handleMarkNotificationRead} onMarkUnread={handleMarkNotificationUnread} />} />
             <Route path="/login" element={<Login setUser={setUser} monitors={monitors} avaliadores={avaliadores} />} />
             <Route path="/perfil" element={<UserProfile user={user} userProfile={userProfile} setUserProfile={setUserProfile} />} />
             <Route path="/evento/:id" element={<EventDetails events={events} />} />
             <Route path="/evento/:id/inscricao" element={<RegistrationForm events={events} user={user} userProfile={userProfile} onSubmitWork={handleSubmitWork} onRegister={handleRegister} monitors={monitors} />} />
             <Route path="/organizador" element={<OrganizerDashboard events={events} onAddEvent={handleAddEvent} onUpdateEvent={handleUpdateEvent} submissions={allSubmissions} onUpdateSubmission={handleUpdateSubmission} monitors={monitors} onAddMonitor={handleAddMonitor} onUpdateMonitor={handleUpdateMonitor} avaliadores={avaliadores} onAddAvaliador={handleAddAvaliador} ingressos={allIngressos} onUpdateIngresso={handleUpdateIngresso} news={allNews} onAddNews={handleAddNews} />} />
-            <Route path="/painel-usuario" element={<UserDashboard submissions={allSubmissions.filter(s => !user || s.userEmail === user.email)} ingressos={allIngressos.filter(i => !user || i.userEmail === user.email)} events={events} user={user} onSubmitWork={handleSubmitWork} onUpdateSubmission={handleUpdateSubmission} notifications={notifications.filter(n => !user || n.userEmail === user.email)} onUpdateIngresso={handleUpdateIngresso} />} />
+            <Route path="/painel-usuario" element={<UserDashboard submissions={allSubmissions.filter(s => user && s.userEmail === user.email)} ingressos={allIngressos.filter(i => user && i.userEmail === user.email)} events={events} user={user} onSubmitWork={handleSubmitWork} onUpdateSubmission={handleUpdateSubmission} notifications={notifications.filter(n => user && n.userEmail === user.email)} onUpdateIngresso={handleUpdateIngresso} />} />
             <Route path="/painel-monitor" element={<MonitorDashboard user={user} monitors={monitors} submissions={allSubmissions} avaliadores={avaliadores} events={events} ingressos={allIngressos} onUpdateIngresso={handleUpdateIngresso} />} />
             <Route path="/painel-avaliador" element={<EvaluatorDashboard user={user} avaliadores={avaliadores} submissions={allSubmissions} events={events} onUpdateSubmission={handleUpdateSubmission} onSendNotification={handleSendNotification} />} />
             <Route path="/validar" element={<ValidarCredencial />} />
