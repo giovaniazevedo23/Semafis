@@ -46,14 +46,14 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
     e.preventDefault();
     onAddMonitor(monitorData);
     setMonitorData({ nome: '', email: '', matricula: '', ira: '', telefone: '' });
-    alert("Monitor cadastrado com sucesso!");
+    setTimeout(() => alert("Monitor cadastrado com sucesso!"), 10);
   };
 
   const handleAvaliadorSubmit = (e) => {
     e.preventDefault();
     onAddAvaliador(avaliadorData);
     setAvaliadorData({ nome: '', email: '', matricula: '', telefone: '', fotoUrl: '' });
-    alert("Avaliador cadastrado com sucesso!");
+    setTimeout(() => alert("Avaliador cadastrado com sucesso!"), 10);
   };
 
   const handleOrganizadorSubmit = (e) => {
@@ -61,7 +61,7 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
     if (onAddOrganizador) {
       onAddOrganizador(organizadorData);
       setOrganizadorData({ nome: '', email: '' });
-      alert("Membro da organização adicionado com sucesso!");
+      setTimeout(() => alert("Membro da organização adicionado com sucesso!"), 10);
     }
   };
 
@@ -71,7 +71,7 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
     const currentActivities = selectedEvent.activities || [];
     onUpdateEvent(selectedEvent.id, { activities: [...currentActivities, activityData] });
     setActivityData({ name: '', minister: '', time: '', room: '', type: 'Minicurso' });
-    alert("Atividade cadastrada com sucesso!");
+    setTimeout(() => alert("Atividade cadastrada com sucesso!"), 10);
   };
 
   const handleAddAssignment = (e) => {
@@ -81,7 +81,7 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
     const newAssignment = { ...assignmentData, id: Date.now().toString() };
     onUpdateEvent(selectedEvent.id, { monitorAssignments: [...currentAssignments, newAssignment] });
     setAssignmentData({ monitorEmail: '', dia: '', horario: '', local: '', funcao: '', ministranteIds: [] });
-    alert("Função delegada com sucesso ao monitor!");
+    setTimeout(() => alert("Função delegada com sucesso ao monitor!"), 10);
   };
 
   const handleAddSpeaker = async (e) => {
