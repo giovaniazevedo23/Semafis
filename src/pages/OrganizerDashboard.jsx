@@ -869,7 +869,7 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
                           onClick={() => {
                             onAddMonitor({ nome: app.nome, email: app.userEmail, matricula: app.matricula, ira: app.ira, telefone: 'Não informado' });
                             if(onUpdateMonitorApplication) onUpdateMonitorApplication(app.id, { status: 'aprovado' });
-                            alert(`${app.nome} foi adicionado à equipe de monitores oficiais!`);
+                            setTimeout(() => alert(`${app.nome} foi adicionado à equipe de monitores oficiais!`), 10);
                           }}
                           className="btn btn-primary" 
                           style={{ backgroundColor: '#16a34a', border: 'none', padding: '0.5rem 1rem', fontSize: '0.875rem' }}
@@ -1010,9 +1010,15 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
             <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>Delegar Função a Monitor</h2>
             <div className="card" style={{ padding: '1.5rem' }}>
               <form onSubmit={handleAddAssignment} className="mb-6">
-                <select value={assignmentData.monitorEmail} onChange={e => setAssignmentData({...assignmentData, monitorEmail: e.target.value})} className="form-input mb-2" required>
-                  <option value="">Selecione o Monitor...</option>
-                  {monitors.map(m => <option key={m.id} value={m.email}>{m.nome}</option>)}
+                <select value={assignmentData.monitorEmail} onChange={e => setAssignmentData({...assignmentData, monitorEmail: e.target.value})} className="form-input mb-2" required disabled={monitors.length === 0}>
+                  {monitors.length === 0 ? (
+                    <option value="">Nenhum monitor cadastrado ainda...</option>
+                  ) : (
+                    <>
+                      <option value="">Selecione o Monitor...</option>
+                      {monitors.map(m => <option key={m.id} value={m.email}>{m.nome}</option>)}
+                    </>
+                  )}
                 </select>
                 <input type="text" placeholder="Dia (Ex: Dia 1, 10/10/2026)" value={assignmentData.dia} onChange={e => setAssignmentData({...assignmentData, dia: e.target.value})} className="form-input mb-2" required />
                 <input type="text" placeholder="Horário (Ex: 08:00 às 12:00)" value={assignmentData.horario} onChange={e => setAssignmentData({...assignmentData, horario: e.target.value})} className="form-input mb-2" required />
@@ -1039,7 +1045,9 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
                   </div>
                 </div>
 
-                <button type="submit" className="btn btn-primary" style={{ width: '100%', backgroundColor: '#0ea5e9', border: 'none' }}>Delegar Função</button>
+                <button type="submit" className="btn btn-primary" style={{ width: '100%', backgroundColor: monitors.length === 0 ? '#94a3b8' : '#0ea5e9', border: 'none', cursor: monitors.length === 0 ? 'not-allowed' : 'pointer' }} disabled={monitors.length === 0}>
+                  {monitors.length === 0 ? 'Cadastre um monitor primeiro' : 'Delegar Função'}
+                </button>
               </form>
             </div>
           </div>
