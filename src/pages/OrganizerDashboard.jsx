@@ -260,26 +260,6 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
       }, index * 500); // 500ms delay para evitar bloqueio do navegador
     });
   };
-    // Pegar trabalhos aprovados e modalidade poster
-    const posterSubmissions = submissions.filter(s => s.status === 'aprovado' && s.modalidade === 'poster');
-    
-    // Ordenar pelo primeiro avaliador associado
-    posterSubmissions.sort((a, b) => {
-      const avaliadorA = (a.avaliadoresEmails && a.avaliadoresEmails[0]) || '';
-      const avaliadorB = (b.avaliadoresEmails && b.avaliadoresEmails[0]) || '';
-      return avaliadorA.localeCompare(avaliadorB);
-    });
-
-    let currentNumber = 1;
-    posterSubmissions.forEach(sub => {
-      const formattedNumber = `PO-${currentNumber.toString().padStart(3, '0')}`;
-      const newDetails = { ...(sub.detalhesApresentacao || {}), numeroPoster: formattedNumber };
-      onUpdateSubmission(sub.id, { detalhesApresentacao: newDetails });
-      currentNumber++;
-    });
-
-    alert(`Numeração automática gerada para ${posterSubmissions.length} pôsteres!`);
-  };
 
   const handlePrint = () => {
     window.print();
