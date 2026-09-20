@@ -40,6 +40,12 @@ export function EventCard({ event }) {
         <p style={{ fontSize: '0.875rem', marginBottom: '1.5rem', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', flex: 1 }}>
           {event.description}
         </p>
+
+        {event.detailedSchedule && event.detailedSchedule.length > 0 && (
+          <div style={{ display: 'inline-block', backgroundColor: '#e0f2fe', color: '#0369a1', fontSize: '0.75rem', padding: '0.25rem 0.5rem', borderRadius: '4px', marginBottom: '1rem', fontWeight: 'bold' }}>
+            📅 Cronograma Disponível
+          </div>
+        )}
         
         <Link to={`/evento/${event.id}`} className="btn btn-outline" style={{ width: '100%', textDecoration: 'none', textAlign: 'center' }}>
           Ver Detalhes

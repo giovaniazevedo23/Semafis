@@ -27,6 +27,7 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
   const [newsImageFile, setNewsImageFile] = useState(null);
   const [isUploadingNewsImage, setIsUploadingNewsImage] = useState(false);
   const [isManagingNews, setIsManagingNews] = useState(false);
+  const [scheduleItem, setScheduleItem] = useState({ date: '', time: '', title: '', description: '', type: 'Geral' });
 
   const selectedEvent = events.find(e => e.id === selectedEventId);
 
@@ -97,6 +98,28 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
     setSpeakerPhotoFile(null);
     setIsUploadingSpeaker(false);
     alert("Ministrante cadastrado com sucesso!");
+  };
+
+  const handleAddScheduleItem = (e) => {
+    e.preventDefault();
+    if (!selectedEvent) return;
+    const currentSchedule = selectedEvent.detailedSchedule || [];
+    const newItem = { ...scheduleItem, id: Date.now().toString() };
+    onUpdateEvent(selectedEvent.id, { 
+      detailedSchedule: [...currentSchedule, newItem].sort((a, b) => {
+        const dateA = new Date(`${a.date}T${a.time}`);
+        const dateB = new Date(`${b.date}T${b.time}`);
+        return dateA - dateB;
+      }) 
+    });
+    setScheduleItem({ date: scheduleItem.date, time: '', title: '', description: '', type: 'Geral' });
+    alert("Atividade adicionada ao cronograma com sucesso!");
+  };
+
+  const handleRemoveScheduleItem = (itemId) => {
+    if (!selectedEvent) return;
+    const currentSchedule = selectedEvent.detailedSchedule || [];
+    onUpdateEvent(selectedEvent.id, { detailedSchedule: currentSchedule.filter(i => i.id !== itemId) });
   };
 
   const handleAddNewsSubmit = async (e) => {
@@ -324,7 +347,61 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
         <button onClick={() => setActiveTab('ranking')} className={`btn ${activeTab === 'ranking' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none' }}>
           Ranking de Apresentações
         </button>
+        <button onClick={() => setActiveTab('cronograma')} className={`btn ${activeTab === 'cronograma' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none' }}>
+          Cronograma do Evento
+        </button>
       </div>
+
+      {/* Aba de Cronograma */}
+      {activeTab === 'cronograma' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>Adicionar ao Cronograma</h2>
+            <div className="card" style={{ padding: '1.5rem' }}>
+              <form onSubmit={handleAddScheduleItem} className="mb-6">
+                <input type="date" value={scheduleItem.date} onChange={e => setScheduleItem({...scheduleItem, date: e.target.value})} className="form-input mb-2" required />
+                <input type="time" value={scheduleItem.time} onChange={e => setScheduleItem({...scheduleItem, time: e.target.value})} className="form-input mb-2" required />
+                <input type="text" placeholder="Título da Atividade (ex: Abertura)" value={scheduleItem.title} onChange={e => setScheduleItem({...scheduleItem, title: e.target.value})} className="form-input mb-2" required />
+                <textarea placeholder="Descrição ou Local (opcional)" value={scheduleItem.description} onChange={e => setScheduleItem({...scheduleItem, description: e.target.value})} className="form-input mb-2" rows="3"></textarea>
+                <select value={scheduleItem.type} onChange={e => setScheduleItem({...scheduleItem, type: e.target.value})} className="form-input mb-4" required>
+                  <option value="Geral">Geral</option>
+                  <option value="Palestra">Palestra</option>
+                  <option value="Oficina">Oficina/Minicurso</option>
+                  <option value="Apresentação">Apresentação de Trabalhos</option>
+                  <option value="Pausa">Pausa/Coffee Break</option>
+                </select>
+                <button type="submit" className="btn btn-primary" style={{ width: '100%', backgroundColor: '#6366f1', border: 'none' }}>Adicionar Atividade</button>
+              </form>
+            </div>
+          </div>
+          <div>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>Cronograma Atual</h2>
+            <div className="card" style={{ padding: '1.5rem', maxHeight: '600px', overflowY: 'auto' }}>
+              {(!selectedEvent?.detailedSchedule || selectedEvent.detailedSchedule.length === 0) ? (
+                <p style={{ color: 'var(--text-secondary)' }}>Nenhuma atividade adicionada ao cronograma detalhado ainda.</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {selectedEvent.detailedSchedule.map((item, idx) => (
+                    <div key={item.id || idx} style={{ padding: '1rem', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', position: 'relative' }}>
+                      <button onClick={() => handleRemoveScheduleItem(item.id)} style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}>
+                        <X size={16} />
+                      </button>
+                      <div style={{ fontSize: '0.75rem', backgroundColor: '#e2e8f0', padding: '0.25rem 0.5rem', borderRadius: '4px', textTransform: 'uppercase', fontWeight: 'bold', display: 'inline-block', marginBottom: '0.5rem' }}>
+                        {item.type}
+                      </div>
+                      <h3 style={{ fontSize: '1.1rem', marginBottom: '0.25rem' }}>{item.title}</h3>
+                      <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                        📅 {item.date ? new Date(`${item.date}T12:00:00`).toLocaleDateString('pt-BR') : ''} ⏰ {item.time}
+                      </p>
+                      {item.description && <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{item.description}</p>}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Aba de Submissões */}
       {activeTab === 'submissoes' && (

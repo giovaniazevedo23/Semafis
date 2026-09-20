@@ -54,7 +54,37 @@ export function EventDetails({ events }) {
               {event.description}
             </p>
 
-            {event.schedule && (
+            {event.detailedSchedule && event.detailedSchedule.length > 0 ? (
+              <div style={{ backgroundColor: '#f8fafc', padding: '1.5rem', borderRadius: '12px', borderLeft: '4px solid var(--accent-primary)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+                <h3 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '8px', color: '#1e293b' }}>
+                  <Clock size={20} color="var(--accent-primary)" /> Cronograma Detalhado
+                </h3>
+                <div style={{ position: 'relative', paddingLeft: '1.5rem', borderLeft: '2px solid #e2e8f0' }}>
+                  {event.detailedSchedule.map((item, idx) => (
+                    <div key={item.id || idx} style={{ position: 'relative', marginBottom: idx !== event.detailedSchedule.length - 1 ? '2rem' : '0' }}>
+                      <div style={{ position: 'absolute', left: '-1.85rem', top: '0.25rem', width: '12px', height: '12px', borderRadius: '50%', backgroundColor: 'var(--accent-primary)', border: '2px solid white', boxShadow: '0 0 0 2px var(--accent-primary)' }}></div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center', marginBottom: '0.5rem' }}>
+                        <span style={{ fontSize: '0.875rem', fontWeight: 'bold', color: 'var(--accent-primary)', backgroundColor: '#e0f2fe', padding: '0.25rem 0.75rem', borderRadius: '9999px' }}>
+                          {item.time}
+                        </span>
+                        {item.date && (
+                          <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                            {new Date(`${item.date}T12:00:00`).toLocaleDateString('pt-BR')}
+                          </span>
+                        )}
+                        <span style={{ fontSize: '0.75rem', backgroundColor: '#f1f5f9', padding: '0.25rem 0.5rem', borderRadius: '4px', textTransform: 'uppercase', color: '#475569' }}>
+                          {item.type}
+                        </span>
+                      </div>
+                      <h4 style={{ fontSize: '1.125rem', marginBottom: '0.5rem', color: '#0f172a' }}>{item.title}</h4>
+                      {item.description && (
+                        <p style={{ fontSize: '0.95rem', color: '#475569', lineHeight: '1.5' }}>{item.description}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : event.schedule && (
               <div style={{ backgroundColor: '#f8fafc', padding: '1.5rem', borderRadius: '12px', borderLeft: '4px solid var(--accent-primary)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
                 <h3 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '8px', color: '#1e293b' }}>
                   <Clock size={20} color="var(--accent-primary)" /> Cronograma de Atividades
