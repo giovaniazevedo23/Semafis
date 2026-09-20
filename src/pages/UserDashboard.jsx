@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, Clock, MonitorPlay, Presentation, FileText, Printer, Ticket, Award, FileUp, Mail, AlertCircle } from 'lucide-react';
+import { Calendar, Clock, MonitorPlay, Presentation, FileText, Printer, Ticket, Award, FileUp, Mail, AlertCircle, Bot } from 'lucide-react';
 
 import { CredentialTicket } from '../components/CredentialTicket';
 import { Badge } from '../components/Badge';
@@ -28,14 +28,45 @@ export function UserDashboard({ submissions, events, ingressos = [], user, onSub
     const sub = submissions.find(s => s.id === subId);
     if (!sub) return;
 
+    const userText = chatInputs[subId].trim();
+
     const newMessage = {
       id: Date.now().toString(),
       sender: 'participante',
-      text: chatInputs[subId],
+      text: userText,
       date: new Date().toISOString()
     };
 
-    onUpdateSubmission(subId, { mensagens: [...(sub.mensagens || []), newMessage] });
+    const newMessagesList = [...(sub.mensagens || []), newMessage];
+    
+    // Resposta Automática do Robô (Fuzzy / Simples)
+    const lowerText = userText.toLowerCase();
+    const isApresentacao = lowerText.includes('apresenta') || lowerText.includes('apreentacao') || lowerText.includes('poster');
+    const isCertificado = lowerText.includes('certificad') || lowerText.includes('horas');
+    
+    const hour = new Date().getHours();
+    let greeting = 'Bom dia';
+    if (hour >= 12 && hour < 18) greeting = 'Boa tarde';
+    if (hour >= 18) greeting = 'Boa noite';
+
+    let autoReplyText = `${greeting}! Sou o assistente virtual da organização. Recebemos sua mensagem e em breve um humano irá responder.`;
+    
+    if (isApresentacao) {
+      autoReplyText = `${greeting}! Notei que sua dúvida é sobre a apresentação. Por favor, verifique a aba de Programação para horários detalhados. A apresentação de pôsteres ocorrerá no local indicado. Nossa equipe retornará logo mais.`;
+    } else if (isCertificado) {
+      autoReplyText = `${greeting}! Sobre certificados: eles serão liberados na aba de Certificados após o evento, condicionados à confirmação de presença (check-in).`;
+    }
+
+    const botMessage = {
+      id: (Date.now() + 1).toString(),
+      sender: 'organizacao',
+      text: autoReplyText,
+      date: new Date().toISOString()
+    };
+    
+    newMessagesList.push(botMessage);
+
+    onUpdateSubmission(subId, { mensagens: newMessagesList });
     setChatInputs(prev => ({ ...prev, [subId]: '' }));
   };
 
@@ -279,10 +310,10 @@ Comissão Organizadora - SEMAFIS`
         <button onClick={() => setActiveTab('certificados')} className={`btn ${activeTab === 'certificados' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
           <Award size={18} /> Certificados
         </button>
-        <button onClick={() => setActiveTab('mensagens')} className={`btn ${activeTab === 'mensagens' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none', display: 'flex', gap: '0.5rem', alignItems: 'center', position: 'relative' }}>
+        <button onClick={() => setActiveTab('mensagens')} className={`btn ${activeTab === 'mensagens' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none', display: 'flex', gap: '0.5rem', alignItems: 'center', position: 'relative', marginRight: '5px' }}>
           <Mail size={18} /> Mensagens
           {displayNotifications.length > 0 && (
-            <span style={{ position: 'absolute', top: '-5px', right: '-5px', backgroundColor: '#ef4444', color: 'white', fontSize: '0.7rem', borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ position: 'absolute', top: '2px', right: '2px', backgroundColor: '#ef4444', color: 'white', fontSize: '0.7rem', borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               {displayNotifications.length}
             </span>
           )}
@@ -619,11 +650,18 @@ Comissão Organizadora - SEMAFIS`
                             ) : (
                               sub.mensagens.map(msg => (
                                 <div key={msg.id} style={{ marginBottom: '1rem', display: 'flex', flexDirection: 'column', alignItems: msg.sender === 'participante' ? 'flex-end' : 'flex-start' }}>
-                                  <div style={{ backgroundColor: msg.sender === 'participante' ? '#3b82f6' : '#e2e8f0', color: msg.sender === 'participante' ? 'white' : '#0f172a', padding: '0.75rem 1rem', borderRadius: '12px', maxWidth: '80%' }}>
-                                    <p style={{ margin: 0, fontSize: '0.9rem' }}>{msg.text}</p>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', maxWidth: '80%', flexDirection: msg.sender === 'participante' ? 'row-reverse' : 'row' }}>
+                                    {msg.sender === 'organizacao' && (
+                                      <div className="bot-avatar">
+                                        <Bot size={16} />
+                                      </div>
+                                    )}
+                                    <div style={{ backgroundColor: msg.sender === 'participante' ? '#3b82f6' : '#e2e8f0', color: msg.sender === 'participante' ? 'white' : '#0f172a', padding: '0.75rem 1rem', borderRadius: '12px' }}>
+                                      <p style={{ margin: 0, fontSize: '0.9rem' }}>{msg.text}</p>
+                                    </div>
                                   </div>
-                                  <span style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '0.25rem' }}>
-                                    {msg.sender === 'participante' ? 'Você' : 'Organização'} • {new Date(msg.date).toLocaleDateString()} {new Date(msg.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  <span style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '0.25rem', padding: '0 2rem' }}>
+                                    {msg.sender === 'participante' ? 'Você' : 'Assistente Virtual / Organização'} • {new Date(msg.date).toLocaleDateString()} {new Date(msg.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                   </span>
                                 </div>
                               ))

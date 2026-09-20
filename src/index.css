@@ -251,3 +251,22 @@ p {
     grid-template-columns: 1fr !important;
   }
 }
+
+@keyframes botBounce {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+  100% { transform: translateY(0); }
+}
+
+.bot-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  animation: botBounce 2s infinite ease-in-out;
+  margin-right: 8px;
+  color: #3b82f6;
+  background-color: #eff6ff;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+}

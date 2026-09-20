@@ -189,6 +189,98 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
     alert(`Numeração automática gerada para ${posterSubmissions.length} pôsteres!`);
   };
 
+  const downloadCredential = (ing, eventTitle) => {
+    const qrCanvas = document.getElementById(`qr-${ing.id}`);
+    if (!qrCanvas) return;
+    
+    const canvas = document.createElement('canvas');
+    canvas.width = 300;
+    canvas.height = 400;
+    const ctx = canvas.getContext('2d');
+    
+    // Fundo branco
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Borda
+    ctx.strokeStyle = '#e2e8f0';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(2, 2, canvas.width - 4, canvas.height - 4);
+    
+    // Logo ou Header do Evento
+    ctx.fillStyle = '#0f172a'; // Trocado de azul claro para preto/escuro a pedido
+    ctx.fillRect(2, 2, canvas.width - 4, 80);
+    
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 18px Arial';
+    ctx.textAlign = 'center';
+    
+    let title = eventTitle || 'Evento';
+    if(title.length > 25) title = title.substring(0, 22) + '...';
+    ctx.fillText(title, canvas.width / 2, 40);
+    ctx.font = '14px Arial';
+    ctx.fillText('Credencial Oficial', canvas.width / 2, 65);
+    
+    // Nome do participante
+    ctx.fillStyle = '#0f172a';
+    ctx.font = 'bold 20px Arial';
+    let nome = ing.nome;
+    if(nome.length > 20) nome = nome.substring(0, 17) + '...';
+    ctx.fillText(nome, canvas.width / 2, 120);
+    
+    // Email / Info
+    ctx.fillStyle = '#64748b';
+    ctx.font = '14px Arial';
+    ctx.fillText(ing.userEmail, canvas.width / 2, 145);
+    
+    // QR Code
+    ctx.drawImage(qrCanvas, 75, 170, 150, 150);
+    
+    // Instrução
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Arial';
+    ctx.fillText('Apresente no credenciamento', canvas.width / 2, 350);
+    
+    const url = canvas.toDataURL("image/png");
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `credencial-${ing.nome.replace(/\\s+/g, '-')}.png`;
+    a.click();
+  };
+
+  const handleDownloadAllCredentials = () => {
+    const inscritos = ingressos.filter(ing => ing.eventId === selectedEvent?.id);
+    if(inscritos.length === 0) return alert('Nenhum participante inscrito.');
+    
+    alert('Iniciando o download de ' + inscritos.length + ' credenciais. Isso pode gerar várias janelas de download.');
+    
+    inscritos.forEach((ing, index) => {
+      setTimeout(() => {
+        downloadCredential(ing, selectedEvent?.title);
+      }, index * 500); // 500ms delay para evitar bloqueio do navegador
+    });
+  };
+    // Pegar trabalhos aprovados e modalidade poster
+    const posterSubmissions = submissions.filter(s => s.status === 'aprovado' && s.modalidade === 'poster');
+    
+    // Ordenar pelo primeiro avaliador associado
+    posterSubmissions.sort((a, b) => {
+      const avaliadorA = (a.avaliadoresEmails && a.avaliadoresEmails[0]) || '';
+      const avaliadorB = (b.avaliadoresEmails && b.avaliadoresEmails[0]) || '';
+      return avaliadorA.localeCompare(avaliadorB);
+    });
+
+    let currentNumber = 1;
+    posterSubmissions.forEach(sub => {
+      const formattedNumber = `PO-${currentNumber.toString().padStart(3, '0')}`;
+      const newDetails = { ...(sub.detalhesApresentacao || {}), numeroPoster: formattedNumber };
+      onUpdateSubmission(sub.id, { detalhesApresentacao: newDetails });
+      currentNumber++;
+    });
+
+    alert(`Numeração automática gerada para ${posterSubmissions.length} pôsteres!`);
+  };
+
   const handlePrint = () => {
     window.print();
   };
@@ -460,7 +552,7 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
                   </tr>
                 </thead>
                 <tbody>
-                  {submissions.map((sub) => (
+                  {submissions.filter(sub => !sub.hiddenByOrganizer).map((sub) => (
                     <tr key={sub.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                       <td style={{ padding: '1rem 0.75rem', fontWeight: '500' }}>
                         {sub.usuario}
@@ -488,10 +580,32 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
                           )}
                         </button>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
-                          <select className="form-input" style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }} value={sub.monitorEmail || ''} onChange={(e) => onUpdateSubmission(sub.id, { monitorEmail: e.target.value })}>
-                            <option value="">Atribuir Monitor...</option>
-                            {monitors.map(m => <option key={m.id} value={m.email}>{m.nome}</option>)}
-                          </select>
+                          {sub.status === 'rejeitado' && (
+                            <button onClick={() => onUpdateSubmission(sub.id, { hiddenByOrganizer: true })} className="btn btn-outline" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', width: '100%', color: '#ef4444', borderColor: '#ef4444' }}>
+                              <X size={12} style={{ display: 'inline', marginRight: '4px' }} /> Ocultar do Painel
+                            </button>
+                          )}
+                          <div style={{ backgroundColor: '#f8fafc', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border-color)', fontSize: '0.75rem' }}>
+                            <strong style={{ display: 'block', marginBottom: '0.25rem' }}>Atribuir Monitores:</strong>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', maxHeight: '80px', overflowY: 'auto' }}>
+                              {monitors.map(m => {
+                                const isAssigned = (sub.monitoresEmails || []).includes(m.email) || sub.monitorEmail === m.email;
+                                return (
+                                  <label key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', cursor: 'pointer' }}>
+                                    <input type="checkbox" checked={isAssigned} onChange={() => {
+                                      let current = sub.monitoresEmails || [];
+                                      if (sub.monitorEmail && !current.includes(sub.monitorEmail)) current.push(sub.monitorEmail);
+                                      if (isAssigned) {
+                                        onUpdateSubmission(sub.id, { monitoresEmails: current.filter(e => e !== m.email), monitorEmail: '' });
+                                      } else {
+                                        onUpdateSubmission(sub.id, { monitoresEmails: [...current, m.email], monitorEmail: m.email });
+                                      }
+                                    }} /> {m.nome}
+                                  </label>
+                                );
+                              })}
+                            </div>
+                          </div>
                           <div style={{ backgroundColor: '#f8fafc', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border-color)', fontSize: '0.75rem' }}>
                             <strong style={{ display: 'block', marginBottom: '0.25rem' }}>Atribuir Avaliadores:</strong>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', maxHeight: '80px', overflowY: 'auto' }}>
@@ -862,9 +976,14 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
       {/* Aba de Credenciais com QR Code */}
       {activeTab === 'credenciais-qr' && (
         <div>
-          <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <ClipboardList size={24} /> Credenciais dos Participantes
-          </h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h2 style={{ fontSize: '1.5rem', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <ClipboardList size={24} /> Credenciais dos Participantes
+            </h2>
+            <button onClick={handleDownloadAllCredentials} className="btn btn-primary" style={{ backgroundColor: '#0f172a', border: 'none', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <FileDown size={18} /> Baixar Todos os QR Codes
+            </button>
+          </div>
           <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>Visualize e baixe os crachás com QR Code de cada participante inscrito neste evento.</p>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
@@ -873,7 +992,7 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
             ) : (
               ingressos.filter(ing => ing.eventId === selectedEvent?.id).map((ing, i) => (
                 <div key={i} className="card" style={{ padding: '1.5rem', textAlign: 'center', border: '1px solid var(--border-color)', borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>{ing.nome}</h3>
+                  <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem', color: '#0f172a' }}>{ing.nome}</h3>
                   <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '1rem' }}>{ing.userEmail}</p>
                   
                   <div style={{ padding: '1rem', background: 'white', borderRadius: '8px', marginBottom: '1rem', border: '1px solid #e2e8f0' }}>
@@ -881,64 +1000,7 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
                   </div>
                   
                   <button 
-                    onClick={() => {
-                      const qrCanvas = document.getElementById(`qr-${ing.id}`);
-                      if (qrCanvas) {
-                        const canvas = document.createElement('canvas');
-                        canvas.width = 300;
-                        canvas.height = 400;
-                        const ctx = canvas.getContext('2d');
-                        
-                        // Fundo branco
-                        ctx.fillStyle = '#ffffff';
-                        ctx.fillRect(0, 0, canvas.width, canvas.height);
-                        
-                        // Borda
-                        ctx.strokeStyle = '#e2e8f0';
-                        ctx.lineWidth = 4;
-                        ctx.strokeRect(2, 2, canvas.width - 4, canvas.height - 4);
-                        
-                        // Logo ou Header do Evento
-                        ctx.fillStyle = '#3b82f6';
-                        ctx.fillRect(2, 2, canvas.width - 4, 80);
-                        
-                        ctx.fillStyle = '#ffffff';
-                        ctx.font = 'bold 18px Arial';
-                        ctx.textAlign = 'center';
-                        // Quebra de linha simples para o título do evento se for muito longo
-                        let title = selectedEvent?.title || 'Evento';
-                        if(title.length > 25) title = title.substring(0, 22) + '...';
-                        ctx.fillText(title, canvas.width / 2, 40);
-                        ctx.font = '14px Arial';
-                        ctx.fillText('Credencial Oficial', canvas.width / 2, 65);
-                        
-                        // Nome do participante
-                        ctx.fillStyle = '#0f172a';
-                        ctx.font = 'bold 20px Arial';
-                        let nome = ing.nome;
-                        if(nome.length > 20) nome = nome.substring(0, 17) + '...';
-                        ctx.fillText(nome, canvas.width / 2, 120);
-                        
-                        // Email / Info
-                        ctx.fillStyle = '#64748b';
-                        ctx.font = '14px Arial';
-                        ctx.fillText(ing.userEmail, canvas.width / 2, 145);
-                        
-                        // QR Code
-                        ctx.drawImage(qrCanvas, 75, 170, 150, 150);
-                        
-                        // Instrução
-                        ctx.fillStyle = '#94a3b8';
-                        ctx.font = '12px Arial';
-                        ctx.fillText('Apresente no credenciamento', canvas.width / 2, 350);
-                        
-                        const url = canvas.toDataURL("image/png");
-                        const a = document.createElement("a");
-                        a.href = url;
-                        a.download = `credencial-${ing.nome.replace(/\\s+/g, '-')}.png`;
-                        a.click();
-                      }
-                    }}
+                    onClick={() => downloadCredential(ing, selectedEvent?.title)}
                     className="btn btn-outline" style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '0.5rem' }}>
                     <FileDown size={16} /> Baixar Credencial
                   </button>

@@ -101,29 +101,29 @@ export function Navbar({ user, userProfile, monitors = [], avaliadores = [], eve
                     <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 'bold' }}>Suas Mensagens</h3>
                   </div>
                   <div style={{ overflowY: 'auto', flex: 1 }}>
-                    {notifications.length === 0 ? (
+                    {notifications.filter(notif => !(notif.readBy || []).includes(user.email)).length === 0 ? (
                       <div style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>
-                        <p style={{ margin: 0, fontSize: '0.9rem' }}>Você não tem novas mensagens.</p>
+                        <p style={{ margin: 0, fontSize: '0.9rem' }}>0 mensagens. Você não tem novas mensagens.</p>
                       </div>
                     ) : (
                       <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        {notifications.map(notif => {
-                          const isRead = (notif.readBy || []).includes(user.email);
+                        {notifications.filter(notif => !(notif.readBy || []).includes(user.email)).map(notif => {
+                          const isRead = false; // Como só mostramos não lidas, sempre é false
                           return (
                             <div key={notif.id} style={{ 
                               padding: '1rem', 
-                              backgroundColor: isRead ? 'white' : '#f0fdf4', 
+                              backgroundColor: '#f0fdf4', 
                               borderBottom: '1px solid var(--border-color)',
-                              borderLeft: `4px solid ${isRead ? 'transparent' : '#10b981'}`
+                              borderLeft: `4px solid #10b981`
                             }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
-                                <h4 style={{ margin: 0, fontSize: '0.95rem', color: isRead ? '#475569' : '#0f172a' }}>{notif.title}</h4>
+                                <h4 style={{ margin: 0, fontSize: '0.95rem', color: '#0f172a' }}>{notif.title}</h4>
                                 <button 
-                                  onClick={() => isRead ? onMarkUnread(notif.id, user.email) : onMarkRead(notif.id, user.email)}
-                                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: isRead ? '#cbd5e1' : '#3b82f6', display: 'flex', alignItems: 'center', padding: 0 }}
-                                  title={isRead ? "Marcar como não lida" : "Marcar como lida"}
+                                  onClick={() => onMarkRead(notif.id, user.email)}
+                                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#3b82f6', display: 'flex', alignItems: 'center', padding: 0 }}
+                                  title="Marcar como lida e ocultar"
                                 >
-                                  {isRead ? <CheckCircle size={16} /> : <Circle size={16} />}
+                                  <Circle size={16} />
                                 </button>
                               </div>
                               <p style={{ margin: '0 0 0.5rem 0', color: '#64748b', fontSize: '0.85rem', lineHeight: '1.4' }}>{notif.content}</p>

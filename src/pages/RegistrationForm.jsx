@@ -118,7 +118,7 @@ export function RegistrationForm({ events, user, userProfile, onSubmitWork, onRe
 
       {step < 3 && (
         <div className="card" style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem' }}>
-          <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem', color: 'var(--accent-primary)' }}>Inscrição: {event.title}</h1>
+          <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem', color: '#0f172a' }}>Inscrição: {event.title}</h1>
           <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>Logado como: <strong>{user.email}</strong></p>
 
           {step === 1 && (

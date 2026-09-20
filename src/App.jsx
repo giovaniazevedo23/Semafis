@@ -321,6 +321,12 @@ function App() {
             <Route path="/validar" element={<ValidarCredencial />} />
           </Routes>
         </main>
+        <footer style={{ backgroundColor: '#0f172a', color: '#f8fafc', padding: '2rem', textAlign: 'center', marginTop: 'auto' }}>
+          <div className="container">
+            <p style={{ margin: '0 0 0.5rem 0', fontWeight: 'bold', fontSize: '1.1rem' }}>© 2026 Todos os direitos reservados da SEMAFIS.</p>
+            <p style={{ margin: 0, fontSize: '0.875rem', color: '#cbd5e1' }}>Semana da Matemática e da Física do Instituto Federal - Ministério da Educação / Governo Federal</p>
+          </div>
+        </footer>
         <AIChat events={events} />
       </div>
     </Router>
