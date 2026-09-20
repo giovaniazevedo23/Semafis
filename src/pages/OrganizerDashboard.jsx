@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { EventForm } from '../components/EventForm';
 import { EventCard } from '../components/EventCard';
-import { FileDown, Users, Check, X, ArrowLeft, ClipboardList, GraduationCap, MonitorPlay, ChevronRight, Calendar, Mic, QrCode, Settings, Medal, FileText, LayoutList } from 'lucide-react';
+import { FileDown, Users, Check, X, ArrowLeft, ClipboardList, GraduationCap, MonitorPlay, ChevronRight, Calendar, Mic, QrCode, Settings, Medal, FileText, LayoutList, Award, Upload } from 'lucide-react';
 import { uploadFile } from '../services/db';
 import { QRCodeCanvas } from 'qrcode.react';
 
@@ -428,6 +428,7 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
             { id: 'credenciamento', title: 'Credenciamento', desc: 'Marcar presença e controlar a entrada', icon: <Check size={20} /> },
             { id: 'credenciais-qr', title: 'Credenciais (QR Code)', desc: 'Gerar e baixar os crachás dos participantes', icon: <QrCode size={20} /> },
             { id: 'relatorios', title: 'Relatórios e Impressão', desc: 'Gerar listas de presença e fichas de avaliação', icon: <ClipboardList size={20} /> },
+            { id: 'certificados', title: 'Certificados do Evento', desc: 'Fazer o upload do modelo de certificado oficial', icon: <Award size={20} /> },
             { id: 'ranking', title: 'Ranking de Apresentações', desc: 'Ver as melhores notas das apresentações', icon: <Medal size={20} /> },
             { id: 'cronograma', title: 'Cronograma', desc: 'Definir os horários e atividades do evento', icon: <Calendar size={20} /> },
           ].map((item, idx) => (
@@ -521,6 +522,57 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
                   ))}
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Aba de Certificados */}
+      {activeTab === 'certificados' && (
+        <div className="grid grid-cols-1 gap-8">
+          <div>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>Upload de Certificado Oficial</h2>
+            <div className="card" style={{ padding: '2rem' }}>
+              <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
+                Faça o upload do modelo de certificado em formato PDF ou Imagem. Ele será disponibilizado para os participantes fazerem download na aba de Certificados após o término do evento.
+              </p>
+              
+              {selectedEvent?.certificadoUrl ? (
+                <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: '#f0fdf4', border: '1px solid #166534', borderRadius: '8px' }}>
+                  <p style={{ margin: '0 0 0.5rem 0', fontWeight: 'bold', color: '#166534' }}>Certificado já disponível no sistema!</p>
+                  <a href={selectedEvent.certificadoUrl} target="_blank" rel="noreferrer" className="btn btn-outline" style={{ display: 'inline-flex', padding: '0.5rem 1rem', fontSize: '0.875rem' }}>
+                    <FileText size={16} /> Ver Certificado Atual
+                  </a>
+                </div>
+              ) : (
+                <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: '#fffbeb', border: '1px solid #b45309', borderRadius: '8px' }}>
+                  <p style={{ margin: 0, color: '#b45309' }}>Nenhum certificado foi enviado para este evento ainda.</p>
+                </div>
+              )}
+
+              <div className="form-group" style={{ marginBottom: '0' }}>
+                <label className="form-label">Substituir / Enviar Certificado (PDF ou PNG/JPG)</label>
+                <input 
+                  type="file" 
+                  className="form-input" 
+                  onChange={async (e) => {
+                    if(e.target.files && e.target.files[0]) {
+                      const file = e.target.files[0];
+                      alert('Iniciando upload do certificado... Por favor aguarde.');
+                      try {
+                        const url = await uploadFile(file, `certificados/${selectedEvent.id}-${Date.now()}`);
+                        if(url) {
+                          onUpdateEvent(selectedEvent.id, { certificadoUrl: url });
+                          alert('Certificado atualizado com sucesso!');
+                        }
+                      } catch (error) {
+                        alert('Erro ao fazer upload do certificado.');
+                        console.error(error);
+                      }
+                    }
+                  }}
+                />
+              </div>
             </div>
           </div>
         </div>

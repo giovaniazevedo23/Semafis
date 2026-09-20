@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, Clock, MonitorPlay, Presentation, FileText, Printer, Ticket, Award, FileUp, Mail, AlertCircle, Bot } from 'lucide-react';
+import { Calendar, Clock, MonitorPlay, Presentation, FileText, Printer, Ticket, Award, FileUp, Mail, AlertCircle, Bot, FileDown } from 'lucide-react';
 
 import { CredentialTicket } from '../components/CredentialTicket';
 import { Badge } from '../components/Badge';
@@ -763,9 +763,15 @@ Comissão Organizadora - SEMAFIS`
                   <div style={{ flex: 1 }}>
                     <h3 style={{ fontSize: '1.1rem', marginBottom: '0.25rem' }}>{evento?.title}</h3>
                     <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '0.5rem' }}>{cert.type} - Carga Horária: {cert.ch}</p>
-                    <button onClick={() => setViewingCertificate(cert)} className="btn btn-outline" style={{ fontSize: '0.75rem', padding: '0.25rem 0.75rem' }}>
-                      Visualizar Certificado
-                    </button>
+                    {evento?.certificadoUrl ? (
+                      <button onClick={() => window.open(evento.certificadoUrl, '_blank')} className="btn btn-outline" style={{ fontSize: '0.75rem', padding: '0.25rem 0.75rem' }}>
+                        <FileDown size={16} style={{ display: 'inline', marginRight: '4px' }} /> Baixar Certificado Oficial
+                      </button>
+                    ) : (
+                      <span style={{ fontSize: '0.75rem', color: '#b45309', backgroundColor: '#fffbeb', padding: '0.25rem 0.75rem', borderRadius: '4px', border: '1px solid #fcd34d', display: 'inline-block' }}>
+                        A organização ainda não submeteu o certificado.
+                      </span>
+                    )}
                   </div>
                 </div>
               );
