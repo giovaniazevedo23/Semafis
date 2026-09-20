@@ -4,7 +4,7 @@ import { LogIn, Users, MonitorPlay, GraduationCap, LayoutDashboard } from 'lucid
 import { auth, googleProvider } from '../firebase';
 import { signInWithPopup } from 'firebase/auth';
 
-export function Login({ setUser, monitors, avaliadores }) {
+export function Login({ setUser, monitors, avaliadores, organizadores = [] }) {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -46,6 +46,17 @@ export function Login({ setUser, monitors, avaliadores }) {
         const isMonitor = monitors.some(m => m.email === userEmail);
         if (!isMonitor) {
           alert("Acesso Negado: Seu e-mail não está cadastrado na lista de Monitores do evento.");
+          await auth.signOut();
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      if (role === 'organizador') {
+        const isOrganizador = organizadores.some(o => o.email === userEmail);
+        // Permite o primeiro login se a lista estiver vazia (bootstrap)
+        if (!isOrganizador && organizadores.length > 0) {
+          alert("Acesso Negado: Seu e-mail não está cadastrado na equipe de Organização.");
           await auth.signOut();
           setIsLoading(false);
           return;

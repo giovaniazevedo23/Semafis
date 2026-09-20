@@ -38,7 +38,7 @@ const DUMMY_EVENTS = [
 import { MonitorDashboard } from './pages/MonitorDashboard';
 import { EvaluatorDashboard } from './pages/EvaluatorDashboard';
 import { ValidarCredencial } from './pages/ValidarCredencial';
-import { listenCollection, listenDocument, addDocument, setDocument, updateDocument } from './services/db';
+import { listenCollection, listenDocument, addDocument, setDocument, updateDocument, deleteDocument } from './services/db';
 import { AIChat } from './components/AIChat';
 
 function App() {
@@ -47,6 +47,7 @@ function App() {
   const [ingressos, setIngressos] = useState([]);
   const [monitors, setMonitors] = useState([]);
   const [avaliadores, setAvaliadores] = useState([]);
+  const [organizadores, setOrganizadores] = useState([]);
   const [monitorApplications, setMonitorApplications] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [news, setNews] = useState([]);
@@ -61,6 +62,7 @@ function App() {
     const unsubIngressos = listenCollection('ingressos', setIngressos);
     const unsubMonitors = listenCollection('monitors', setMonitors);
     const unsubAvaliadores = listenCollection('avaliadores', setAvaliadores);
+    const unsubOrganizadores = listenCollection('organizadores', setOrganizadores);
     const unsubMonitorApplications = listenCollection('monitorApplications', setMonitorApplications);
     const unsubNotifications = listenCollection('notifications', setNotifications);
     const unsubNews = listenCollection('news', setNews);
@@ -71,6 +73,7 @@ function App() {
       unsubIngressos();
       unsubMonitors();
       unsubAvaliadores();
+      unsubOrganizadores();
       unsubMonitorApplications();
       unsubNotifications();
       unsubNews();
@@ -169,6 +172,14 @@ function App() {
 
   const handleAddAvaliador = async (avaliadorData) => {
     await addDocument('avaliadores', avaliadorData);
+  };
+
+  const handleAddOrganizador = async (orgData) => {
+    await addDocument('organizadores', orgData);
+  };
+
+  const handleRemoveOrganizador = async (orgId) => {
+    await deleteDocument('organizadores', orgId);
   };
 
   const handleAddMonitorApplication = async (appData) => {
@@ -347,11 +358,11 @@ function App() {
         <main className="main-content">
           <Routes>
             <Route path="/" element={<ClientPortal events={events} news={allNews} user={user} notifications={notifications.filter(n => (user && n.userEmail === user.email) || !n.userEmail)} onMarkRead={handleMarkNotificationRead} onMarkUnread={handleMarkNotificationUnread} />} />
-            <Route path="/login" element={<Login setUser={setUser} monitors={monitors} avaliadores={avaliadores} />} />
+            <Route path="/login" element={<Login setUser={setUser} monitors={monitors} avaliadores={avaliadores} organizadores={organizadores} />} />
             <Route path="/perfil" element={<UserProfile user={user} userProfile={userProfile} setUserProfile={setUserProfile} />} />
             <Route path="/evento/:id" element={<EventDetails events={events} />} />
             <Route path="/evento/:id/inscricao" element={<RegistrationForm events={events} user={user} userProfile={userProfile} onSubmitWork={handleSubmitWork} onRegister={handleRegister} monitors={monitors} />} />
-            <Route path="/organizador" element={<OrganizerDashboard events={events} onAddEvent={handleAddEvent} onUpdateEvent={handleUpdateEvent} submissions={allSubmissions} onUpdateSubmission={handleUpdateSubmission} monitors={monitors} onAddMonitor={handleAddMonitor} onUpdateMonitor={handleUpdateMonitor} avaliadores={avaliadores} onAddAvaliador={handleAddAvaliador} ingressos={allIngressos} onUpdateIngresso={handleUpdateIngresso} news={allNews} onAddNews={handleAddNews} monitorApplications={allMonitorApplications} onUpdateMonitorApplication={handleUpdateMonitorApplication} />} />
+            <Route path="/organizador" element={<OrganizerDashboard events={events} onAddEvent={handleAddEvent} onUpdateEvent={handleUpdateEvent} submissions={allSubmissions} onUpdateSubmission={handleUpdateSubmission} monitors={monitors} onAddMonitor={handleAddMonitor} onUpdateMonitor={handleUpdateMonitor} avaliadores={avaliadores} onAddAvaliador={handleAddAvaliador} organizadores={organizadores} onAddOrganizador={handleAddOrganizador} onRemoveOrganizador={handleRemoveOrganizador} ingressos={allIngressos} onUpdateIngresso={handleUpdateIngresso} news={allNews} onAddNews={handleAddNews} monitorApplications={allMonitorApplications} onUpdateMonitorApplication={handleUpdateMonitorApplication} />} />
             <Route path="/painel-usuario" element={<UserDashboard submissions={allSubmissions.filter(s => user && s.userEmail === user.email)} ingressos={allIngressos.filter(i => user && i.userEmail === user.email)} events={events} user={user} onSubmitWork={handleSubmitWork} onUpdateSubmission={handleUpdateSubmission} notifications={notifications.filter(n => user && n.userEmail === user.email)} onUpdateIngresso={handleUpdateIngresso} monitorApplications={allMonitorApplications.filter(m => user && m.userEmail === user.email)} onAddMonitorApplication={handleAddMonitorApplication} />} />
             <Route path="/painel-monitor" element={<MonitorDashboard user={user} monitors={monitors} submissions={allSubmissions} avaliadores={avaliadores} events={events} ingressos={allIngressos} onUpdateIngresso={handleUpdateIngresso} />} />
             <Route path="/painel-avaliador" element={<EvaluatorDashboard user={user} avaliadores={avaliadores} submissions={allSubmissions} events={events} onUpdateSubmission={handleUpdateSubmission} onSendNotification={handleSendNotification} />} />

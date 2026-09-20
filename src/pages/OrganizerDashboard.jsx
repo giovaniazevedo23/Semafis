@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { EventForm } from '../components/EventForm';
 import { EventCard } from '../components/EventCard';
-import { FileDown, Users, Check, X, ArrowLeft, ClipboardList, GraduationCap, MonitorPlay, ChevronRight, Calendar, Mic, QrCode, Settings, Medal, FileText, LayoutList, Award, Upload, Bot } from 'lucide-react';
+import { FileDown, Users, Check, X, ArrowLeft, ClipboardList, GraduationCap, MonitorPlay, ChevronRight, Calendar, Mic, QrCode, Settings, Medal, FileText, LayoutList, Award, Upload, Bot, Shield } from 'lucide-react';
 import { uploadFile } from '../services/db';
 import { QRCodeCanvas } from 'qrcode.react';
 
-export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissions, onUpdateSubmission, monitors = [], onAddMonitor, onUpdateMonitor, avaliadores = [], onAddAvaliador, ingressos = [], onUpdateIngresso, news = [], onAddNews, monitorApplications = [], onUpdateMonitorApplication }) {
+export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissions, onUpdateSubmission, monitors = [], onAddMonitor, onUpdateMonitor, avaliadores = [], onAddAvaliador, organizadores = [], onAddOrganizador, onRemoveOrganizador, ingressos = [], onUpdateIngresso, news = [], onAddNews, monitorApplications = [], onUpdateMonitorApplication }) {
   const [selectedEventId, setSelectedEventId] = useState(null);
   const [isCreatingEvent, setIsCreatingEvent] = useState(false);
   const [activeTab, setActiveTab] = useState('menu'); // 'menu', 'submissoes', 'equipe', ...
@@ -18,6 +18,7 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
   const [approvalData, setApprovalData] = useState({ dataApresentacao: '', horaApresentacao: '', localApresentacao: '', numeroPoster: '' });
   const [monitorData, setMonitorData] = useState({ nome: '', email: '', matricula: '', ira: '', telefone: '' });
   const [avaliadorData, setAvaliadorData] = useState({ nome: '', email: '', matricula: '', telefone: '', fotoUrl: '' });
+  const [organizadorData, setOrganizadorData] = useState({ nome: '', email: '' });
   const [activityData, setActivityData] = useState({ name: '', minister: '', time: '', room: '', type: 'Minicurso' });
   const [assignmentData, setAssignmentData] = useState({ monitorEmail: '', dia: '', horario: '', local: '', funcao: '', ministranteIds: [] });
   const [speakerData, setSpeakerData] = useState({ nome: '', papel: 'Palestrante', bio: '', detalhesAtividade: '', fotoUrl: '' });
@@ -53,6 +54,15 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
     onAddAvaliador(avaliadorData);
     setAvaliadorData({ nome: '', email: '', matricula: '', telefone: '', fotoUrl: '' });
     alert("Avaliador cadastrado com sucesso!");
+  };
+
+  const handleOrganizadorSubmit = (e) => {
+    e.preventDefault();
+    if (onAddOrganizador) {
+      onAddOrganizador(organizadorData);
+      setOrganizadorData({ nome: '', email: '' });
+      alert("Membro da organização adicionado com sucesso!");
+    }
   };
 
   const handleAddActivity = (e) => {
@@ -416,6 +426,7 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
             { id: 'ranking', title: 'Ranking de Apresentações', desc: 'Ver as melhores notas das apresentações', icon: <Medal size={20} /> },
             { id: 'cronograma', title: 'Cronograma', desc: 'Definir os horários e atividades do evento', icon: <Calendar size={20} /> },
             { id: 'candidatos-monitoria', title: 'Candidatos a Monitoria', desc: 'Ver e classificar candidatos via IA', icon: <Bot size={20} /> },
+            { id: 'organizadores', title: 'Membros da Organização', desc: 'Gerenciar equipe principal do evento', icon: <Shield size={20} /> },
           ].map((item, idx) => (
             <div 
               key={item.id}
@@ -721,6 +732,53 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
                   <strong>{a.nome}</strong> ({a.email})
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Aba de Organizadores */}
+      {activeTab === 'organizadores' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Shield size={24} /> Adicionar Organizador</h2>
+            <div className="card" style={{ padding: '1.5rem' }}>
+              <form onSubmit={handleOrganizadorSubmit} className="mb-6">
+                <input type="text" placeholder="Nome Completo" value={organizadorData.nome} onChange={e => setOrganizadorData({...organizadorData, nome: e.target.value})} className="form-input mb-2" required />
+                <input type="email" placeholder="E-mail" value={organizadorData.email} onChange={e => setOrganizadorData({...organizadorData, email: e.target.value})} className="form-input mb-4" required />
+                <button type="submit" className="btn btn-primary" style={{ width: '100%', backgroundColor: '#0f172a', border: 'none' }}>Adicionar Organizador</button>
+              </form>
+            </div>
+          </div>
+
+          <div>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Users size={24} /> Lista de Organizadores</h2>
+            <div className="card" style={{ padding: '1.5rem' }}>
+              {(!organizadores || organizadores.length === 0) ? (
+                <p style={{ color: 'var(--text-secondary)' }}>Nenhum organizador cadastrado. Apenas o criador inicial tem acesso.</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {organizadores.map(org => (
+                    <div key={org.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                      <div>
+                        <strong style={{ display: 'block', fontSize: '1.1rem' }}>{org.nome}</strong>
+                        <span style={{ fontSize: '0.875rem', color: '#64748b' }}>{org.email}</span>
+                      </div>
+                      <button 
+                        onClick={() => {
+                          if (window.confirm(`Deseja realmente remover ${org.nome} da equipe de organização?`)) {
+                            if (onRemoveOrganizador) onRemoveOrganizador(org.id);
+                          }
+                        }}
+                        className="btn btn-outline" 
+                        style={{ color: '#ef4444', borderColor: '#ef4444', padding: '0.5rem', fontSize: '0.875rem' }}
+                      >
+                        <X size={16} style={{ display: 'inline' }} /> Remover
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

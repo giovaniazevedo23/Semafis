@@ -1,4 +1,4 @@
-import { collection, doc, setDoc, addDoc, updateDoc, onSnapshot, query, getDocs } from 'firebase/firestore';
+import { collection, doc, setDoc, addDoc, updateDoc, deleteDoc, onSnapshot, query, getDocs } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../firebase';
 
@@ -51,6 +51,15 @@ export const updateDocument = async (collectionName, docId, updates) => {
     await updateDoc(doc(db, collectionName, docId), updates);
   } catch (error) {
     console.error(`Erro ao atualizar documento ${collectionName}/${docId}:`, error);
+    throw error;
+  }
+};
+
+export const deleteDocument = async (collectionName, docId) => {
+  try {
+    await deleteDoc(doc(db, collectionName, docId));
+  } catch (error) {
+    console.error(`Erro ao deletar documento ${collectionName}/${docId}:`, error);
     throw error;
   }
 };
