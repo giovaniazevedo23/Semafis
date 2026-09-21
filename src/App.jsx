@@ -376,37 +376,40 @@ function App() {
             <Route path="/validar" element={<ValidarCredencial />} />
           </Routes>
         </main>
-        <footer style={{ backgroundColor: '#ffffff', color: '#0f172a', padding: '2rem', textAlign: 'center', marginTop: 'auto', borderTop: '1px solid #e2e8f0' }}>
-          <div className="container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-              <span style={{ fontWeight: 'bold', fontSize: '1.1rem', color: '#0f172a' }}>Siga a SEMAFIS</span>
-              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-                <a 
-                  href="https://www.instagram.com/semafis_catce/" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center', 
-                    width: '45px', 
-                    height: '45px', 
-                    borderRadius: '50%', 
-                    backgroundColor: '#f1f5f9', 
-                    color: '#e1306c', 
-                    transition: 'all 0.2s ease',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-                  }}
-                  onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#e2e8f0'; e.currentTarget.style.transform = 'scale(1.1)'; }}
-                  onMouseOut={(e) => { e.currentTarget.style.backgroundColor = '#f1f5f9'; e.currentTarget.style.transform = 'scale(1)'; }}
-                  title="Siga-nos no Instagram"
-                  aria-label="Instagram da SEMAFIS"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
-                </a>
+        <footer style={{ backgroundColor: '#ffffff', color: '#0f172a', padding: '2rem 1rem', marginTop: 'auto', borderTop: '1px solid #e2e8f0' }}>
+          <div className="container" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '2rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '0.75rem' }}>
+                <span style={{ fontWeight: 'bold', fontSize: '1.1rem', color: '#0f172a' }}>Siga a SEMAFIS</span>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <a 
+                    href="https://www.instagram.com/semafis_catce/" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center', 
+                      width: '45px', 
+                      height: '45px', 
+                      borderRadius: '50%', 
+                      backgroundColor: '#f1f5f9', 
+                      color: '#e1306c', 
+                      transition: 'all 0.2s ease',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                    }}
+                    onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#e2e8f0'; e.currentTarget.style.transform = 'scale(1.1)'; }}
+                    onMouseOut={(e) => { e.currentTarget.style.backgroundColor = '#f1f5f9'; e.currentTarget.style.transform = 'scale(1)'; }}
+                    title="Siga-nos no Instagram"
+                    aria-label="Instagram da SEMAFIS"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+                  </a>
+                </div>
               </div>
             </div>
-            <div>
+            
+            <div style={{ textAlign: 'center', borderTop: '1px solid #e2e8f0', paddingTop: '1.5rem' }}>
               <p style={{ margin: '0 0 0.5rem 0', fontWeight: 'bold', fontSize: '1.1rem' }}>© 2026 Todos os direitos reservados da SEMAFIS.</p>
               <p style={{ margin: 0, fontSize: '0.875rem', color: '#475569' }}>Semana da Matemática e da Física do Instituto Federal - Ministério da Educação / Governo Federal</p>
             </div>
