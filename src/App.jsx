@@ -90,11 +90,18 @@ function App() {
           displayName: currentUser.displayName
         });
         unsubProfile = listenDocument('userProfiles', currentUser.email, (data) => {
+          const local = JSON.parse(localStorage.getItem('fallback_profiles') || '{}');
+          const localProfile = local[currentUser.email];
+          
           if (data) {
-            setUserProfile(data);
+            // Se tem foto salva localmente (base64) e os dados do server não têm, mescla a foto local
+            if (localProfile && localProfile.photoUrl && localProfile.photoUrl.startsWith('data:image')) {
+              setUserProfile({ ...data, photoUrl: localProfile.photoUrl });
+            } else {
+              setUserProfile(data);
+            }
           } else {
-            const local = JSON.parse(localStorage.getItem('fallback_profiles') || '{}');
-            if (local[currentUser.email]) setUserProfile(local[currentUser.email]);
+            if (localProfile) setUserProfile(localProfile);
             else setUserProfile(null);
           }
         });

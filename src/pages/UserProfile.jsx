@@ -72,8 +72,15 @@ export function UserProfile({ user, userProfile, setUserProfile }) {
         setUploading(true);
         const path = `profiles/${user.email}/${file.name}`;
         const url = await uploadFile(path, file);
-        setFormData(prev => ({ ...prev, photoUrl: url }));
-        alert('Foto enviada com sucesso!');
+        const newFormData = { ...formData, photoUrl: url };
+        setFormData(newFormData);
+        
+        try {
+          await setDocument('userProfiles', user.email, newFormData);
+          setUserProfile(newFormData);
+        } catch (err) {}
+        
+        alert('Foto enviada e salva no perfil com sucesso!');
       } catch (e) {
         console.error(e);
         const localUrl = await new Promise((resolve) => {
@@ -81,8 +88,20 @@ export function UserProfile({ user, userProfile, setUserProfile }) {
           reader.onloadend = () => resolve(reader.result);
           reader.readAsDataURL(file);
         });
-        setFormData(prev => ({ ...prev, photoUrl: localUrl }));
-        alert('Atenção: O upload da foto falhou devido a permissões do Firebase. A foto será salva localmente.');
+        const newFormData = { ...formData, photoUrl: localUrl };
+        setFormData(newFormData);
+        
+        try {
+          await setDocument('userProfiles', user.email, newFormData);
+          setUserProfile(newFormData);
+        } catch (err) {
+          const localProfiles = JSON.parse(localStorage.getItem('fallback_profiles') || '{}');
+          localProfiles[user.email] = newFormData;
+          localStorage.setItem('fallback_profiles', JSON.stringify(localProfiles));
+          setUserProfile(newFormData);
+        }
+        
+        alert('Atenção: O upload falhou, mas a foto foi salva localmente no seu perfil.');
       } finally {
         setUploading(false);
       }
