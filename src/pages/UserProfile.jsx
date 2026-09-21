@@ -82,26 +82,58 @@ export function UserProfile({ user, userProfile, setUserProfile }) {
         
         alert('Foto enviada e salva no perfil com sucesso!');
       } catch (e) {
-        console.error(e);
-        const localUrl = await new Promise((resolve) => {
+        console.error("Storage upload failed, trying Firestore with compression:", e);
+        
+        // Comprimir imagem usando Canvas para caber no Firestore (limite de 1MB)
+        const compressedBase64 = await new Promise((resolve) => {
           const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result);
           reader.readAsDataURL(file);
+          reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+              const canvas = document.createElement('canvas');
+              const MAX_WIDTH = 300;
+              const MAX_HEIGHT = 300;
+              let width = img.width;
+              let height = img.height;
+
+              if (width > height) {
+                if (width > MAX_WIDTH) {
+                  height *= MAX_WIDTH / width;
+                  width = MAX_WIDTH;
+                }
+              } else {
+                if (height > MAX_HEIGHT) {
+                  width *= MAX_HEIGHT / height;
+                  height = MAX_HEIGHT;
+                }
+              }
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, width, height);
+              resolve(canvas.toDataURL('image/jpeg', 0.7)); // 70% quality JPEG
+            };
+          };
         });
-        const newFormData = { ...formData, photoUrl: localUrl };
+
+        const newFormData = { ...formData, photoUrl: compressedBase64 };
         setFormData(newFormData);
         
         try {
+          // Agora com a imagem comprimida (pequena), o Firestore deve aceitar sem erro de tamanho!
           await setDocument('userProfiles', user.email, newFormData);
           setUserProfile(newFormData);
+          alert('Foto enviada e salva na nuvem com sucesso! (Modo de segurança)');
         } catch (err) {
+          console.error("Firestore save failed even after compression:", err);
           const localProfiles = JSON.parse(localStorage.getItem('fallback_profiles') || '{}');
           localProfiles[user.email] = newFormData;
           localStorage.setItem('fallback_profiles', JSON.stringify(localProfiles));
           setUserProfile(newFormData);
+          alert('Atenção: Servidor indisponível. A foto foi salva apenas localmente no seu perfil.');
         }
-        
-        alert('Atenção: O upload falhou, mas a foto foi salva localmente no seu perfil.');
       } finally {
         setUploading(false);
       }
