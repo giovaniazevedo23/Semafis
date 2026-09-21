@@ -30,6 +30,8 @@ export function UserProfile({ user, userProfile, setUserProfile }) {
     }
   }, [userProfile, user]);
 
+  const [uploading, setUploading] = useState(false);
+
   if (!user) {
     return (
       <div className="container text-center" style={{ paddingTop: '5rem' }}>
@@ -43,8 +45,6 @@ export function UserProfile({ user, userProfile, setUserProfile }) {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
-
-  const [uploading, setUploading] = useState(false);
 
   const handleSave = async () => {
     try {
