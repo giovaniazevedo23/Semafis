@@ -75,7 +75,14 @@ export function UserProfile({ user, userProfile, setUserProfile }) {
         setFormData(prev => ({ ...prev, photoUrl: url }));
         alert('Foto enviada com sucesso!');
       } catch (e) {
-        alert('Erro ao enviar foto para o Storage.');
+        console.error(e);
+        const localUrl = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.readAsDataURL(file);
+        });
+        setFormData(prev => ({ ...prev, photoUrl: localUrl }));
+        alert('Atenção: O upload da foto falhou devido a permissões do Firebase. A foto será salva localmente.');
       } finally {
         setUploading(false);
       }
