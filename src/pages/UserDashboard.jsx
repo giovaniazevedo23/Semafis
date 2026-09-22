@@ -34,6 +34,18 @@ export function UserDashboard({ submissions, events, ingressos = [], user, onSub
   });
   const [trabalhoFile, setTrabalhoFile] = useState(null);
   
+  const today = new Date().toISOString().split('T')[0];
+  const activeSubmissionEvents = events.filter(e => {
+    if (!e.dataInicioSubmissao || !e.dataFimSubmissao) return false;
+    return today >= e.dataInicioSubmissao && today <= e.dataFimSubmissao;
+  });
+  
+  const canSubmit = activeSubmissionEvents.length > 0;
+  
+  const temTrabalhoAprovado = submissions.some(s => s.status === 'aprovado');
+  const temIngressoApresentador = ingressos.some(i => i.categoriasDisplay && i.categoriasDisplay.includes('Apresentador'));
+  const precisaComprarIngresso = temTrabalhoAprovado && !temIngressoApresentador;
+
   const selectedEventForSub = activeSubmissionEvents.find(e => e.id === formData.eventId);
   const eventModalidades = selectedEventForSub?.modalidades || ['Poster', 'Comunicação Oral', 'Material Didático'];
   const eventEixos = selectedEventForSub?.eixosTematicos || ['Física', 'Matemática', 'Misto'];
@@ -85,18 +97,6 @@ export function UserDashboard({ submissions, events, ingressos = [], user, onSub
     onUpdateSubmission(subId, { mensagens: newMessagesList });
     setChatInputs(prev => ({ ...prev, [subId]: '' }));
   };
-
-  const today = new Date().toISOString().split('T')[0];
-  const activeSubmissionEvents = events.filter(e => {
-    if (!e.dataInicioSubmissao || !e.dataFimSubmissao) return false;
-    return today >= e.dataInicioSubmissao && today <= e.dataFimSubmissao;
-  });
-  
-  const canSubmit = activeSubmissionEvents.length > 0;
-  
-  const temTrabalhoAprovado = submissions.some(s => s.status === 'aprovado');
-  const temIngressoApresentador = ingressos.some(i => i.categoriasDisplay && i.categoriasDisplay.includes('Apresentador'));
-  const precisaComprarIngresso = temTrabalhoAprovado && !temIngressoApresentador;
 
   const welcomeMessage = {
     id: 'welcome_msg',
