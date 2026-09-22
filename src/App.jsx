@@ -123,7 +123,12 @@ function App() {
 
   const handleUpdateEvent = async (eventId, updates) => {
     try {
-      await updateDocument('events', eventId, updates);
+      const existingEvent = events.find(ev => ev.id === eventId);
+      if (existingEvent) {
+        await setDocument('events', eventId, { ...existingEvent, ...updates });
+      } else {
+        await updateDocument('events', eventId, updates);
+      }
     } catch (e) {
       console.error('Falha ao atualizar evento no Firestore.', e);
     }
