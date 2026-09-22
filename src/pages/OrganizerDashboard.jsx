@@ -44,6 +44,12 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
   const [newModalidade, setNewModalidade] = useState('');
   const [newEixo, setNewEixo] = useState('');
   const [newScheduleCategory, setNewScheduleCategory] = useState('');
+  
+  // Date configuration states
+  const [submissionDates, setSubmissionDates] = useState({
+    inicio: '',
+    fim: ''
+  });
 
   const selectedEvent = events.find(e => e.id === selectedEventId);
 
@@ -517,8 +523,8 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
                 <label className="form-label">Data de Início</label>
                 <input 
                   type="date" 
-                  value={selectedEvent.dataInicioSubmissao || ''} 
-                  onChange={e => onUpdateEvent(selectedEvent.id, { dataInicioSubmissao: e.target.value })} 
+                  value={submissionDates.inicio !== '' ? submissionDates.inicio : (selectedEvent?.dataInicioSubmissao || '')} 
+                  onChange={e => setSubmissionDates({...submissionDates, inicio: e.target.value})} 
                   className="form-input" 
                 />
               </div>
@@ -526,11 +532,26 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
                 <label className="form-label">Data de Encerramento</label>
                 <input 
                   type="date" 
-                  value={selectedEvent.dataFimSubmissao || ''} 
-                  onChange={e => onUpdateEvent(selectedEvent.id, { dataFimSubmissao: e.target.value })} 
+                  value={submissionDates.fim !== '' ? submissionDates.fim : (selectedEvent?.dataFimSubmissao || '')} 
+                  onChange={e => setSubmissionDates({...submissionDates, fim: e.target.value})} 
                   className="form-input" 
                 />
               </div>
+              <button 
+                onClick={() => {
+                  const dataToSave = {};
+                  if (submissionDates.inicio !== '') dataToSave.dataInicioSubmissao = submissionDates.inicio;
+                  if (submissionDates.fim !== '') dataToSave.dataFimSubmissao = submissionDates.fim;
+                  if (Object.keys(dataToSave).length > 0) {
+                    onUpdateEvent(selectedEvent.id, dataToSave);
+                    alert("Datas de submissão salvas com sucesso!");
+                  }
+                }}
+                className="btn btn-primary"
+                style={{ padding: '0.75rem 1.5rem' }}
+              >
+                Salvar Datas
+              </button>
             </div>
           </div>
 
