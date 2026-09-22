@@ -8,6 +8,7 @@ export function MonitorDashboard({ user, monitors, submissions, avaliadores, eve
   const [viewingReport, setViewingReport] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
   const [scannedUserId, setScannedUserId] = useState(null);
+  const [selectedCheckinActivity, setSelectedCheckinActivity] = useState('GERAL');
   const scannerRef = useRef(null);
 
   useEffect(() => {
@@ -21,15 +22,28 @@ export function MonitorDashboard({ user, monitors, submissions, avaliadores, eve
       
       html5QrcodeScanner.render(
         (decodedText, decodedResult) => {
-          setScannedUserId(decodedText);
-          const ing = ingressos.find(i => i.userEmail === decodedText || i.id === decodedText);
+          let extractedId = decodedText;
+          try {
+            const url = new URL(decodedText);
+            if (url.searchParams.has('id')) {
+              extractedId = url.searchParams.get('id');
+            }
+          } catch(e) {}
+
+          setScannedUserId(extractedId);
+          const ing = ingressos.find(i => i.userEmail === extractedId || i.id === extractedId);
           if (ing) {
             if (onUpdateIngresso) {
-              onUpdateIngresso(ing.id, { checkinGeral: true });
+              const novaPresenca = { ...(ing.presenca || {}) };
+              novaPresenca[selectedCheckinActivity] = true;
+              onUpdateIngresso(ing.id, { 
+                presenca: novaPresenca, 
+                checkinGeral: selectedCheckinActivity === 'GERAL' ? true : ing.checkinGeral 
+              });
             }
-            alert(`Usuário ${ing.nome} credenciado com sucesso!`);
+            alert(`Usuário ${ing.nome} credenciado com sucesso em: ${selectedCheckinActivity}!`);
           } else {
-            alert(`Usuário ${decodedText} lido, mas ingresso não encontrado.`);
+            alert(`Usuário ${extractedId} lido, mas ingresso não encontrado.`);
           }
           setIsScanning(false);
           if (html5QrcodeScanner) {
@@ -262,17 +276,33 @@ export function MonitorDashboard({ user, monitors, submissions, avaliadores, eve
         <div>
           <div className="flex justify-between items-center mb-6">
             <h2 style={{ fontSize: '1.5rem' }}>Credenciamento de Participantes</h2>
-            <button 
-              onClick={() => setIsScanning(!isScanning)} 
-              className={`btn ${isScanning ? 'btn-outline' : 'btn-primary'} flex items-center gap-2`}
-            >
-              <Camera size={18} /> {isScanning ? 'Fechar Câmera' : 'Ler QR Code'}
-            </button>
+            <div className="flex gap-4">
+              <select 
+                className="form-input" 
+                value={selectedCheckinActivity}
+                onChange={(e) => setSelectedCheckinActivity(e.target.value)}
+                style={{ minWidth: '200px' }}
+              >
+                <option value="GERAL">Credenciamento Geral</option>
+                {events.flatMap(e => e.activities || []).map((act, i) => (
+                  <option key={i} value={act.name}>{act.name} (Atividade)</option>
+                ))}
+              </select>
+              <button 
+                onClick={() => setIsScanning(!isScanning)} 
+                className={`btn ${isScanning ? 'btn-outline' : 'btn-primary'} flex items-center gap-2`}
+              >
+                <Camera size={18} /> {isScanning ? 'Fechar Câmera' : 'Ler QR Code'}
+              </button>
+            </div>
           </div>
 
           {isScanning && (
             <div className="card mb-8" style={{ padding: '1.5rem', backgroundColor: '#0f172a', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               <div style={{ width: '100%', maxWidth: '400px', borderRadius: '8px', overflow: 'hidden', backgroundColor: 'white', padding: '1.5rem' }}>
+                <p style={{ textAlign: 'center', fontWeight: 'bold', marginBottom: '1rem', color: '#16a34a' }}>
+                  Ação: {selectedCheckinActivity === 'GERAL' ? 'Check-in Geral do Evento' : `Presença em ${selectedCheckinActivity}`}
+                </p>
                 <h4 style={{ color: '#0f172a', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <Camera size={20} /> Leitura Automática (Câmera)
                 </h4>
@@ -289,15 +319,29 @@ export function MonitorDashboard({ user, monitors, submissions, avaliadores, eve
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && e.target.value) {
                       const decodedText = e.target.value;
-                      setScannedUserId(decodedText);
-                      const ing = ingressos.find(i => i.userEmail === decodedText || i.id === decodedText);
+                      
+                      let extractedId = decodedText;
+                      try {
+                        const url = new URL(decodedText);
+                        if (url.searchParams.has('id')) {
+                          extractedId = url.searchParams.get('id');
+                        }
+                      } catch(e) {}
+
+                      setScannedUserId(extractedId);
+                      const ing = ingressos.find(i => i.userEmail === extractedId || i.id === extractedId);
                       if (ing) {
                         if (onUpdateIngresso) {
-                          onUpdateIngresso(ing.id, { checkinGeral: true });
+                          const novaPresenca = { ...(ing.presenca || {}) };
+                          novaPresenca[selectedCheckinActivity] = true;
+                          onUpdateIngresso(ing.id, { 
+                            presenca: novaPresenca, 
+                            checkinGeral: selectedCheckinActivity === 'GERAL' ? true : ing.checkinGeral 
+                          });
                         }
-                        alert(`Usuário ${ing.nome} credenciado com sucesso!`);
+                        alert(`Usuário ${ing.nome} credenciado com sucesso em: ${selectedCheckinActivity}!`);
                       } else {
-                        alert(`Usuário ${decodedText} lido, mas ingresso não encontrado.`);
+                        alert(`Usuário ${extractedId} lido, mas ingresso não encontrado.`);
                       }
                       setIsScanning(false);
                     }
