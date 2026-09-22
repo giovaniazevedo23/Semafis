@@ -122,7 +122,12 @@ function App() {
   };
 
   const handleUpdateEvent = async (eventId, updates) => {
-    await updateDocument('events', eventId, updates);
+    try {
+      await updateDocument('events', eventId, updates);
+    } catch (e) {
+      console.error('Falha ao atualizar evento no Firestore.', e);
+    }
+    setEvents(prev => prev.map(ev => ev.id === eventId ? { ...ev, ...updates } : ev));
   };
 
   const handleSubmitWork = async (eventId, submissionData) => {
