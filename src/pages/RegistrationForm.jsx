@@ -224,7 +224,8 @@ export function RegistrationForm({ events, user, userProfile, onSubmitWork, onRe
                         boxShadow: isSelected ? '0 10px 25px -5px rgba(59, 130, 246, 0.2)' : 'none',
                         transition: 'all 0.3s ease',
                         transform: isSelected ? 'translateY(-4px)' : 'none',
-                        backgroundColor: isSelected ? '#f8fafc' : 'white'
+                        backgroundColor: isSelected ? '#f8fafc' : 'white',
+                        overflow: 'visible'
                       }}
                     >
                       {pkg.highlight && (
