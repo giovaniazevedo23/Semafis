@@ -505,7 +505,36 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
 
       {/* Aba de Configurações */}
       {activeTab === 'configuracoes' && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          
+          <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--accent-primary)' }}>
+            <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>Período de Submissão de Trabalhos</h2>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem', fontSize: '0.875rem' }}>
+              Defina as datas de início e fim para permitir que os participantes enviem seus trabalhos pela plataforma.
+            </p>
+            <div className="flex gap-4 items-end flex-wrap">
+              <div className="form-group" style={{ marginBottom: 0, flex: 1, minWidth: '200px' }}>
+                <label className="form-label">Data de Início</label>
+                <input 
+                  type="date" 
+                  value={selectedEvent.dataInicioSubmissao || ''} 
+                  onChange={e => onUpdateEvent(selectedEvent.id, { dataInicioSubmissao: e.target.value })} 
+                  className="form-input" 
+                />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0, flex: 1, minWidth: '200px' }}>
+                <label className="form-label">Data de Encerramento</label>
+                <input 
+                  type="date" 
+                  value={selectedEvent.dataFimSubmissao || ''} 
+                  onChange={e => onUpdateEvent(selectedEvent.id, { dataFimSubmissao: e.target.value })} 
+                  className="form-input" 
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
             <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>Modalidades de Trabalho</h2>
             <div className="card" style={{ padding: '1rem' }}>
@@ -599,6 +628,7 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
               </div>
             </div>
           </div>
+        </div>
         </div>
       )}
 
