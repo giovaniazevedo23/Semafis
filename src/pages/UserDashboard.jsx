@@ -818,7 +818,12 @@ Comissão Organizadora - SEMAFIS`
       {/* Monitoria Tab */}
       {activeTab === 'monitoria' && (
         <div className="grid grid-cols-1 gap-6">
-          {!showMonitoriaForm ? (
+          {!events.some(e => e.monitorApplicationsOpen) ? (
+            <div className="card text-center" style={{ padding: '3rem 2rem' }}>
+              <h2>Inscrições Fechadas</h2>
+              <p style={{ color: 'var(--text-secondary)' }}>A organização ainda não liberou as inscrições para monitoria.</p>
+            </div>
+          ) : !showMonitoriaForm ? (
             <div className="card text-center" style={{ padding: '3rem 2rem' }}>
               <h2>Candidatura a Monitor Voluntário</h2>
               <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>Ajude na organização do evento e ganhe certificado de participação diferenciado. As vagas são concorridas e a seleção é feita por uma Inteligência Artificial com base no seu I.R.A. e Curso.</p>

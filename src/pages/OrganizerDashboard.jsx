@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { EventForm } from '../components/EventForm';
 import { EventCard } from '../components/EventCard';
-import { FileDown, Users, Check, X, ArrowLeft, ClipboardList, GraduationCap, MonitorPlay, ChevronRight, Calendar, Mic, QrCode, Settings, Medal, FileText, LayoutList, Award, Upload, Bot, Shield } from 'lucide-react';
+import { FileDown, Users, Check, X, ArrowLeft, ClipboardList, GraduationCap, MonitorPlay, ChevronRight, Calendar, Mic, QrCode, Settings, Medal, FileText, LayoutList, Award, Upload, Bot, Shield, Bell, AlertCircle } from 'lucide-react';
 import { uploadFile } from '../services/db';
 import { QRCodeCanvas } from 'qrcode.react';
 
-export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissions, onUpdateSubmission, monitors = [], onAddMonitor, onUpdateMonitor, avaliadores = [], onAddAvaliador, organizadores = [], onAddOrganizador, onRemoveOrganizador, ingressos = [], onUpdateIngresso, news = [], onAddNews, monitorApplications = [], onUpdateMonitorApplication }) {
+export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissions, onUpdateSubmission, monitors = [], onAddMonitor, onUpdateMonitor, avaliadores = [], onAddAvaliador, organizadores = [], onAddOrganizador, onRemoveOrganizador, ingressos = [], onUpdateIngresso, news = [], onAddNews, monitorApplications = [], onUpdateMonitorApplication, onSendNotification }) {
   const [selectedEventId, setSelectedEventId] = useState(null);
   const [isCreatingEvent, setIsCreatingEvent] = useState(false);
   const [activeTab, setActiveTab] = useState('menu'); // 'menu', 'submissoes', 'equipe', ...
@@ -34,6 +34,11 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
   // AI Sorting States
   const [rankedCandidates, setRankedCandidates] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  // Avisos Globais e Vagas Monitoria
+  const [avisoData, setAvisoData] = useState({ title: '', content: '' });
+  const [newVacancyCourse, setNewVacancyCourse] = useState('Matemática');
+  const [newVacancyCount, setNewVacancyCount] = useState('');
 
   const selectedEvent = events.find(e => e.id === selectedEventId);
 
@@ -414,6 +419,7 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
           <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem', color: 'var(--text-secondary)' }}>O que você deseja fazer?</h2>
           
           {[
+            { id: 'avisos', title: 'Avisos Gerais', desc: 'Enviar notificações para todos os participantes', icon: <Bell size={20} /> },
             { id: 'submissoes', title: 'Submissões', desc: 'Visualizar e gerenciar os trabalhos enviados', icon: <FileText size={20} /> },
             { id: 'equipe', title: 'Equipe do Evento', desc: 'Cadastrar e gerenciar avaliadores e monitores', icon: <Users size={20} /> },
             { id: 'atividades', title: 'Atividades', desc: 'Cadastrar e organizar minicursos e oficinas', icon: <LayoutList size={20} /> },
@@ -784,47 +790,192 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
         </div>
       )}
 
+      {/* Aba de Avisos Gerais */}
+      {activeTab === 'avisos' && (
+        <div className="grid grid-cols-1 gap-8">
+          <div>
+            <div className="flex justify-between items-center mb-6">
+              <h2 style={{ fontSize: '1.5rem', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Bell size={24} /> Avisos Globais da Organização
+              </h2>
+            </div>
+            <div className="card" style={{ padding: '1.5rem' }}>
+              <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
+                Envie notificações importantes para todos os participantes que estão usando a plataforma no momento. O aviso aparecerá no sininho de notificações de cada um.
+              </p>
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                if(onSendNotification) {
+                  onSendNotification({ title: avisoData.title, content: avisoData.content });
+                  setAvisoData({ title: '', content: '' });
+                  alert("Aviso global enviado com sucesso para todos os participantes!");
+                }
+              }}>
+                <input type="text" placeholder="Título do Aviso (Ex: Mudança de Sala, Aviso Urgente)" value={avisoData.title} onChange={e => setAvisoData({...avisoData, title: e.target.value})} className="form-input mb-4" required />
+                <textarea placeholder="Conteúdo da mensagem..." value={avisoData.content} onChange={e => setAvisoData({...avisoData, content: e.target.value})} className="form-input mb-4" rows="4" required></textarea>
+                <button type="submit" className="btn btn-primary" style={{ width: '100%', backgroundColor: '#0284c7', border: 'none', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}>
+                  <Bell size={18} /> Enviar Aviso para Todos
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Aba de Candidatos a Monitoria */}
       {activeTab === 'candidatos-monitoria' && (
         <div className="grid grid-cols-1 gap-8">
           <div>
             <div className="flex justify-between items-center mb-6">
               <h2 style={{ fontSize: '1.5rem', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Bot size={24} /> Seleção de Monitores por Inteligência Artificial
+                <Bot size={24} /> Seleção de Monitores
               </h2>
-              <button 
-                onClick={() => {
-                  setIsAnalyzing(true);
-                  setTimeout(() => {
-                    const sorted = [...monitorApplications].map(app => {
-                      let score = (parseFloat(app.ira || 0) / 10) * 7;
-                      if (app.curso && (app.curso.toLowerCase().includes('física') || app.curso.toLowerCase().includes('matemática'))) {
-                        score += 3;
-                      } else {
-                        score += 1;
-                      }
-                      
-                      let badge = 'Apto';
-                      if (score >= 8.5) badge = 'Altamente Recomendado';
-                      else if (score >= 6) badge = 'Recomendado';
-                      
-                      return { ...app, aiScore: score.toFixed(1), aiBadge: badge };
-                    }).sort((a, b) => b.aiScore - a.aiScore);
-                    setRankedCandidates(sorted);
-                    setIsAnalyzing(false);
-                  }, 1500);
-                }} 
-                className="btn btn-primary" 
-                style={{ backgroundColor: '#8b5cf6', border: 'none', display: 'flex', gap: '0.5rem', alignItems: 'center' }}
-                disabled={isAnalyzing || monitorApplications.length === 0}
-              >
-                {isAnalyzing ? 'A IA está analisando...' : 'Analisar Candidatos com IA'}
-              </button>
             </div>
-            
+
+            <div className="card mb-8" style={{ padding: '1.5rem', borderLeft: '4px solid #8b5cf6' }}>
+              <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Configurações de Vagas e Inscrição</h3>
+              
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '1.5rem' }}>
+                <div>
+                  <strong style={{ fontSize: '1.1rem', display: 'block' }}>Inscrições para Monitoria</strong>
+                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Libere ou bloqueie a candidatura de novos monitores no painel do usuário.</span>
+                </div>
+                <button 
+                  onClick={() => {
+                    const newValue = !selectedEvent?.monitorApplicationsOpen;
+                    onUpdateEvent(selectedEvent.id, { monitorApplicationsOpen: newValue });
+                    if (newValue && onSendNotification) {
+                      onSendNotification({ title: 'Inscrições Abertas!', content: `As inscrições para a monitoria do evento ${selectedEvent.title} estão abertas! Candidate-se agora no seu painel.` });
+                      alert('Inscrições liberadas e todos os participantes foram notificados!');
+                    } else {
+                      alert('Inscrições fechadas.');
+                    }
+                  }}
+                  className="btn" 
+                  style={{ backgroundColor: selectedEvent?.monitorApplicationsOpen ? '#ef4444' : '#10b981', color: 'white', border: 'none' }}
+                >
+                  {selectedEvent?.monitorApplicationsOpen ? 'Fechar Inscrições' : 'Liberar Inscrições'}
+                </button>
+              </div>
+
+              <div style={{ padding: '1rem', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                <strong style={{ fontSize: '1.1rem', display: 'block', marginBottom: '0.5rem' }}>Quadro de Vagas por Curso</strong>
+                <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', display: 'block', marginBottom: '1rem' }}>Defina quantas vagas de monitoria estão abertas para cada curso. A Inteligência Artificial usará este quadro para selecionar os melhores candidatos.</span>
+                
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!newVacancyCourse || !newVacancyCount) return;
+                  const currentVacancies = selectedEvent?.monitorVacancies || {};
+                  onUpdateEvent(selectedEvent.id, { monitorVacancies: { ...currentVacancies, [newVacancyCourse]: parseInt(newVacancyCount) } });
+                  setNewVacancyCourse('');
+                  setNewVacancyCount('');
+                }} style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+                  <input type="text" placeholder="Nome do Curso (ex: Matemática)" value={newVacancyCourse} onChange={e => setNewVacancyCourse(e.target.value)} className="form-input" style={{ flex: 2 }} required />
+                  <input type="number" placeholder="Vagas" value={newVacancyCount} onChange={e => setNewVacancyCount(e.target.value)} className="form-input" style={{ flex: 1 }} min="1" required />
+                  <button type="submit" className="btn btn-outline" style={{ flexShrink: 0 }}>Adicionar</button>
+                </form>
+
+                {(!selectedEvent?.monitorVacancies || Object.keys(selectedEvent.monitorVacancies).length === 0) ? (
+                  <p style={{ color: '#94a3b8', fontSize: '0.875rem', margin: 0 }}>Nenhuma vaga cadastrada. A IA aprovará todos os recomendados se o quadro estiver vazio.</p>
+                ) : (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    {Object.entries(selectedEvent.monitorVacancies).map(([course, count]) => (
+                      <div key={course} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', backgroundColor: '#e2e8f0', borderRadius: '99px', fontSize: '0.875rem' }}>
+                        <strong>{course}</strong>: {count} vaga(s)
+                        <button onClick={() => {
+                          const newVacancies = { ...selectedEvent.monitorVacancies };
+                          delete newVacancies[course];
+                          onUpdateEvent(selectedEvent.id, { monitorVacancies: newVacancies });
+                        }} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 0, display: 'flex' }}>
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
             <div className="card" style={{ padding: '1.5rem' }}>
+              <div className="flex justify-between items-center mb-6">
+                <h3 style={{ fontSize: '1.25rem', margin: 0 }}>Classificação via Inteligência Artificial</h3>
+                <button 
+                  onClick={() => {
+                    setIsAnalyzing(true);
+                    setTimeout(() => {
+                      const vacancies = selectedEvent?.monitorVacancies || {};
+                      let candidatesByCourse = {};
+                      
+                      // Agrupar e pontuar candidatos
+                      const scoredCandidates = [...monitorApplications].map(app => {
+                        let score = (parseFloat(app.ira || 0) / 10) * 7;
+                        if (app.curso && (app.curso.toLowerCase().includes('física') || app.curso.toLowerCase().includes('matemática'))) {
+                          score += 3;
+                        } else {
+                          score += 1;
+                        }
+                        return { ...app, aiScore: score };
+                      });
+
+                      // Organizar por curso e ordenar por score
+                      scoredCandidates.forEach(app => {
+                        const course = app.curso || 'Outros';
+                        if (!candidatesByCourse[course]) candidatesByCourse[course] = [];
+                        candidatesByCourse[course].push(app);
+                      });
+
+                      Object.keys(candidatesByCourse).forEach(course => {
+                        candidatesByCourse[course].sort((a, b) => b.aiScore - a.aiScore);
+                      });
+
+                      // Distribuir vagas
+                      let finalRanked = [];
+                      const hasVacanciesRule = Object.keys(vacancies).length > 0;
+
+                      Object.keys(candidatesByCourse).forEach(course => {
+                        const candidates = candidatesByCourse[course];
+                        const availableVacancies = vacancies[course] || 0;
+                        
+                        candidates.forEach((app, idx) => {
+                          let badge = '';
+                          
+                          if (hasVacanciesRule) {
+                            if (idx < availableVacancies) {
+                              badge = 'Classificado na Vaga';
+                            } else {
+                              badge = 'Cadastro Reserva';
+                            }
+                          } else {
+                            if (app.aiScore >= 8.5) badge = 'Altamente Recomendado';
+                            else if (app.aiScore >= 6) badge = 'Recomendado';
+                            else badge = 'Apto';
+                          }
+
+                          finalRanked.push({ ...app, aiScore: app.aiScore.toFixed(1), aiBadge: badge });
+                        });
+                      });
+
+                      // Ordenar a lista final (Classificados primeiro, depois por Score)
+                      finalRanked.sort((a, b) => {
+                        if (a.aiBadge === 'Classificado na Vaga' && b.aiBadge !== 'Classificado na Vaga') return -1;
+                        if (a.aiBadge !== 'Classificado na Vaga' && b.aiBadge === 'Classificado na Vaga') return 1;
+                        return b.aiScore - a.aiScore;
+                      });
+
+                      setRankedCandidates(finalRanked);
+                      setIsAnalyzing(false);
+                    }, 1500);
+                  }} 
+                  className="btn btn-primary" 
+                  style={{ backgroundColor: '#8b5cf6', border: 'none', display: 'flex', gap: '0.5rem', alignItems: 'center' }}
+                  disabled={isAnalyzing || monitorApplications.length === 0}
+                >
+                  {isAnalyzing ? 'A IA está analisando...' : 'Analisar Candidatos com IA'}
+                </button>
+              </div>
+
               <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-                A Inteligência Artificial analisa os candidatos com base em seus históricos (I.R.A) e relevância do curso para os temas do evento, sugerindo os mais capacitados para a equipe.
+                A Inteligência Artificial analisa os candidatos com base em seus históricos (I.R.A) e preenche o quadro de vagas por curso, definindo quem está classificado e quem fica no cadastro reserva.
               </p>
 
               {monitorApplications.length === 0 ? (
@@ -843,16 +994,16 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
                               fontSize: '0.75rem', 
                               padding: '0.2rem 0.5rem', 
                               borderRadius: '99px',
-                              backgroundColor: app.aiBadge === 'Altamente Recomendado' ? '#dcfce7' : app.aiBadge === 'Recomendado' ? '#fef08a' : '#f1f5f9',
-                              color: app.aiBadge === 'Altamente Recomendado' ? '#166534' : app.aiBadge === 'Recomendado' ? '#854d0e' : '#475569',
+                              backgroundColor: app.aiBadge === 'Classificado na Vaga' || app.aiBadge === 'Altamente Recomendado' ? '#dcfce7' : app.aiBadge === 'Cadastro Reserva' ? '#fef08a' : '#f1f5f9',
+                              color: app.aiBadge === 'Classificado na Vaga' || app.aiBadge === 'Altamente Recomendado' ? '#166534' : app.aiBadge === 'Cadastro Reserva' ? '#854d0e' : '#475569',
                               fontWeight: 'bold'
                             }}>
-                              ✨ {app.aiBadge} (Score: {app.aiScore}/10)
+                              {app.aiBadge === 'Classificado na Vaga' ? '🏆' : app.aiBadge === 'Cadastro Reserva' ? '⏳' : '✨'} {app.aiBadge} (Score: {app.aiScore}/10)
                             </span>
                           )}
                         </div>
                         <p style={{ fontSize: '0.875rem', color: '#64748b', margin: 0 }}>
-                          {app.userEmail} • Curso: {app.curso} • Matrícula: {app.matricula} • I.R.A: {app.ira}
+                          {app.userEmail} • Curso: <strong>{app.curso || 'Não Informado'}</strong> • Matrícula: {app.matricula} • I.R.A: {app.ira}
                         </p>
                         {app.motivacao && (
                           <p style={{ fontSize: '0.875rem', color: '#475569', marginTop: '0.5rem', fontStyle: 'italic' }}>
