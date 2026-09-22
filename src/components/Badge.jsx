@@ -1,18 +1,19 @@
 import React from 'react';
-import { QRCodeSVG } from 'qrcode.react';
+import { QRCodeCanvas } from 'qrcode.react';
+import logoImg from '../assets/logo.png';
 
 export const Badge = React.forwardRef(({ type = 'participante', name, roleName, logoUrl, qrCodeValue, photoUrl, validUntil }, ref) => {
   const getStyleTokens = () => {
     switch (type.toLowerCase()) {
       case 'monitor':
-        return { color: '#0ea5e9', role: 'Monitor' };
+        return { color: '#3b82f6', role: 'Monitor' }; // Blue
       case 'organizador':
       case 'organização':
-        return { color: '#334155', role: 'Organização' };
+        return { color: '#334155', role: 'Organização' }; // Slate
       case 'apresentador':
-        return { color: '#8b5cf6', role: 'Apresentador' };
+        return { color: '#8b5cf6', role: 'Apresentador' }; // Purple
       default:
-        return { color: '#166534', role: 'Participante' }; // Dark green from mockup
+        return { color: '#f97316', role: 'Participante' }; // Orange platform color
     }
   };
 
@@ -64,19 +65,7 @@ export const Badge = React.forwardRef(({ type = 'participante', name, roleName, 
         {logoUrl ? (
           <img src={logoUrl} alt="Logo Evento" style={{ maxHeight: '40px', objectFit: 'contain' }} />
         ) : (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold', fontSize: '1.25rem' }}>
-            <span style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
-              width: '32px', 
-              height: '32px', 
-              border: '2px solid white', 
-              borderRadius: '50%',
-              fontSize: '1rem'
-            }}>∞</span>
-            SEMAFIS
-          </div>
+          <img src={logoImg} alt="SEMAFIS Logo" style={{ maxHeight: '50px', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
         )}
       </div>
 
@@ -167,7 +156,7 @@ export const Badge = React.forwardRef(({ type = 'participante', name, roleName, 
             <div style={{ position: 'absolute', bottom: 0, left: 0, width: '20px', height: '20px', borderBottom: `3px solid ${badgeColor}`, borderLeft: `3px solid ${badgeColor}` }}></div>
             <div style={{ position: 'absolute', bottom: 0, right: 0, width: '20px', height: '20px', borderBottom: `3px solid ${badgeColor}`, borderRight: `3px solid ${badgeColor}` }}></div>
             
-            <QRCodeSVG value={qrCodeValue} size={90} fgColor={badgeColor} />
+            <QRCodeCanvas value={qrCodeValue} size={90} fgColor={badgeColor} />
           </div>
         )}
         <div style={{

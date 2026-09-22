@@ -7,7 +7,7 @@ import { CredentialTicket } from '../components/CredentialTicket';
 import { Badge } from '../components/Badge';
 import { uploadFile } from '../services/db';
 
-export function UserDashboard({ submissions, events, ingressos = [], user, onSubmitWork, onUpdateSubmission, notifications = [], onUpdateIngresso, monitorApplications = [], onAddMonitorApplication }) {
+export function UserDashboard({ submissions, events, ingressos = [], user, userProfile, onSubmitWork, onUpdateSubmission, notifications = [], onUpdateIngresso, monitorApplications = [], onAddMonitorApplication }) {
   const [activeTab, setActiveTab] = useState('trabalhos');
   const [viewingEvaluation, setViewingEvaluation] = useState(null);
   const [viewingCertificate, setViewingCertificate] = useState(null);
@@ -870,7 +870,7 @@ Comissão Organizadora - SEMAFIS`
                         name={ing.nome}
                         roleName={roleLabel}
                         logoUrl={evento?.logoUrl}
-                        photoUrl={user?.photoURL}
+                        photoUrl={userProfile?.photoUrl || user?.photoURL}
                         validUntil={evento?.dataFimSubmissao ? new Date(evento.dataFimSubmissao).toLocaleDateString('pt-BR') : 'Final do Evento'}
                         qrCodeValue={JSON.stringify({ userId: ing.userEmail, eventId: ing.eventId, type: userRoleType })}
                       />
