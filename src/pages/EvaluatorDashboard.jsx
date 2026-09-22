@@ -383,6 +383,7 @@ Comissão Científica - SEMAFIS`;
                       <div>
                         <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem', color: 'var(--text-primary)' }}>{sub.trabalho}</h3>
                         <p style={{ color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Autor(a): <strong>{sub.usuario}</strong></p>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '0.25rem' }}>Eixo Temático: {sub.eixoTematico || 'Geral'}</p>
                         <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '0.25rem' }}>Código do Trabalho: {sub.detalhesApresentacao?.numeroPoster || sub.id.slice(-4)}</p>
                         <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Evento: {event ? event.title : 'Desconhecido'}</p>
                       </div>

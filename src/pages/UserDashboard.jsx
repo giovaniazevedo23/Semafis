@@ -27,7 +27,9 @@ export function UserDashboard({ submissions, events, ingressos = [], user, onSub
   const [formData, setFormData] = useState({
     eventId: '',
     tipoApresentacao: 'poster',
+    eixoTematico: 'Ensino e Práticas Pedagógicas',
     coAutores: '',
+    tituloTrabalho: '',
   });
   const [trabalhoFile, setTrabalhoFile] = useState(null);
   const [chatInputs, setChatInputs] = useState({});
@@ -160,6 +162,7 @@ Comissão Organizadora - SEMAFIS`
       nomeArquivoOriginal: trabalhoFile.name,
       arquivoUrl: arquivoUrl,
       modalidade: formData.tipoApresentacao,
+      eixoTematico: formData.eixoTematico,
       status: 'em_analise',
       data: new Date().toISOString(),
       avaliadoresEmails: [],
@@ -169,7 +172,7 @@ Comissão Organizadora - SEMAFIS`
     alert("Seu trabalho foi enviado com sucesso e está em análise!");
     setShowSubmitForm(false);
     setIsSubmitting(false);
-    setFormData({ eventId: '', tipoApresentacao: 'poster', coAutores: '', tituloTrabalho: '' });
+    setFormData({ eventId: '', tipoApresentacao: 'poster', eixoTematico: 'Ensino e Práticas Pedagógicas', coAutores: '', tituloTrabalho: '' });
     setTrabalhoFile(null);
   };
 
@@ -579,6 +582,21 @@ Comissão Organizadora - SEMAFIS`
                 </div>
 
                 <div className="mb-4">
+                  <label className="form-label">Eixo Temático</label>
+                  <select 
+                    className="form-input" 
+                    value={formData.eixoTematico || 'Ensino e Práticas Pedagógicas'} 
+                    onChange={e => setFormData({...formData, eixoTematico: e.target.value})}
+                    required
+                  >
+                    <option value="Ensino e Práticas Pedagógicas">Ensino e Práticas Pedagógicas</option>
+                    <option value="Pesquisa e Ciências Aplicadas">Pesquisa e Ciências Aplicadas</option>
+                    <option value="Tecnologia e Inovação">Tecnologia e Inovação</option>
+                    <option value="Outros">Outros</option>
+                  </select>
+                </div>
+
+                <div className="mb-4">
                   <label className="form-label">Título do Trabalho</label>
                   <input 
                     type="text" 
@@ -667,6 +685,17 @@ Comissão Organizadora - SEMAFIS`
                       ) : (
                         <p style={{ fontWeight: '500', marginBottom: '1.5rem', textTransform: 'uppercase' }}>{sub.trabalho}</p>
                       )}
+                      
+                      <div className="grid grid-cols-2 gap-4 mb-6">
+                        <div>
+                          <p style={{ color: 'var(--text-secondary)', marginBottom: '0.25rem', fontSize: '0.875rem' }}>Modalidade:</p>
+                          <p style={{ fontWeight: '500', textTransform: 'uppercase' }}>{sub.modalidade === 'poster' ? 'Pôster (PO)' : sub.modalidade === 'comunicacao_oral' ? 'Comunicação Oral' : sub.modalidade === 'material_didatico' ? 'Material Didático' : sub.modalidade}</p>
+                        </div>
+                        <div>
+                          <p style={{ color: 'var(--text-secondary)', marginBottom: '0.25rem', fontSize: '0.875rem' }}>Eixo Temático:</p>
+                          <p style={{ fontWeight: '500' }}>{sub.eixoTematico || 'Geral'}</p>
+                        </div>
+                      </div>
 
                       {(sub.status === 'aprovado' || sub.status === 'rejeitado') && (
                         <div style={{ marginTop: '2rem', display: 'flex', gap: '1rem', borderTop: '1px dashed var(--border-color)', paddingTop: '1.5rem' }}>

@@ -214,7 +214,7 @@ export function MonitorDashboard({ user, monitors, submissions, avaliadores, eve
                             <li style={{ marginBottom: '0.5rem' }}><strong>Data:</strong> {sub.detalhesApresentacao.dataApresentacao}</li>
                             <li style={{ marginBottom: '0.5rem' }}><strong>Horário:</strong> {sub.detalhesApresentacao.horaApresentacao}</li>
                             <li style={{ marginBottom: '0.5rem' }}><strong>Local:</strong> {sub.detalhesApresentacao.localApresentacao}</li>
-                            {sub.detalhesApresentacao.numeroPoster && <li><strong>Pôster:</strong> {sub.detalhesApresentacao.numeroPoster}</li>}
+                            {sub.detalhesApresentacao.numeroPoster && <li><strong>Código:</strong> {sub.detalhesApresentacao.numeroPoster}</li>}
                           </ul>
                         ) : (
                           <p style={{ color: '#ef4444', fontSize: '0.875rem', margin: 0 }}>A organização ainda não definiu data e local para este trabalho. Aguarde a aprovação.</p>

@@ -187,25 +187,44 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
   };
 
   const handleGeneratePosters = () => {
-    // Pegar trabalhos aprovados e modalidade poster
-    const posterSubmissions = submissions.filter(s => s.status === 'aprovado' && s.modalidade === 'poster');
+    const approvedSubmissions = submissions.filter(s => s.status === 'aprovado');
     
-    // Ordenar pelo primeiro avaliador associado
-    posterSubmissions.sort((a, b) => {
+    // Agrupar por Modalidade -> Eixo -> Avaliador
+    approvedSubmissions.sort((a, b) => {
+      // 1. Modalidade
+      const modA = a.modalidade || '';
+      const modB = b.modalidade || '';
+      if (modA !== modB) return modA.localeCompare(modB);
+      
+      // 2. Eixo Temático
+      const eixoA = a.eixoTematico || '';
+      const eixoB = b.eixoTematico || '';
+      if (eixoA !== eixoB) return eixoA.localeCompare(eixoB);
+      
+      // 3. Avaliador
       const avaliadorA = (a.avaliadoresEmails && a.avaliadoresEmails[0]) || '';
       const avaliadorB = (b.avaliadoresEmails && b.avaliadoresEmails[0]) || '';
       return avaliadorA.localeCompare(avaliadorB);
     });
 
     let currentNumber = 1;
-    posterSubmissions.forEach(sub => {
-      const formattedNumber = `PO-${currentNumber.toString().padStart(3, '0')}`;
-      const newDetails = { ...(sub.detalhesApresentacao || {}), numeroPoster: formattedNumber };
+    approvedSubmissions.forEach(sub => {
+      const formattedNumber = currentNumber.toString().padStart(3, '0');
+      
+      let prefix = '';
+      if (sub.modalidade === 'poster') prefix = 'PO-';
+      else if (sub.modalidade === 'comunicacao_oral') prefix = 'CO-';
+      else if (sub.modalidade === 'material_didatico') prefix = 'MD-';
+      else prefix = 'ID-';
+
+      const codigoGeral = `${prefix}${formattedNumber}`;
+      
+      const newDetails = { ...(sub.detalhesApresentacao || {}), numeroPoster: codigoGeral };
       onUpdateSubmission(sub.id, { detalhesApresentacao: newDetails });
       currentNumber++;
     });
 
-    alert(`Numeração automática gerada para ${posterSubmissions.length} pôsteres!`);
+    alert(`Numeração automática (Código da Apresentação) gerada para ${approvedSubmissions.length} trabalhos!`);
   };
 
   const downloadCredential = (ing, eventTitle) => {
@@ -586,7 +605,7 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
           <div className="flex justify-between items-center mb-6">
             <h2 style={{ fontSize: '1.5rem', margin: 0 }}>Trabalhos Submetidos para Avaliação</h2>
             <button onClick={handleGeneratePosters} className="btn btn-primary" style={{ backgroundColor: '#8b5cf6', border: 'none', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-              Gerar Numeração Automática de Pôsteres
+              Gerar Numeração Automática de Trabalhos
             </button>
           </div>
           {submissions.length === 0 ? (
@@ -615,8 +634,15 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
                           <FileDown size={12} style={{ display: 'inline' }} /> Baixar {sub.trabalho}
                         </button>
                       </td>
-                      <td style={{ padding: '1rem 0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontSize: '0.875rem' }}>
-                        {sub.modalidade}
+                      <td style={{ padding: '1rem 0.75rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+                        <strong style={{ textTransform: 'uppercase' }}>{sub.modalidade}</strong>
+                        <br/>
+                        <span style={{ fontSize: '0.75rem' }}>Eixo: {sub.eixoTematico || 'Geral'}</span>
+                        {sub.detalhesApresentacao?.numeroPoster && (
+                          <div style={{ marginTop: '0.5rem', color: '#16a34a', fontWeight: 'bold' }}>
+                            Cód: {sub.detalhesApresentacao.numeroPoster}
+                          </div>
+                        )}
                       </td>
                       <td style={{ padding: '1rem 0.75rem' }}>
                         {sub.status === 'em_analise' && <span style={{ backgroundColor: '#fef08a', color: '#854d0e', padding: '0.25rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 'bold' }}>Em Análise</span>}
