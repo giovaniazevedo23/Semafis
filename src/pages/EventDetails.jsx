@@ -147,6 +147,48 @@ export function EventDetails({ events }) {
                 </div>
               </div>
             )}
+
+            {event.activities && event.activities.length > 0 && (
+              <div style={{ marginTop: '3rem' }}>
+                <h3 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  Minicursos e Oficinas
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {event.activities.map((act, idx) => {
+                    const speaker = (event.speakers || []).find(s => s.nome === act.minister) || {
+                      nome: act.minister,
+                      fotoUrl: 'https://via.placeholder.com/150?text=Sem+Foto'
+                    };
+                    return (
+                      <div key={idx} style={{ padding: '1.5rem', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0', borderTop: '4px solid var(--accent-primary)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                          <span style={{ fontSize: '0.75rem', backgroundColor: '#e2e8f0', padding: '0.25rem 0.5rem', borderRadius: '4px', textTransform: 'uppercase', fontWeight: 'bold' }}>
+                            {act.type || 'Atividade'}
+                          </span>
+                        </div>
+                        <h4 style={{ fontSize: '1.125rem', marginBottom: '1rem', color: '#0f172a' }}>{act.name}</h4>
+                        
+                        <div className="flex items-center gap-3 mb-4">
+                          <img src={speaker.fotoUrl} alt={speaker.nome} style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', border: '2px solid white', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }} />
+                          <div style={{ fontSize: '0.875rem', color: '#475569' }}>
+                            Com <strong>{speaker.nome}</strong>
+                          </div>
+                        </div>
+
+                        <div style={{ fontSize: '0.875rem', color: '#64748b', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                          <div className="flex items-center gap-2">
+                            <Clock size={16} /> <span>{act.time}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <MapPin size={16} /> <span>{act.room}</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
           
           <div style={{ position: 'sticky', top: '100px' }}>

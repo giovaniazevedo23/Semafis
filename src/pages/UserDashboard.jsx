@@ -26,12 +26,17 @@ export function UserDashboard({ submissions, events, ingressos = [], user, onSub
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     eventId: '',
-    tipoApresentacao: 'poster',
-    eixoTematico: 'Ensino e Práticas Pedagógicas',
+    tipoApresentacao: '',
+    eixoTematico: '',
     coAutores: '',
     tituloTrabalho: '',
+    isMinicourse: false,
   });
   const [trabalhoFile, setTrabalhoFile] = useState(null);
+  
+  const selectedEventForSub = activeSubmissionEvents.find(e => e.id === formData.eventId);
+  const eventModalidades = selectedEventForSub?.modalidades || ['Poster', 'Comunicação Oral', 'Material Didático'];
+  const eventEixos = selectedEventForSub?.eixosTematicos || ['Física', 'Matemática', 'Misto'];
   const [chatInputs, setChatInputs] = useState({});
 
   const handleSendChatMessage = (subId) => {
@@ -167,18 +172,18 @@ Comissão Organizadora - SEMAFIS`
       trabalho: formData.tituloTrabalho,
       nomeArquivoOriginal: trabalhoFile.name,
       arquivoUrl: arquivoUrl,
-      modalidade: formData.tipoApresentacao,
-      eixoTematico: formData.eixoTematico,
+      modalidade: formData.isMinicourse ? 'minicurso' : formData.tipoApresentacao || eventModalidades[0],
+      eixoTematico: formData.isMinicourse ? 'Minicurso' : formData.eixoTematico || eventEixos[0],
       status: 'em_analise',
       data: new Date().toISOString(),
       avaliadoresEmails: [],
       avaliacoes: []
     });
 
-    alert("Seu trabalho foi enviado com sucesso e está em análise!");
+    alert(formData.isMinicourse ? "Seu minicurso foi submetido com sucesso e está em análise!" : "Seu trabalho foi enviado com sucesso e está em análise!");
     setShowSubmitForm(false);
     setIsSubmitting(false);
-    setFormData({ eventId: '', tipoApresentacao: 'poster', eixoTematico: 'Ensino e Práticas Pedagógicas', coAutores: '', tituloTrabalho: '' });
+    setFormData({ eventId: '', tipoApresentacao: '', eixoTematico: '', coAutores: '', tituloTrabalho: '', isMinicourse: false });
     setTrabalhoFile(null);
   };
 
@@ -548,9 +553,14 @@ Comissão Organizadora - SEMAFIS`
           {!showSubmitForm && (
             <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'flex-start' }}>
               {canSubmit ? (
-                <button onClick={() => setShowSubmitForm(true)} className="btn btn-primary" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', padding: '1rem 1.5rem' }}>
-                  <FileUp size={20} /> Enviar Arquivo do Trabalho
-                </button>
+                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                  <button onClick={() => setShowSubmitForm(true)} className="btn btn-primary" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', padding: '1rem 1.5rem' }}>
+                    <FileUp size={20} /> Enviar Arquivo do Trabalho
+                  </button>
+                  <button onClick={() => { setShowSubmitForm(true); setFormData(f => ({...f, isMinicourse: true})); }} className="btn btn-outline" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', padding: '1rem 1.5rem', borderColor: '#8b5cf6', color: '#8b5cf6' }}>
+                    <FileUp size={20} /> Submeter Minicurso
+                  </button>
+                </div>
               ) : (
                 <div style={{ backgroundColor: '#fffbeb', color: '#b45309', padding: '1rem', borderRadius: '8px', border: '1px solid #fde68a', width: '100%' }}>
                   <strong>Aviso:</strong> O período de submissão de trabalhos para os eventos atuais encerrou ou ainda não começou.
@@ -578,38 +588,37 @@ Comissão Organizadora - SEMAFIS`
                   </select>
                 </div>
 
-                <div className="mb-4">
-                  <label className="form-label">Tipo de Apresentação</label>
-                  <div className="flex gap-4">
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', cursor: 'pointer' }}>
-                      <input type="radio" name="tipoApresentacao" value="poster" checked={formData.tipoApresentacao === 'poster'} onChange={() => setFormData({...formData, tipoApresentacao: 'poster'})} /> Pôster (PO)
-                    </label>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', cursor: 'pointer' }}>
-                      <input type="radio" name="tipoApresentacao" value="comunicacao_oral" checked={formData.tipoApresentacao === 'comunicacao_oral'} onChange={() => setFormData({...formData, tipoApresentacao: 'comunicacao_oral'})} /> Comunicação Oral
-                    </label>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', cursor: 'pointer' }}>
-                      <input type="radio" name="tipoApresentacao" value="material_didatico" checked={formData.tipoApresentacao === 'material_didatico'} onChange={() => setFormData({...formData, tipoApresentacao: 'material_didatico'})} /> Material Didático
-                    </label>
-                  </div>
-                </div>
+                {!formData.isMinicourse && (
+                  <>
+                    <div className="mb-4">
+                      <label className="form-label">Tipo de Apresentação</label>
+                      <div className="flex gap-4 flex-wrap">
+                        {eventModalidades.map(mod => (
+                          <label key={mod} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', cursor: 'pointer' }}>
+                            <input type="radio" name="tipoApresentacao" value={mod} checked={formData.tipoApresentacao === mod || (!formData.tipoApresentacao && eventModalidades[0] === mod)} onChange={() => setFormData({...formData, tipoApresentacao: mod})} /> {mod}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="mb-4">
+                      <label className="form-label">Eixo Temático</label>
+                      <select 
+                        className="form-input" 
+                        value={formData.eixoTematico || eventEixos[0]} 
+                        onChange={e => setFormData({...formData, eixoTematico: e.target.value})}
+                        required
+                      >
+                        {eventEixos.map(eixo => (
+                          <option key={eixo} value={eixo}>{eixo}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </>
+                )}
 
                 <div className="mb-4">
-                  <label className="form-label">Eixo Temático</label>
-                  <select 
-                    className="form-input" 
-                    value={formData.eixoTematico || 'Ensino e Práticas Pedagógicas'} 
-                    onChange={e => setFormData({...formData, eixoTematico: e.target.value})}
-                    required
-                  >
-                    <option value="Ensino e Práticas Pedagógicas">Ensino e Práticas Pedagógicas</option>
-                    <option value="Pesquisa e Ciências Aplicadas">Pesquisa e Ciências Aplicadas</option>
-                    <option value="Tecnologia e Inovação">Tecnologia e Inovação</option>
-                    <option value="Outros">Outros</option>
-                  </select>
-                </div>
-
-                <div className="mb-4">
-                  <label className="form-label">Título do Trabalho</label>
+                  <label className="form-label">{formData.isMinicourse ? 'Título do Minicurso' : 'Título do Trabalho'}</label>
                   <input 
                     type="text" 
                     className="form-input" 
@@ -638,7 +647,7 @@ Comissão Organizadora - SEMAFIS`
                   <button type="submit" disabled={isSubmitting} className="btn btn-primary" style={{ flex: 1 }}>
                     {isSubmitting ? 'Enviando...' : 'Concluir Submissão'}
                   </button>
-                  <button type="button" onClick={() => setShowSubmitForm(false)} className="btn btn-outline" style={{ flex: 1 }}>
+                  <button type="button" onClick={() => { setShowSubmitForm(false); setFormData(f => ({...f, isMinicourse: false})); }} className="btn btn-outline" style={{ flex: 1 }}>
                     Cancelar
                   </button>
                 </div>
@@ -662,7 +671,7 @@ Comissão Organizadora - SEMAFIS`
                     <div style={{ backgroundColor: '#f8fafc', padding: '1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div className="flex items-center gap-2">
                         <MonitorPlay size={24} style={{ color: 'var(--text-secondary)' }} />
-                        <h3 style={{ margin: 0, fontSize: '1.25rem' }}>Apresentação de Trabalho</h3>
+                        <h3 style={{ margin: 0, fontSize: '1.25rem' }}>{sub.modalidade === 'minicurso' ? 'Proposta de Minicurso' : 'Apresentação de Trabalho'}</h3>
                       </div>
                       <div>
                         {sub.status === 'em_analise' && <span style={{ backgroundColor: '#fef08a', color: '#854d0e', padding: '0.5rem 1rem', borderRadius: '99px', fontSize: '0.875rem', fontWeight: 'bold' }}>Em Análise</span>}

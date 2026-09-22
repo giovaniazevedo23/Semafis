@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { EventForm } from '../components/EventForm';
 import { EventCard } from '../components/EventCard';
-import { FileDown, Users, Check, X, ArrowLeft, ClipboardList, GraduationCap, MonitorPlay, ChevronRight, Calendar, Mic, QrCode, Settings, Medal, FileText, LayoutList, Award, Upload, Bot, Shield, Bell, AlertCircle } from 'lucide-react';
+import { FileDown, Users, Check, X, ArrowLeft, ClipboardList, GraduationCap, MonitorPlay, ChevronRight, Calendar, Mic, QrCode, Settings, Medal, FileText, LayoutList, Award, Upload, Bot, Shield, Bell, AlertCircle, Sliders } from 'lucide-react';
 import { uploadFile } from '../services/db';
 import { QRCodeCanvas } from 'qrcode.react';
 
@@ -39,6 +39,11 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
   const [avisoData, setAvisoData] = useState({ title: '', content: '' });
   const [newVacancyCourse, setNewVacancyCourse] = useState('Matemática');
   const [newVacancyCount, setNewVacancyCount] = useState('');
+
+  // Event Configurations States
+  const [newModalidade, setNewModalidade] = useState('');
+  const [newEixo, setNewEixo] = useState('');
+  const [newScheduleCategory, setNewScheduleCategory] = useState('');
 
   const selectedEvent = events.find(e => e.id === selectedEventId);
 
@@ -439,6 +444,7 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
           
           {[
             { id: 'avisos', title: 'Avisos Gerais', desc: 'Enviar notificações para todos os participantes', icon: <Bell size={20} /> },
+            { id: 'configuracoes', title: 'Configurações do Evento', desc: 'Gerenciar modalidades, eixos temáticos e categorias', icon: <Sliders size={20} /> },
             { id: 'submissoes', title: 'Submissões', desc: 'Visualizar e gerenciar os trabalhos enviados', icon: <FileText size={20} /> },
             { id: 'equipe', title: 'Equipe do Evento', desc: 'Cadastrar e gerenciar avaliadores e monitores', icon: <Users size={20} /> },
             { id: 'atividades', title: 'Atividades', desc: 'Cadastrar e organizar minicursos e oficinas', icon: <LayoutList size={20} /> },
@@ -497,6 +503,105 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
         </button>
       )}
 
+      {/* Aba de Configurações */}
+      {activeTab === 'configuracoes' && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div>
+            <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>Modalidades de Trabalho</h2>
+            <div className="card" style={{ padding: '1rem' }}>
+              <div className="flex gap-2 mb-4">
+                <input type="text" placeholder="Nova Modalidade" value={newModalidade} onChange={e => setNewModalidade(e.target.value)} className="form-input" style={{ flex: 1 }} />
+                <button 
+                  onClick={() => {
+                    if (!newModalidade.trim()) return;
+                    const mods = selectedEvent.modalidades || ['Poster', 'Comunicação Oral', 'Material Didático'];
+                    onUpdateEvent(selectedEvent.id, { modalidades: [...mods, newModalidade.trim()] });
+                    setNewModalidade('');
+                  }} 
+                  className="btn btn-primary" 
+                  style={{ padding: '0.5rem' }}
+                >
+                  Adicionar
+                </button>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {(selectedEvent.modalidades || ['Poster', 'Comunicação Oral', 'Material Didático']).map((mod, idx) => (
+                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f8fafc', padding: '0.5rem', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
+                    <span>{mod}</span>
+                    <button onClick={() => {
+                      const mods = (selectedEvent.modalidades || ['Poster', 'Comunicação Oral', 'Material Didático']).filter(m => m !== mod);
+                      onUpdateEvent(selectedEvent.id, { modalidades: mods });
+                    }} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer' }}><X size={16} /></button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div>
+            <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>Eixos Temáticos</h2>
+            <div className="card" style={{ padding: '1rem' }}>
+              <div className="flex gap-2 mb-4">
+                <input type="text" placeholder="Novo Eixo" value={newEixo} onChange={e => setNewEixo(e.target.value)} className="form-input" style={{ flex: 1 }} />
+                <button 
+                  onClick={() => {
+                    if (!newEixo.trim()) return;
+                    const eixos = selectedEvent.eixosTematicos || ['Física', 'Matemática', 'Misto'];
+                    onUpdateEvent(selectedEvent.id, { eixosTematicos: [...eixos, newEixo.trim()] });
+                    setNewEixo('');
+                  }} 
+                  className="btn btn-primary" 
+                  style={{ padding: '0.5rem' }}
+                >
+                  Adicionar
+                </button>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {(selectedEvent.eixosTematicos || ['Física', 'Matemática', 'Misto']).map((eixo, idx) => (
+                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f8fafc', padding: '0.5rem', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
+                    <span>{eixo}</span>
+                    <button onClick={() => {
+                      const eixos = (selectedEvent.eixosTematicos || ['Física', 'Matemática', 'Misto']).filter(e => e !== eixo);
+                      onUpdateEvent(selectedEvent.id, { eixosTematicos: eixos });
+                    }} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer' }}><X size={16} /></button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div>
+            <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>Categorias do Cronograma</h2>
+            <div className="card" style={{ padding: '1rem' }}>
+              <div className="flex gap-2 mb-4">
+                <input type="text" placeholder="Nova Categoria" value={newScheduleCategory} onChange={e => setNewScheduleCategory(e.target.value)} className="form-input" style={{ flex: 1 }} />
+                <button 
+                  onClick={() => {
+                    if (!newScheduleCategory.trim()) return;
+                    const cats = selectedEvent.scheduleCategories || ['Geral', 'Palestra', 'Oficina/Minicurso', 'Apresentação', 'Pausa'];
+                    onUpdateEvent(selectedEvent.id, { scheduleCategories: [...cats, newScheduleCategory.trim()] });
+                    setNewScheduleCategory('');
+                  }} 
+                  className="btn btn-primary" 
+                  style={{ padding: '0.5rem' }}
+                >
+                  Adicionar
+                </button>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {(selectedEvent.scheduleCategories || ['Geral', 'Palestra', 'Oficina/Minicurso', 'Apresentação', 'Pausa']).map((cat, idx) => (
+                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f8fafc', padding: '0.5rem', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
+                    <span>{cat}</span>
+                    <button onClick={() => {
+                      const cats = (selectedEvent.scheduleCategories || ['Geral', 'Palestra', 'Oficina/Minicurso', 'Apresentação', 'Pausa']).filter(c => c !== cat);
+                      onUpdateEvent(selectedEvent.id, { scheduleCategories: cats });
+                    }} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer' }}><X size={16} /></button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Aba de Cronograma */}
       {activeTab === 'cronograma' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -509,11 +614,9 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
                 <input type="text" placeholder="Título da Atividade (ex: Abertura)" value={scheduleItem.title} onChange={e => setScheduleItem({...scheduleItem, title: e.target.value})} className="form-input mb-2" required />
                 <textarea placeholder="Descrição ou Local (opcional)" value={scheduleItem.description} onChange={e => setScheduleItem({...scheduleItem, description: e.target.value})} className="form-input mb-2" rows="3"></textarea>
                 <select value={scheduleItem.type} onChange={e => setScheduleItem({...scheduleItem, type: e.target.value})} className="form-input mb-4" required>
-                  <option value="Geral">Geral</option>
-                  <option value="Palestra">Palestra</option>
-                  <option value="Oficina">Oficina/Minicurso</option>
-                  <option value="Apresentação">Apresentação de Trabalhos</option>
-                  <option value="Pausa">Pausa/Coffee Break</option>
+                  {(selectedEvent?.scheduleCategories || ['Geral', 'Palestra', 'Oficina/Minicurso', 'Apresentação', 'Pausa']).map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
                 </select>
                 <button type="submit" className="btn btn-primary" style={{ width: '100%', backgroundColor: '#6366f1', border: 'none' }}>Adicionar Atividade</button>
               </form>
@@ -1089,7 +1192,10 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
                   <option value="Mesa Redonda">Mesa Redonda</option>
                 </select>
                 <input type="text" placeholder="Nome da Atividade" value={activityData.name} onChange={e => setActivityData({...activityData, name: e.target.value})} className="form-input mb-2" required />
-                <input type="text" placeholder="Ministrante / Palestrante" value={activityData.minister} onChange={e => setActivityData({...activityData, minister: e.target.value})} className="form-input mb-2" required />
+                <select value={activityData.minister} onChange={e => setActivityData({...activityData, minister: e.target.value})} className="form-input mb-2" required>
+                  <option value="">Selecione o Ministrante...</option>
+                  {selectedEvent?.speakers?.map(spk => <option key={spk.id} value={spk.nome}>{spk.nome}</option>)}
+                </select>
                 <input type="text" placeholder="Horário (Ex: 14:00 - 16:00)" value={activityData.time} onChange={e => setActivityData({...activityData, time: e.target.value})} className="form-input mb-2" required />
                 <input type="text" placeholder="Local / Sala" value={activityData.room} onChange={e => setActivityData({...activityData, room: e.target.value})} className="form-input mb-4" required />
                 <button type="submit" className="btn btn-primary" style={{ width: '100%', backgroundColor: '#8b5cf6', border: 'none' }}>Cadastrar Atividade</button>
@@ -1463,21 +1569,15 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
               const avaliacoes = sub.avaliacoesApresentacao || [];
               const media = avaliacoes.reduce((acc, curr) => acc + (curr.total || 0), 0) / avaliacoes.length;
               
-              // Descobrir a área através do ingresso do usuário
-              const ingresso = ingressos.find(ing => ing.userEmail === sub.userEmail && ing.eventId === sub.eventId);
-              const curso = ingresso ? (ingresso.curso || 'Outro') : 'Outro';
-              
-              let categoria = 'Geral';
-              if (curso.toLowerCase().includes('física') || curso.toLowerCase().includes('fisica')) categoria = 'Física';
-              if (curso.toLowerCase().includes('matemática') || curso.toLowerCase().includes('matematica')) categoria = 'Matemática';
+              // Descobrir a área através do eixo temático da submissão
+              const eixo = sub.eixoTematico || 'Outros';
 
-              return { ...sub, mediaFinal: media, categoriaAutor: categoria, qtdAvaliadores: avaliacoes.length };
+              return { ...sub, mediaFinal: media, categoriaAutor: eixo, qtdAvaliadores: avaliacoes.length };
             }).sort((a, b) => b.mediaFinal - a.mediaFinal);
 
-            const fisicaTop = rankedWorks.filter(w => w.categoriaAutor === 'Física').slice(0, 3);
-            const matTop = rankedWorks.filter(w => w.categoriaAutor === 'Matemática').slice(0, 3);
-            const geralTop = [...rankedWorks].slice(0, 3);
-
+            // Group top 3 by eixoTematico dynamically
+            const eixos = [...new Set(rankedWorks.map(w => w.categoriaAutor))];
+            
             const renderPodium = (title, works, color) => (
               <div className="card mb-6" style={{ padding: '1.5rem', borderTop: `4px solid ${color}` }}>
                 <h3 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', color: color }}>{title}</h3>
@@ -1511,13 +1611,18 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
               </div>
             );
 
+            const colors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6'];
+            
             return (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {renderPodium('Melhores Trabalhos - Física', fisicaTop, '#3b82f6')}
-                {renderPodium('Melhores Trabalhos - Matemática', matTop, '#ef4444')}
-                <div className="lg:col-span-2">
-                  {renderPodium('Top 3 Geral (Misto)', geralTop, '#10b981')}
-                </div>
+                {eixos.map((eixo, idx) => {
+                  const works = rankedWorks.filter(w => w.categoriaAutor === eixo).slice(0, 3);
+                  return (
+                    <div key={eixo}>
+                      {renderPodium(`Melhores Trabalhos - ${eixo}`, works, colors[idx % colors.length])}
+                    </div>
+                  );
+                })}
               </div>
             );
           })()}

@@ -10,7 +10,7 @@ import CreatableSelect from 'react-select/creatable';
 // Inicializa com a chave pública fornecida pelo usuário
 initMercadoPago('APP_USR-b36f802e-840f-45c2-b81f-6249a435a48f');
 
-export function RegistrationForm({ events, user, userProfile, onSubmitWork, onRegister, monitors = [] }) {
+export function RegistrationForm({ events, user, userProfile, onSubmitWork, onRegister, monitors = [], ingressos = [] }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const event = events.find(e => e.id === id);
@@ -83,6 +83,14 @@ export function RegistrationForm({ events, user, userProfile, onSubmitWork, onRe
 
   const handleNext = (e) => {
     e.preventDefault();
+    const eventIngressos = ingressos.filter(i => i.eventId === event.id);
+    const isDuplicate = eventIngressos.some(i => i.userEmail === user.email || i.cpf === formData.cpf);
+    
+    if (isDuplicate) {
+      alert("Atenção: Você (este e-mail ou CPF) já está inscrito neste evento!");
+      return;
+    }
+    
     setStep(2);
   };
 
