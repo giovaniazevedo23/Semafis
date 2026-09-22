@@ -838,6 +838,18 @@ Comissão Organizadora - SEMAFIS`
 
               const roleLabel = ing.categoriasDisplay || 'Participante';
 
+              // Build QR Code validation URL to match CredentialTicket exactly
+              const qrUrlParams = new URLSearchParams({
+                nome: ing.nome || '',
+                cpf: ing.cpf || '',
+                inst: ing.instituicao || '',
+                campus: ing.campus || '',
+                cat: ing.categoriasDisplay || '',
+                atividades: ing.atividades || '',
+                id: ing.id || ''
+              });
+              const validacaoUrl = `${window.location.origin}/validar?${qrUrlParams.toString()}`;
+
               // Ensure unique ID for downloading
               const badgeElementId = `badge-${ing.id}`;
 
@@ -872,7 +884,7 @@ Comissão Organizadora - SEMAFIS`
                         logoUrl={evento?.logoUrl}
                         photoUrl={userProfile?.photoUrl || user?.photoURL}
                         validUntil={evento?.dataFimSubmissao ? new Date(evento.dataFimSubmissao).toLocaleDateString('pt-BR') : 'Final do Evento'}
-                        qrCodeValue={JSON.stringify({ userId: ing.userEmail, eventId: ing.eventId, type: userRoleType })}
+                        qrCodeValue={validacaoUrl}
                       />
                     </div>
                   </div>
