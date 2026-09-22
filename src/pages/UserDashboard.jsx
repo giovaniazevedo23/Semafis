@@ -81,7 +81,13 @@ export function UserDashboard({ submissions, events, ingressos = [], user, onSub
     setChatInputs(prev => ({ ...prev, [subId]: '' }));
   };
 
-  const canSubmit = true; 
+  const today = new Date().toISOString().split('T')[0];
+  const activeSubmissionEvents = events.filter(e => {
+    if (!e.dataInicioSubmissao || !e.dataFimSubmissao) return false;
+    return today >= e.dataInicioSubmissao && today <= e.dataFimSubmissao;
+  });
+  
+  const canSubmit = activeSubmissionEvents.length > 0;
   
   const temTrabalhoAprovado = submissions.some(s => s.status === 'aprovado');
   const temIngressoApresentador = ingressos.some(i => i.categoriasDisplay && i.categoriasDisplay.includes('Apresentador'));
@@ -539,11 +545,17 @@ Comissão Organizadora - SEMAFIS`
       {/* Trabalhos Tab */}
       {activeTab === 'trabalhos' && (
         <>
-          {canSubmit && !showSubmitForm && (
+          {!showSubmitForm && (
             <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'flex-start' }}>
-              <button onClick={() => setShowSubmitForm(true)} className="btn btn-primary" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', padding: '1rem 1.5rem' }}>
-                <FileUp size={20} /> Enviar Arquivo do Trabalho
-              </button>
+              {canSubmit ? (
+                <button onClick={() => setShowSubmitForm(true)} className="btn btn-primary" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', padding: '1rem 1.5rem' }}>
+                  <FileUp size={20} /> Enviar Arquivo do Trabalho
+                </button>
+              ) : (
+                <div style={{ backgroundColor: '#fffbeb', color: '#b45309', padding: '1rem', borderRadius: '8px', border: '1px solid #fde68a', width: '100%' }}>
+                  <strong>Aviso:</strong> O período de submissão de trabalhos para os eventos atuais encerrou ou ainda não começou.
+                </div>
+              )}
             </div>
           )}
 
@@ -560,7 +572,7 @@ Comissão Organizadora - SEMAFIS`
                     required
                   >
                     <option value="">-- Selecione o evento --</option>
-                    {events.map(ev => (
+                    {activeSubmissionEvents.map(ev => (
                       <option key={ev.id} value={ev.id}>{ev.title}</option>
                     ))}
                   </select>

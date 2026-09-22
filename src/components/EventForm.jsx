@@ -11,6 +11,8 @@ export function EventForm({ onSubmit }) {
     priceWithoutSubmission: '',
     dataInicioInscricao: '',
     dataFimInscricao: '',
+    dataInicioSubmissao: '',
+    dataFimSubmissao: '',
     schedule: '',
     imageUrl: '',
     logoUrl: '',
@@ -79,7 +81,7 @@ export function EventForm({ onSubmit }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     onSubmit({ ...formData, id: Date.now().toString() });
-    setFormData({ title: '', date: '', location: '', description: '', dataInicioInscricao: '', dataFimInscricao: '', schedule: '', imageUrl: '', logoUrl: '', packages: [], activities: [] });
+    setFormData({ title: '', date: '', location: '', description: '', dataInicioInscricao: '', dataFimInscricao: '', dataInicioSubmissao: '', dataFimSubmissao: '', schedule: '', imageUrl: '', logoUrl: '', packages: [], activities: [] });
     setImagePreview(null);
     setLogoPreview(null);
     alert('Evento criado com sucesso!');
@@ -127,6 +129,22 @@ export function EventForm({ onSubmit }) {
             <div className="flex items-center gap-2 mb-2" style={{ color: '#86198f' }}>Término das Inscrições</div>
           </label>
           <input type="date" name="dataFimInscricao" value={formData.dataFimInscricao} onChange={handleChange} className="form-input" required />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4" style={{ backgroundColor: '#f0fdf4', padding: '1rem', borderRadius: '8px', border: '1px solid #bbf7d0', marginBottom: '1.5rem' }}>
+        <div className="form-group" style={{ marginBottom: 0 }}>
+          <label className="form-label">
+            <div className="flex items-center gap-2 mb-2" style={{ color: '#166534' }}>Início da Submissão de Trabalhos</div>
+          </label>
+          <input type="date" name="dataInicioSubmissao" value={formData.dataInicioSubmissao || ''} onChange={handleChange} className="form-input" required />
+        </div>
+
+        <div className="form-group" style={{ marginBottom: 0 }}>
+          <label className="form-label">
+            <div className="flex items-center gap-2 mb-2" style={{ color: '#166534' }}>Término da Submissão</div>
+          </label>
+          <input type="date" name="dataFimSubmissao" value={formData.dataFimSubmissao || ''} onChange={handleChange} className="form-input" required />
         </div>
       </div>
 
