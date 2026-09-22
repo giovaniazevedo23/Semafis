@@ -1,138 +1,198 @@
+import React from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 
-export function Badge({ type = 'participante', name, institution, roleName, logoUrl, qrCodeValue }) {
+export const Badge = React.forwardRef(({ type = 'participante', name, roleName, logoUrl, qrCodeValue, photoUrl, validUntil }, ref) => {
   const getStyleTokens = () => {
-    switch (type) {
+    switch (type.toLowerCase()) {
       case 'monitor':
-        return {
-          gradient: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)',
-          text: 'white',
-          label: 'MONITOR',
-          shadow: 'rgba(59, 130, 246, 0.4)'
-        };
+        return { color: '#0ea5e9', role: 'Monitor' };
       case 'organizador':
-        return {
-          gradient: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-          text: '#fbbf24', // Gold text
-          label: 'ORGANIZAÇÃO',
-          shadow: 'rgba(15, 23, 42, 0.4)'
-        };
+      case 'organização':
+        return { color: '#334155', role: 'Organização' };
+      case 'apresentador':
+        return { color: '#8b5cf6', role: 'Apresentador' };
       default:
-        return {
-          gradient: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',
-          text: 'white',
-          label: 'PARTICIPANTE',
-          shadow: 'rgba(236, 72, 153, 0.4)'
-        };
+        return { color: '#166534', role: 'Participante' }; // Dark green from mockup
     }
   };
 
   const tokens = getStyleTokens();
-  const displayRole = roleName || tokens.label;
+  const displayRole = roleName || tokens.role;
+  const badgeColor = tokens.color;
 
   return (
-    <div style={{
-      width: '100%',
-      maxWidth: '320px',
+    <div ref={ref} style={{
+      width: '320px',
+      height: '500px',
       margin: '0 auto',
-      background: tokens.gradient,
+      backgroundColor: '#ffffff',
       borderRadius: '16px',
-      boxShadow: `0 20px 40px -10px ${tokens.shadow}`,
+      boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)',
       overflow: 'hidden',
       display: 'flex',
       flexDirection: 'column',
       position: 'relative',
-      color: 'white',
-      border: '1px solid rgba(255, 255, 255, 0.2)'
+      color: '#0f172a',
+      fontFamily: 'Inter, system-ui, sans-serif'
     }}>
-      {/* Lanyard Hole */}
+      {/* Top Banner with Clip Path and City Skyline Pattern */}
       <div style={{
         position: 'absolute',
-        top: '15px',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        width: '60px',
-        height: '12px',
-        backgroundColor: 'rgba(0,0,0,0.2)',
-        borderRadius: '10px',
-        border: '1px solid rgba(255,255,255,0.3)',
-        zIndex: 10
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '180px',
+        backgroundColor: badgeColor,
+        clipPath: 'polygon(0 0, 100% 0, 100% 65%, 0 100%)',
+        zIndex: 0,
+        backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='40' viewBox='0 0 100 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 40h10v-20h10v-10h10v30h10v-25h10v25h10v-15h10v15h10v-35h10v35h10v-5h10v5' fill='none' stroke='rgba(255,255,255,0.2)' stroke-width='1'/%3E%3C/svg%3E")`,
+        backgroundPosition: 'bottom',
+        backgroundRepeat: 'repeat-x',
+        backgroundSize: '100px 40px'
       }}></div>
 
-      {/* Decorative top circles */}
-      <div style={{ position: 'absolute', top: '-50px', right: '-50px', width: '150px', height: '150px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)' }}></div>
-      <div style={{ position: 'absolute', top: '50px', left: '-50px', width: '100px', height: '100px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }}></div>
-
-      {/* Header */}
+      {/* Header Logo */}
       <div style={{
-        padding: '40px 1.5rem 1.5rem 1.5rem',
+        padding: '1.5rem',
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
         position: 'relative',
-        zIndex: 1
+        zIndex: 1,
+        color: 'white'
       }}>
         {logoUrl ? (
-          <img src={logoUrl} alt="Logo Evento" style={{ maxHeight: '70px', objectFit: 'contain', filter: 'drop-shadow(0px 2px 4px rgba(0,0,0,0.2))' }} />
+          <img src={logoUrl} alt="Logo Evento" style={{ maxHeight: '40px', objectFit: 'contain' }} />
         ) : (
-          <div style={{ height: '70px', display: 'flex', alignItems: 'center', fontWeight: '800', fontSize: '1.5rem', letterSpacing: '2px', textShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold', fontSize: '1.25rem' }}>
+            <span style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              width: '32px', 
+              height: '32px', 
+              border: '2px solid white', 
+              borderRadius: '50%',
+              fontSize: '1rem'
+            }}>∞</span>
             SEMAFIS
           </div>
         )}
       </div>
 
-      {/* Content Area */}
+      {/* Profile Photo */}
       <div style={{
-        padding: '1rem 1.5rem 2rem 1.5rem',
+        display: 'flex',
+        justifyContent: 'center',
+        position: 'relative',
+        zIndex: 2,
+        marginTop: '1rem'
+      }}>
+        <div style={{
+          width: '120px',
+          height: '120px',
+          borderRadius: '50%',
+          backgroundColor: '#e2e8f0',
+          border: `4px solid ${badgeColor}`,
+          padding: '2px',
+          boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+          overflow: 'hidden',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          {photoUrl ? (
+            <img src={photoUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+          ) : (
+            <span style={{ fontSize: '3rem', color: '#94a3b8' }}>
+              {name ? name.charAt(0).toUpperCase() : 'U'}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* User Info */}
+      <div style={{
         textAlign: 'center',
+        padding: '0.5rem 1.5rem 0',
+        position: 'relative',
+        zIndex: 1
+      }}>
+        <h2 style={{ 
+          fontSize: '1.5rem', 
+          fontWeight: '800', 
+          margin: '0.5rem 0 0.25rem', 
+          color: badgeColor,
+          lineHeight: '1.2'
+        }}>
+          {name || 'Nome do Participante'}
+        </h2>
+        
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '0.5rem',
+          margin: '0 auto 1rem',
+          maxWidth: '80%'
+        }}>
+          <div style={{ height: '1px', flex: 1, backgroundColor: badgeColor }}></div>
+          <span style={{ fontSize: '0.875rem', fontWeight: '700', color: badgeColor, textTransform: 'uppercase' }}>
+            {displayRole}
+          </span>
+          <div style={{ height: '1px', flex: 1, backgroundColor: badgeColor }}></div>
+        </div>
+      </div>
+
+      {/* QR Code and Validation */}
+      <div style={{
         flex: 1,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         position: 'relative',
-        zIndex: 1
+        zIndex: 1,
+        paddingBottom: '2rem'
       }}>
-        <h2 style={{ fontSize: '1.75rem', fontWeight: '800', marginBottom: '0.5rem', lineHeight: '1.2', textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}>
-          {name || 'Nome do Usuário'}
-        </h2>
-        
-        {type === 'participante' && institution && (
-          <p style={{ fontSize: '1rem', fontWeight: '500', opacity: 0.9, marginBottom: '1.5rem' }}>
-            {institution}
-          </p>
-        )}
-        
-        {/* Glassmorphism QR Code Container */}
         {qrCodeValue && (
-          <div style={{ 
-            marginTop: institution ? '0' : '1.5rem', 
-            padding: '12px', 
-            background: 'rgba(255, 255, 255, 0.9)', 
-            borderRadius: '12px',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
-            backdropFilter: 'blur(4px)'
+          <div style={{
+            position: 'relative',
+            padding: '0.75rem',
+            marginBottom: '0.5rem'
           }}>
-            <QRCodeSVG value={qrCodeValue} size={140} />
+            {/* Brackets around QR Code */}
+            <div style={{ position: 'absolute', top: 0, left: 0, width: '20px', height: '20px', borderTop: `3px solid ${badgeColor}`, borderLeft: `3px solid ${badgeColor}` }}></div>
+            <div style={{ position: 'absolute', top: 0, right: 0, width: '20px', height: '20px', borderTop: `3px solid ${badgeColor}`, borderRight: `3px solid ${badgeColor}` }}></div>
+            <div style={{ position: 'absolute', bottom: 0, left: 0, width: '20px', height: '20px', borderBottom: `3px solid ${badgeColor}`, borderLeft: `3px solid ${badgeColor}` }}></div>
+            <div style={{ position: 'absolute', bottom: 0, right: 0, width: '20px', height: '20px', borderBottom: `3px solid ${badgeColor}`, borderRight: `3px solid ${badgeColor}` }}></div>
+            
+            <QRCodeSVG value={qrCodeValue} size={90} fgColor={badgeColor} />
           </div>
         )}
+        <div style={{
+          fontSize: '0.7rem',
+          fontWeight: '700',
+          color: badgeColor,
+          textTransform: 'uppercase'
+        }}>
+          VÁLIDO ATÉ {validUntil || '21/04/2023'}
+        </div>
       </div>
 
-      {/* Bottom Role Banner */}
+      {/* Bottom Slope */}
       <div style={{
-        background: 'rgba(0, 0, 0, 0.25)',
-        backdropFilter: 'blur(10px)',
-        color: tokens.text,
-        padding: '1.25rem',
-        textAlign: 'center',
-        fontWeight: '800',
-        fontSize: '1.25rem',
-        letterSpacing: '3px',
-        textTransform: 'uppercase',
-        borderTop: '1px solid rgba(255, 255, 255, 0.1)'
-      }}>
-        {displayRole}
-      </div>
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: '60px',
+        backgroundColor: badgeColor,
+        clipPath: 'polygon(0 100%, 100% 100%, 100% 0, 0 65%)',
+        zIndex: 0
+      }}></div>
     </div>
   );
-}
+});
+
+Badge.displayName = 'Badge';

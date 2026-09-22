@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, Clock, MonitorPlay, Presentation, FileText, Printer, Ticket, Award, FileUp, Mail, AlertCircle, Bot, FileDown } from 'lucide-react';
+import { Calendar, Clock, MonitorPlay, Presentation, FileText, Printer, Ticket, Award, FileUp, Mail, AlertCircle, Bot, FileDown, QrCode, Download } from 'lucide-react';
+import html2canvas from 'html2canvas';
 
 import { CredentialTicket } from '../components/CredentialTicket';
 import { Badge } from '../components/Badge';
@@ -349,6 +350,9 @@ Comissão Organizadora - SEMAFIS`
         </button>
         <button onClick={() => setActiveTab('ingressos')} className={`btn ${activeTab === 'ingressos' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
           <Ticket size={18} /> Ingressos
+        </button>
+        <button onClick={() => setActiveTab('cracha')} className={`btn ${activeTab === 'cracha' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <QrCode size={18} /> Crachá Digital
         </button>
         <button onClick={() => setActiveTab('programacao')} className={`btn ${activeTab === 'programacao' ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
           <Calendar size={18} /> Programação / Atividades
@@ -787,41 +791,102 @@ Comissão Organizadora - SEMAFIS`
               const evento = events.find(e => e.id === ing.eventId);
               return (
                 <div key={ing.id} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 align-items-start">
-                    <div className="md:col-span-2">
-                      <CredentialTicket 
-                        event={evento}
-                        userEmail={ing.userEmail}
-                        nome={ing.nome}
-                        cpf={ing.cpf}
-                        curso={ing.curso}
-                        instituicao={ing.instituicao}
-                        campus={ing.campus}
-                        categoriasDisplay={ing.categoriasDisplay}
-                        precoAtual={ing.precoAtual}
-                        atividades={ing.atividades}
-                        id={ing.id}
-                        timestamp={ing.timestamp}
-                        showSuccessHeader={false}
-                        variant="compact"
-                      />
-                    </div>
-                    
-                    <div className="md:col-span-1" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: '#f1f5f9', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                      <h3 style={{ fontSize: '1.1rem', marginBottom: '1.5rem', textAlign: 'center', color: '#64748b' }}>Seu Crachá Digital</h3>
+                  <div className="grid grid-cols-1 gap-6 align-items-start">
+                    <CredentialTicket 
+                      event={evento}
+                      userEmail={ing.userEmail}
+                      nome={ing.nome}
+                      cpf={ing.cpf}
+                      curso={ing.curso}
+                      instituicao={ing.instituicao}
+                      campus={ing.campus}
+                      categoriasDisplay={ing.categoriasDisplay}
+                      precoAtual={ing.precoAtual}
+                      atividades={ing.atividades}
+                      id={ing.id}
+                      timestamp={ing.timestamp}
+                      showSuccessHeader={false}
+                      variant="compact"
+                    />
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      )}
+
+      {/* Crachá Tab */}
+      {activeTab === 'cracha' && (
+        <div className="grid grid-cols-1 gap-6">
+          {ingressos.length === 0 ? (
+            <div className="card text-center" style={{ padding: '3rem 2rem', gridColumn: '1 / -1' }}>
+              <h2>Você não possui crachás.</h2>
+              <p style={{ color: 'var(--text-secondary)' }}>Adquira um ingresso em um evento para gerar seu crachá digital.</p>
+            </div>
+          ) : (
+            ingressos.map(ing => {
+              const evento = events.find(e => e.id === ing.eventId);
+              
+              // Determine role logic:
+              // If it's monitor, aprensentador, etc. Check categoriasDisplay or hardcode for now
+              let userRoleType = 'participante';
+              const cats = (ing.categoriasDisplay || '').toLowerCase();
+              if (cats.includes('monitor')) userRoleType = 'monitor';
+              else if (cats.includes('apresentador')) userRoleType = 'apresentador';
+              else if (cats.includes('organiza')) userRoleType = 'organizador';
+
+              const roleLabel = ing.categoriasDisplay || 'Participante';
+
+              // Ensure unique ID for downloading
+              const badgeElementId = `badge-${ing.id}`;
+
+              const handleDownloadBadge = async () => {
+                const element = document.getElementById(badgeElementId);
+                if (!element) return;
+                try {
+                  const canvas = await html2canvas(element, { scale: 3, useCORS: true, backgroundColor: null });
+                  const dataUrl = canvas.toDataURL('image/png');
+                  const link = document.createElement('a');
+                  link.download = `Cracha_${ing.nome.replace(/\s+/g, '_')}_${evento?.title || 'SEMAFIS'}.png`;
+                  link.href = dataUrl;
+                  link.click();
+                } catch (err) {
+                  console.error('Failed to download badge:', err);
+                  alert('Não foi possível gerar a imagem do crachá.');
+                }
+              };
+
+              return (
+                <div key={ing.id} className="card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                  <h3 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', textAlign: 'center', color: '#334155' }}>
+                    Crachá Digital - {evento?.title || 'Evento'}
+                  </h3>
+                  
+                  <div style={{ marginBottom: '2rem', filter: 'drop-shadow(0 10px 15px rgba(0,0,0,0.1))' }}>
+                    <div id={badgeElementId}>
                       <Badge 
-                        type="participante"
+                        type={userRoleType}
                         name={ing.nome}
-                        institution={ing.instituicao}
+                        roleName={roleLabel}
                         logoUrl={evento?.logoUrl}
-                        qrCodeValue={JSON.stringify({ userId: ing.userEmail, eventId: ing.eventId, type: 'participante' })}
+                        photoUrl={user?.photoURL}
+                        validUntil={evento?.dataFimSubmissao ? new Date(evento.dataFimSubmissao).toLocaleDateString('pt-BR') : 'Final do Evento'}
+                        qrCodeValue={JSON.stringify({ userId: ing.userEmail, eventId: ing.eventId, type: userRoleType })}
                       />
-                      <p style={{ fontSize: '0.875rem', color: '#64748b', marginTop: '1rem', textAlign: 'center' }}>
-                        Salve ou imprima este crachá para facilitar seu credenciamento.
-                      </p>
                     </div>
                   </div>
-                  <hr style={{ border: 'none', borderBottom: '1px dashed var(--border-color)', margin: '1rem 0' }} />
+
+                  <button 
+                    onClick={handleDownloadBadge} 
+                    className="btn btn-primary" 
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 2rem', fontSize: '1rem' }}
+                  >
+                    <Download size={20} /> Baixar Crachá (PNG)
+                  </button>
+                  <p style={{ fontSize: '0.875rem', color: '#64748b', marginTop: '1rem', textAlign: 'center', maxWidth: '400px' }}>
+                    Apresente este crachá digital na tela do seu celular, ou imprima se preferir, para agilizar seu acesso durante o evento.
+                  </p>
                 </div>
               );
             })
