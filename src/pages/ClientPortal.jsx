@@ -1,5 +1,6 @@
 import { EventCard } from '../components/EventCard';
-import { Search, CalendarDays, ArrowRight, Bell, CheckCircle, Circle } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Search, CalendarDays, ArrowRight, Bell, CheckCircle, Circle, Smartphone, Sparkles } from 'lucide-react';
 
 export function ClientPortal({ events, news = [], user, notifications = [], onMarkRead, onMarkUnread }) {
   return (
@@ -46,6 +47,80 @@ export function ClientPortal({ events, news = [], user, notifications = [], onMa
           ))}
         </div>
       )}
+
+      {/* Seção dedicada de Apps SEMAFIS */}
+      <div
+        style={{
+          marginBottom: '3.5rem',
+          padding: '1.75rem 2rem',
+          borderRadius: '20px',
+          background: 'linear-gradient(135deg, #0b1120 0%, #172554 60%, #1d4ed8 100%)',
+          color: '#ffffff',
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '1.5rem',
+          boxShadow: '0 18px 36px -14px rgba(15, 23, 42, 0.35)',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flex: '1 1 320px' }}>
+          <img
+            src="/downloads/cosmo-vr-icon.png"
+            alt="COSMO VR"
+            style={{
+              width: '76px',
+              height: '76px',
+              borderRadius: '18px',
+              objectFit: 'cover',
+              border: '2px solid rgba(56, 189, 248, 0.5)',
+              flexShrink: 0,
+            }}
+          />
+          <div>
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                fontSize: '0.78rem',
+                fontWeight: '700',
+                color: '#7dd3fc',
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+                marginBottom: '0.35rem',
+              }}
+            >
+              <Sparkles size={14} /> Novo Espaço • Apps SEMAFIS
+            </div>
+            <h2 style={{ margin: '0 0 0.3rem 0', color: '#ffffff', fontSize: '1.5rem', fontWeight: '800' }}>
+              Conheça o COSMO VR e nossos aplicativos
+            </h2>
+            <p style={{ margin: 0, color: '#cbd5e1', fontSize: '0.95rem', lineHeight: 1.5 }}>
+              Explore o Sistema Solar em Realidade Virtual no seu Android e acompanhe os novos apps
+              desenvolvidos para a SEMAFIS.
+            </p>
+          </div>
+        </div>
+
+        <Link
+          to="/apps"
+          className="btn"
+          style={{
+            backgroundColor: '#38bdf8',
+            color: '#0f172a',
+            fontWeight: '700',
+            padding: '0.8rem 1.4rem',
+            borderRadius: '12px',
+            textDecoration: 'none',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          <Smartphone size={18} />
+          Acessar Área de Apps
+          <ArrowRight size={17} />
+        </Link>
+      </div>
 
       <div style={{ marginTop: '4rem', paddingTop: '3rem', borderTop: '1px solid var(--border-color)' }}>
         <h2 style={{ fontSize: '2rem', fontWeight: '800', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>

@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 credentials.json
 .env
+
+# Pasta local de rascunho de APKs (arquivos hospedados ficam em public/downloads/)
+/app/

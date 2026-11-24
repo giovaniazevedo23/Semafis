@@ -38,6 +38,7 @@ const DUMMY_EVENTS = [
 import { MonitorDashboard } from './pages/MonitorDashboard';
 import { EvaluatorDashboard } from './pages/EvaluatorDashboard';
 import { ValidarCredencial } from './pages/ValidarCredencial';
+import { AppsPortal } from './pages/AppsPortal';
 import { listenCollection, listenDocument, addDocument, setDocument, updateDocument, deleteDocument } from './services/db';
 import { AIChat } from './components/AIChat';
 
@@ -396,6 +397,7 @@ function App() {
             <Route path="/painel-monitor" element={<MonitorDashboard user={user} monitors={monitors} submissions={allSubmissions} avaliadores={avaliadores} events={allEvents} ingressos={allIngressos} onUpdateIngresso={handleUpdateIngresso} />} />
             <Route path="/painel-avaliador" element={<EvaluatorDashboard user={user} avaliadores={avaliadores} submissions={allSubmissions} events={allEvents} onUpdateSubmission={handleUpdateSubmission} onSendNotification={handleSendNotification} />} />
             <Route path="/validar" element={<ValidarCredencial />} />
+            <Route path="/apps" element={<AppsPortal />} />
           </Routes>
         </main>
         <footer style={{ backgroundColor: '#ffffff', color: '#0f172a', padding: '2rem 1rem', marginTop: 'auto', borderTop: '1px solid #e2e8f0' }}>

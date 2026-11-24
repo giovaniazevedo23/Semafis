@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { CalendarDays, LayoutDashboard, UserCircle, FileText, Menu, ChevronDown, LogOut, Bell, CheckCircle, Circle } from 'lucide-react';
+import { CalendarDays, LayoutDashboard, UserCircle, FileText, Menu, ChevronDown, LogOut, Bell, CheckCircle, Circle, Smartphone } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { signOut } from 'firebase/auth';
 import { auth } from '../firebase';
@@ -67,7 +67,25 @@ export function Navbar({ user, userProfile, monitors = [], avaliadores = [], eve
           </div>
         </Link>
         
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+          <Link
+            to="/apps"
+            className="btn"
+            style={{
+              padding: '0.5rem 1rem',
+              borderRadius: '50px',
+              textDecoration: 'none',
+              fontSize: '0.9rem',
+              fontWeight: '600',
+              backgroundColor: location.pathname === '/apps' ? 'var(--accent-primary)' : '#eff6ff',
+              color: location.pathname === '/apps' ? '#ffffff' : 'var(--accent-primary)',
+              border: `1px solid ${location.pathname === '/apps' ? 'var(--accent-primary)' : '#bfdbfe'}`,
+            }}
+          >
+            <Smartphone size={17} />
+            <span>Apps</span>
+          </Link>
+
           {user && (
             <div style={{ position: 'relative' }} ref={notifRef}>
               <button 
@@ -190,6 +208,11 @@ export function Navbar({ user, userProfile, monitors = [], avaliadores = [], eve
                     <CalendarDays size={18} /> Portal de Eventos
                   </Link>
                 )}
+
+                {/* Área de Apps SEMAFIS: Visível para todos */}
+                <Link to="/apps" onClick={() => setIsMenuOpen(false)} className={`nav-link-dropdown ${location.pathname === '/apps' ? 'active-dropdown' : ''}`} style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none', color: 'var(--text-primary)', borderBottom: '1px solid var(--border-color)' }}>
+                  <Smartphone size={18} /> Apps SEMAFIS
+                </Link>
                 
                 {user ? (
                   <>
