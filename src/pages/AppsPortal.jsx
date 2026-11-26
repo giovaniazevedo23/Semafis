@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Download,
   Smartphone,
@@ -16,17 +17,21 @@ import {
   Rocket,
   Layers,
   Package,
+  Settings,
 } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { APPS_CATALOG } from '../data/appsCatalog';
 import './AppsPortal.css';
 
-export function AppsPortal() {
+export function AppsPortal({ apps = APPS_CATALOG }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todos');
   const [modalApp, setModalApp] = useState(null);
   const [modalTab, setModalTab] = useState('qrcode'); // 'qrcode' | 'install'
   const [copiedId, setCopiedId] = useState(null);
+  const isOrganizer = sessionStorage.getItem('userRole') === 'organizador';
+
+  const catalog = apps && apps.length > 0 ? apps : APPS_CATALOG;
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -37,39 +42,49 @@ export function AppsPortal() {
   }, []);
 
   const categories = useMemo(() => {
-    const unique = Array.from(new Set(APPS_CATALOG.map((app) => app.category)));
+    const unique = Array.from(new Set(catalog.map((app) => app.category).filter(Boolean)));
     return ['Todos', ...unique];
-  }, []);
+  }, [catalog]);
 
   const featuredApp = useMemo(
-    () => APPS_CATALOG.find((app) => app.featured && app.status === 'available') || APPS_CATALOG[0],
-    []
+    () => catalog.find((app) => app.featured && app.status === 'available') || catalog[0],
+    [catalog]
   );
 
   const filteredApps = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
-    return APPS_CATALOG.filter((app) => {
+    return catalog.filter((app) => {
       const matchesCategory = selectedCategory === 'Todos' || app.category === selectedCategory;
       if (!matchesCategory) return false;
       if (!query) return true;
       return (
-        app.name.toLowerCase().includes(query) ||
-        app.subtitle.toLowerCase().includes(query) ||
-        app.description.toLowerCase().includes(query) ||
-        app.category.toLowerCase().includes(query) ||
+        (app.name || '').toLowerCase().includes(query) ||
+        (app.subtitle || '').toLowerCase().includes(query) ||
+        (app.description || '').toLowerCase().includes(query) ||
+        (app.category || '').toLowerCase().includes(query) ||
         (app.tags || []).some((tag) => tag.toLowerCase().includes(query))
       );
     });
-  }, [searchTerm, selectedCategory]);
+  }, [catalog, searchTerm, selectedCategory]);
 
-  const availableCount = APPS_CATALOG.filter((a) => a.status === 'available').length;
+  const availableCount = catalog.filter((a) => a.status === 'available').length;
 
   const getAbsoluteDownloadUrl = (downloadUrl) => {
+    if (!downloadUrl) return '';
     if (typeof window === 'undefined') return downloadUrl;
     if (downloadUrl.startsWith('http://') || downloadUrl.startsWith('https://')) {
       return downloadUrl;
     }
     return `${window.location.origin}${downloadUrl}`;
+  };
+
+  const getDownloadLinkProps = (app) => {
+    const isExternal = /^https?:\/\//i.test(app?.downloadUrl || '');
+    return {
+      href: app?.downloadUrl || '#',
+      download: app?.fileName || undefined,
+      ...(isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {}),
+    };
   };
 
   const handleCopyLink = async (app) => {
@@ -116,6 +131,21 @@ export function AppsPortal() {
               <Sparkles size={16} color="#facc15" />
               Novos Apps em Desenvolvimento
             </span>
+            {isOrganizer && (
+              <Link
+                to="/organizador?tab=apps"
+                className="apps-stat-pill"
+                style={{
+                  textDecoration: 'none',
+                  background: 'rgba(56, 189, 248, 0.22)',
+                  borderColor: 'rgba(56, 189, 248, 0.6)',
+                  fontWeight: '700',
+                }}
+              >
+                <Settings size={16} color="#7dd3fc" />
+                Gerenciar / Hospedar Apps
+              </Link>
+            )}
           </div>
         </div>
       </section>
@@ -160,23 +190,24 @@ export function AppsPortal() {
               <p className="featured-app-subtitle">{featuredApp.subtitle}</p>
               <p className="featured-app-desc">{featuredApp.description}</p>
 
-              <div className="featured-highlights">
-                {featuredApp.highlights.map((item, idx) => (
-                  <div key={idx} className="featured-highlight-item">
-                    <CheckCircle2
-                      size={17}
-                      color="#38bdf8"
-                      style={{ flexShrink: 0, marginTop: '2px' }}
-                    />
-                    <span>{item}</span>
-                  </div>
-                ))}
-              </div>
+              {(featuredApp.highlights || []).length > 0 && (
+                <div className="featured-highlights">
+                  {featuredApp.highlights.map((item, idx) => (
+                    <div key={idx} className="featured-highlight-item">
+                      <CheckCircle2
+                        size={17}
+                        color="#38bdf8"
+                        style={{ flexShrink: 0, marginTop: '2px' }}
+                      />
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               <div className="featured-actions">
                 <a
-                  href={featuredApp.downloadUrl}
-                  download={featuredApp.fileName}
+                  {...getDownloadLinkProps(featuredApp)}
                   className="btn-download-primary"
                 >
                   <Download size={20} />
@@ -339,8 +370,7 @@ export function AppsPortal() {
                 {app.status === 'available' ? (
                   <>
                     <a
-                      href={app.downloadUrl}
-                      download={app.fileName}
+                      {...getDownloadLinkProps(app)}
                       className="btn btn-primary"
                       style={{ flex: 1, textDecoration: 'none', padding: '0.7rem 1rem' }}
                     >
@@ -407,7 +437,7 @@ export function AppsPortal() {
       </section>
 
       {/* Quick Android Install Guide */}
-      {featuredApp && (
+      {featuredApp && (featuredApp.installSteps || []).length > 0 && (
         <section className="install-guide-box">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
             <ShieldCheck size={24} color="#10b981" />
@@ -532,8 +562,7 @@ export function AppsPortal() {
 
                 <div style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap' }}>
                   <a
-                    href={modalApp.downloadUrl}
-                    download={modalApp.fileName}
+                    {...getDownloadLinkProps(modalApp)}
                     className="btn btn-primary"
                     style={{ flex: 1, textDecoration: 'none', padding: '0.75rem 1rem' }}
                   >
@@ -562,7 +591,7 @@ export function AppsPortal() {
                 <div>
                   <h4 style={{ fontSize: '1rem', marginBottom: '0.6rem' }}>Requisitos Técnicos</h4>
                   <ul style={{ paddingLeft: '1.25rem', color: '#475569', fontSize: '0.9rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                    {modalApp.requirements.map((req, i) => (
+                    {(modalApp.requirements || ['Android 9.0 ou superior']).map((req, i) => (
                       <li key={i}>{req}</li>
                     ))}
                   </ul>
@@ -571,7 +600,7 @@ export function AppsPortal() {
                 <div>
                   <h4 style={{ fontSize: '1rem', marginBottom: '0.6rem' }}>Passo a Passo</h4>
                   <ol style={{ paddingLeft: '1.25rem', color: '#475569', fontSize: '0.9rem', display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
-                    {modalApp.installSteps.map((step, i) => (
+                    {(modalApp.installSteps || ['Baixe o arquivo e abra no dispositivo para instalar.']).map((step, i) => (
                       <li key={i}>{step}</li>
                     ))}
                   </ol>
@@ -605,8 +634,7 @@ export function AppsPortal() {
                 </div>
 
                 <a
-                  href={modalApp.downloadUrl}
-                  download={modalApp.fileName}
+                  {...getDownloadLinkProps(modalApp)}
                   className="btn btn-primary"
                   style={{ width: '100%', textDecoration: 'none', padding: '0.8rem 1rem' }}
                 >

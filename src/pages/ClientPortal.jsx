@@ -2,7 +2,8 @@ import { EventCard } from '../components/EventCard';
 import { Link } from 'react-router-dom';
 import { Search, CalendarDays, ArrowRight, Bell, CheckCircle, Circle, Smartphone, Sparkles } from 'lucide-react';
 
-export function ClientPortal({ events, news = [], user, notifications = [], onMarkRead, onMarkUnread }) {
+export function ClientPortal({ events, news = [], apps = [], user, notifications = [], onMarkRead, onMarkUnread }) {
+  const featuredApp = apps.find(a => a.featured && a.status === 'available') || apps[0];
   return (
     <div className="container">
       {user && (
@@ -66,8 +67,8 @@ export function ClientPortal({ events, news = [], user, notifications = [], onMa
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flex: '1 1 320px' }}>
           <img
-            src="/downloads/cosmo-vr-icon.png"
-            alt="COSMO VR"
+            src={featuredApp?.icon || '/downloads/cosmo-vr-icon.png'}
+            alt={featuredApp?.name || 'COSMO VR'}
             style={{
               width: '76px',
               height: '76px',
@@ -91,14 +92,13 @@ export function ClientPortal({ events, news = [], user, notifications = [], onMa
                 marginBottom: '0.35rem',
               }}
             >
-              <Sparkles size={14} /> Novo Espaço • Apps SEMAFIS
+              <Sparkles size={14} /> Espaço Exclusivo • Apps SEMAFIS ({apps.filter(a => a.status === 'available').length || 1} {apps.filter(a => a.status === 'available').length === 1 ? 'disponível' : 'disponíveis'})
             </div>
             <h2 style={{ margin: '0 0 0.3rem 0', color: '#ffffff', fontSize: '1.5rem', fontWeight: '800' }}>
-              Conheça o COSMO VR e nossos aplicativos
+              Conheça o {featuredApp?.name || 'COSMO VR'} e nossos aplicativos
             </h2>
             <p style={{ margin: 0, color: '#cbd5e1', fontSize: '0.95rem', lineHeight: 1.5 }}>
-              Explore o Sistema Solar em Realidade Virtual no seu Android e acompanhe os novos apps
-              desenvolvidos para a SEMAFIS.
+              {featuredApp?.subtitle || 'Explore o Sistema Solar em Realidade Virtual no seu Android e acompanhe os novos apps desenvolvidos para a SEMAFIS.'}
             </p>
           </div>
         </div>

@@ -1,14 +1,28 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { EventForm } from '../components/EventForm';
 import { EventCard } from '../components/EventCard';
+import { OrganizerAppsManager } from '../components/OrganizerAppsManager';
 import { FileDown, Users, Check, X, ArrowLeft, ClipboardList, GraduationCap, MonitorPlay, ChevronRight, Calendar, Mic, QrCode, Settings, Medal, FileText, LayoutList, Award, Upload, Bot, Shield, Bell, AlertCircle, Sliders } from 'lucide-react';
 import { uploadFile } from '../services/db';
 import { QRCodeCanvas } from 'qrcode.react';
 
-export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissions, onUpdateSubmission, monitors = [], onAddMonitor, onUpdateMonitor, avaliadores = [], onAddAvaliador, organizadores = [], onAddOrganizador, onRemoveOrganizador, ingressos = [], onUpdateIngresso, news = [], onAddNews, monitorApplications = [], onUpdateMonitorApplication, onSendNotification }) {
+export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissions, onUpdateSubmission, monitors = [], onAddMonitor, onUpdateMonitor, avaliadores = [], onAddAvaliador, organizadores = [], onAddOrganizador, onRemoveOrganizador, ingressos = [], onUpdateIngresso, news = [], onAddNews, apps = [], onSaveApp, onDeleteApp, monitorApplications = [], onUpdateMonitorApplication, onSendNotification }) {
+  const location = useLocation();
   const [selectedEventId, setSelectedEventId] = useState(null);
   const [isCreatingEvent, setIsCreatingEvent] = useState(false);
+  const [isManagingApps, setIsManagingApps] = useState(() => new URLSearchParams(window.location.search).get('tab') === 'apps');
   const [activeTab, setActiveTab] = useState('menu'); // 'menu', 'submissoes', 'equipe', ...
+
+  useEffect(() => {
+    const tabParam = new URLSearchParams(location.search).get('tab');
+    if (tabParam === 'apps') {
+      setIsManagingApps(true);
+      setIsManagingNews(false);
+      setIsCreatingEvent(false);
+      setSelectedEventId(null);
+    }
+  }, [location.search]);
   const [viewingReport, setViewingReport] = useState(null); // 'credenciamento', 'oficinas', 'monitores', 'trabalhos'
   const [sharingMonitorId, setSharingMonitorId] = useState('');
   
@@ -315,15 +329,18 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
   };
 
   // Se não tem evento selecionado E não está criando, mostra a lista de eventos
-  if (!selectedEventId && !isCreatingEvent && !isManagingNews) {
+  if (!selectedEventId && !isCreatingEvent && !isManagingNews && !isManagingApps) {
     return (
       <div className="container" style={{ marginTop: '2rem' }}>
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex justify-between items-center mb-8" style={{ flexWrap: 'wrap', gap: '1rem' }}>
           <div>
             <h1 style={{ fontSize: '2.25rem', fontWeight: '700' }}>Painel do Organizador</h1>
             <p style={{ color: 'var(--text-secondary)' }}>Selecione um evento para gerenciar ou crie um novo.</p>
           </div>
-          <div style={{ display: 'flex', gap: '1rem' }}>
+          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <button onClick={() => setIsManagingApps(true)} className="btn btn-outline" style={{ borderColor: '#bfdbfe', color: '#1d4ed8', backgroundColor: '#eff6ff' }}>
+              📱 Gerenciar Apps ({apps.length})
+            </button>
             <button onClick={() => setIsManagingNews(true)} className="btn btn-outline">
               📰 Gerenciar Notícias
             </button>
@@ -354,6 +371,18 @@ export function OrganizerDashboard({ events, onAddEvent, onUpdateEvent, submissi
           </div>
         )}
       </div>
+    );
+  }
+
+  // Tela de Gerenciamento e Hospedagem de Apps
+  if (isManagingApps) {
+    return (
+      <OrganizerAppsManager
+        apps={apps}
+        onSaveApp={onSaveApp}
+        onDeleteApp={onDeleteApp}
+        onBack={() => setIsManagingApps(false)}
+      />
     );
   }
 

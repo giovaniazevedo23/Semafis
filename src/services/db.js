@@ -1,5 +1,5 @@
 import { collection, doc, setDoc, addDoc, updateDoc, deleteDoc, onSnapshot, query, getDocs } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytes, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../firebase';
 
 // Listeners genéricos para coleções
@@ -81,4 +81,35 @@ export const uploadFile = async (path, file) => {
     console.error(`Erro ao fazer upload do arquivo para ${path}:`, error);
     throw error;
   }
+};
+
+// Upload com progresso em tempo real (ideal para arquivos grandes como .apk)
+export const uploadFileWithProgress = (path, file, onProgress) => {
+  if (!file) return Promise.resolve(null);
+  return new Promise((resolve, reject) => {
+    const storageRef = ref(storage, path);
+    const uploadTask = uploadBytesResumable(storageRef, file);
+
+    uploadTask.on(
+      'state_changed',
+      (snapshot) => {
+        if (onProgress && snapshot.totalBytes > 0) {
+          const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+          onProgress(pct);
+        }
+      },
+      (error) => {
+        console.error(`Erro ao fazer upload de ${path}:`, error);
+        reject(error);
+      },
+      async () => {
+        try {
+          const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
+          resolve(downloadUrl);
+        } catch (err) {
+          reject(err);
+        }
+      }
+    );
+  });
 };

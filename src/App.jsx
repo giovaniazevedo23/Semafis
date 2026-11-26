@@ -39,6 +39,7 @@ import { MonitorDashboard } from './pages/MonitorDashboard';
 import { EvaluatorDashboard } from './pages/EvaluatorDashboard';
 import { ValidarCredencial } from './pages/ValidarCredencial';
 import { AppsPortal } from './pages/AppsPortal';
+import { APPS_CATALOG } from './data/appsCatalog';
 import { listenCollection, listenDocument, addDocument, setDocument, updateDocument, deleteDocument } from './services/db';
 import { AIChat } from './components/AIChat';
 
@@ -52,6 +53,7 @@ function App() {
   const [monitorApplications, setMonitorApplications] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [news, setNews] = useState([]);
+  const [platformApps, setPlatformApps] = useState([]);
   const [user, setUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
 
@@ -67,6 +69,7 @@ function App() {
     const unsubMonitorApplications = listenCollection('monitorApplications', setMonitorApplications);
     const unsubNotifications = listenCollection('notifications', setNotifications);
     const unsubNews = listenCollection('news', setNews);
+    const unsubApps = listenCollection('apps', setPlatformApps);
 
     return () => {
       unsubEvents();
@@ -78,6 +81,7 @@ function App() {
       unsubMonitorApplications();
       unsubNotifications();
       unsubNews();
+      unsubApps();
     };
   }, []);
 
@@ -247,6 +251,59 @@ function App() {
     }
   };
 
+  const handleSaveApp = async (appData) => {
+    const id = appData.id || 'APP-' + Date.now().toString().slice(-6);
+    const cleanData = Object.fromEntries(
+      Object.entries({ ...appData, id, updatedAt: appData.updatedAt || new Date().toISOString() }).map(([k, v]) => [k, v === undefined ? '' : v])
+    );
+
+    try {
+      await setDocument('apps', id, cleanData);
+    } catch (e) {
+      console.error('Falha ao salvar app no Firestore. Usando armazenamento local.', e);
+      const localApps = JSON.parse(localStorage.getItem('fallback_apps') || '[]');
+      const idx = localApps.findIndex(a => a.id === id);
+      if (idx >= 0) localApps[idx] = cleanData;
+      else localApps.unshift(cleanData);
+      localStorage.setItem('fallback_apps', JSON.stringify(localApps));
+      setPlatformApps(prev => {
+        const exists = prev.some(a => a.id === id);
+        return exists ? prev.map(a => (a.id === id ? cleanData : a)) : [cleanData, ...prev];
+      });
+    }
+  };
+
+  const handleDeleteApp = async (appId) => {
+    const isBuiltIn = APPS_CATALOG.some(a => a.id === appId);
+    try {
+      if (isBuiltIn) {
+        await setDocument('apps', appId, { id: appId, hidden: true, updatedAt: new Date().toISOString() });
+      } else {
+        await deleteDocument('apps', appId);
+      }
+    } catch (e) {
+      console.error('Falha ao remover app no Firestore. Atualizando localmente.', e);
+    }
+
+    const localApps = JSON.parse(localStorage.getItem('fallback_apps') || '[]');
+    if (isBuiltIn) {
+      const idx = localApps.findIndex(a => a.id === appId);
+      const hiddenEntry = { id: appId, hidden: true };
+      if (idx >= 0) localApps[idx] = { ...localApps[idx], ...hiddenEntry };
+      else localApps.push(hiddenEntry);
+    } else {
+      const filtered = localApps.filter(a => a.id !== appId);
+      localStorage.setItem('fallback_apps', JSON.stringify(filtered));
+      setPlatformApps(prev => prev.filter(a => a.id !== appId));
+      return;
+    }
+    localStorage.setItem('fallback_apps', JSON.stringify(localApps));
+    setPlatformApps(prev => {
+      const exists = prev.some(a => a.id === appId);
+      return exists ? prev.map(a => (a.id === appId ? { ...a, hidden: true } : a)) : [...prev, { id: appId, hidden: true }];
+    });
+  };
+
   const handleSendNotification = async (notificationData) => {
     const id = 'NOTIF-' + Date.now().toString().slice(-6);
     const cleanData = Object.fromEntries(
@@ -372,6 +429,18 @@ function App() {
     return ev;
   });
 
+  const mergedAppsMap = new Map();
+  APPS_CATALOG.forEach(app => mergedAppsMap.set(app.id, app));
+  JSON.parse(localStorage.getItem('fallback_apps') || '[]').forEach(app => {
+    mergedAppsMap.set(app.id, { ...(mergedAppsMap.get(app.id) || {}), ...app });
+  });
+  platformApps.forEach(app => {
+    mergedAppsMap.set(app.id, { ...(mergedAppsMap.get(app.id) || {}), ...app });
+  });
+  const allApps = Array.from(mergedAppsMap.values())
+    .filter(app => !app.hidden)
+    .sort((a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured)));
+
   return (
     <Router>
       <div className="page-wrapper">
@@ -387,17 +456,17 @@ function App() {
         />
         <main className="main-content">
           <Routes>
-            <Route path="/" element={<ClientPortal events={allEvents} news={allNews} user={user} notifications={notifications.filter(n => (user && n.userEmail === user.email) || !n.userEmail)} onMarkRead={handleMarkNotificationRead} onMarkUnread={handleMarkNotificationUnread} />} />
+            <Route path="/" element={<ClientPortal events={allEvents} news={allNews} apps={allApps} user={user} notifications={notifications.filter(n => (user && n.userEmail === user.email) || !n.userEmail)} onMarkRead={handleMarkNotificationRead} onMarkUnread={handleMarkNotificationUnread} />} />
             <Route path="/login" element={<Login setUser={setUser} monitors={monitors} avaliadores={avaliadores} organizadores={organizadores} />} />
             <Route path="/perfil" element={<UserProfile user={user} userProfile={userProfile} setUserProfile={setUserProfile} />} />
             <Route path="/evento/:id" element={<EventDetails events={allEvents} />} />
             <Route path="/evento/:id/inscricao" element={<RegistrationForm events={allEvents} user={user} userProfile={userProfile} onSubmitWork={handleSubmitWork} onRegister={handleRegister} monitors={monitors} ingressos={allIngressos} />} />
-            <Route path="/organizador" element={<OrganizerDashboard events={allEvents} onAddEvent={handleAddEvent} onUpdateEvent={handleUpdateEvent} submissions={allSubmissions} onUpdateSubmission={handleUpdateSubmission} monitors={monitors} onAddMonitor={handleAddMonitor} onUpdateMonitor={handleUpdateMonitor} avaliadores={avaliadores} onAddAvaliador={handleAddAvaliador} organizadores={organizadores} onAddOrganizador={handleAddOrganizador} onRemoveOrganizador={handleRemoveOrganizador} ingressos={allIngressos} onUpdateIngresso={handleUpdateIngresso} news={allNews} onAddNews={handleAddNews} monitorApplications={allMonitorApplications} onUpdateMonitorApplication={handleUpdateMonitorApplication} onSendNotification={handleSendNotification} />} />
+            <Route path="/organizador" element={<OrganizerDashboard events={allEvents} onAddEvent={handleAddEvent} onUpdateEvent={handleUpdateEvent} submissions={allSubmissions} onUpdateSubmission={handleUpdateSubmission} monitors={monitors} onAddMonitor={handleAddMonitor} onUpdateMonitor={handleUpdateMonitor} avaliadores={avaliadores} onAddAvaliador={handleAddAvaliador} organizadores={organizadores} onAddOrganizador={handleAddOrganizador} onRemoveOrganizador={handleRemoveOrganizador} ingressos={allIngressos} onUpdateIngresso={handleUpdateIngresso} news={allNews} onAddNews={handleAddNews} apps={allApps} onSaveApp={handleSaveApp} onDeleteApp={handleDeleteApp} monitorApplications={allMonitorApplications} onUpdateMonitorApplication={handleUpdateMonitorApplication} onSendNotification={handleSendNotification} />} />
             <Route path="/painel-usuario" element={<UserDashboard submissions={allSubmissions.filter(s => user && s.userEmail === user.email)} ingressos={allIngressos.filter(i => user && i.userEmail === user.email)} events={allEvents} user={user} userProfile={userProfile} onSubmitWork={handleSubmitWork} onUpdateSubmission={handleUpdateSubmission} notifications={notifications.filter(n => user && n.userEmail === user.email)} onUpdateIngresso={handleUpdateIngresso} monitorApplications={allMonitorApplications.filter(m => user && m.userEmail === user.email)} onAddMonitorApplication={handleAddMonitorApplication} />} />
             <Route path="/painel-monitor" element={<MonitorDashboard user={user} monitors={monitors} submissions={allSubmissions} avaliadores={avaliadores} events={allEvents} ingressos={allIngressos} onUpdateIngresso={handleUpdateIngresso} />} />
             <Route path="/painel-avaliador" element={<EvaluatorDashboard user={user} avaliadores={avaliadores} submissions={allSubmissions} events={allEvents} onUpdateSubmission={handleUpdateSubmission} onSendNotification={handleSendNotification} />} />
             <Route path="/validar" element={<ValidarCredencial />} />
-            <Route path="/apps" element={<AppsPortal />} />
+            <Route path="/apps" element={<AppsPortal apps={allApps} />} />
           </Routes>
         </main>
         <footer style={{ backgroundColor: '#ffffff', color: '#0f172a', padding: '2rem 1rem', marginTop: 'auto', borderTop: '1px solid #e2e8f0' }}>
